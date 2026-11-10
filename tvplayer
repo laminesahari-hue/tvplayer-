@@ -1,0 +1,7 @@
+settings.gradle.kts
+build.gradle.kts
+app/build.gradle.kts
+app/src/main/AndroidManifest.xml
+app/src/main/java/com/example/tvplayer/Channel.kt
+app/src/main/java/com/example/tvplayer/MainActivity.kt
+.github/workflows/build.yml

@@ -21,8 +21,25 @@ jobs:
 
       - name: Prepare web files
         run: |
+          echo "=== Fichiers du depot ==="
+          find . -path ./.git -prune -o -type f -print | head -100
           mkdir -p www
-          rsync -a --exclude='.git' --exclude='.github' --exclude='www' ./ www/
+          IDX=$(find . -name index.html -not -path "./www/*" -not -path "./.git/*" -not -path "*/node_modules/*" | head -1)
+          if [ -n "$IDX" ]; then
+            DIR=$(dirname "$IDX")
+            echo "index.html trouve dans $DIR"
+            rsync -a --exclude='.git' --exclude='.github' --exclude='www' "$DIR"/ www/
+          else
+            HTML=$(find . -name "*.html" -not -path "./www/*" -not -path "./.git/*" | head -1)
+            if [ -z "$HTML" ]; then
+              echo "ERREUR: aucun fichier .html dans le depot"
+              exit 1
+            fi
+            echo "Utilisation de $HTML comme index.html"
+            DIR=$(dirname "$HTML")
+            rsync -a --exclude='.git' --exclude='.github' --exclude='www' "$DIR"/ www/
+            cp "$HTML" www/index.html
+          fi
           ls www
 
       - name: Create Android project

@@ -10,54 +10,176 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 17
 
-      - name: Prepare web files
-        run: |
-          echo "=== Fichiers du depot ==="
-          find . -path ./.git -prune -o -type f -print | head -100
-          mkdir -p www
-          IDX=$(find . -name index.html -not -path "./www/*" -not -path "./.git/*" -not -path "*/node_modules/*" | head -1)
-          if [ -n "$IDX" ]; then
-            DIR=$(dirname "$IDX")
-            echo "index.html trouve dans $DIR"
-            rsync -a --exclude='.git' --exclude='.github' --exclude='www' "$DIR"/ www/
-          else
-            HTML=$(find . -name "*.html" -not -path "./www/*" -not -path "./.git/*" | head -1)
-            if [ -z "$HTML" ]; then
-              echo "ERREUR: aucun fichier .html dans le depot"
-              exit 1
-            fi
-            echo "Utilisation de $HTML comme index.html"
-            DIR=$(dirname "$HTML")
-            rsync -a --exclude='.git' --exclude='.github' --exclude='www' "$DIR"/ www/
-            cp "$HTML" www/index.html
-          fi
-          ls www
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.9
 
-      - name: Create Android project
+      - name: Create project files
         run: |
-          npm init -y
-          npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap init "TV Player" com.lamine.tvplayer --web-dir=www
-          npx cap add android
-          npx cap sync android
+          mkdir -p app/src/main/java/com/example/tvplayer
+
+          cat > settings.gradle.kts << 'EOF'
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+          dependencyResolutionManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          rootProject.name = "tvplayer"
+          include(":app")
+          EOF
+
+          cat > build.gradle.kts << 'EOF'
+          plugins {
+              id("com.android.application") version "8.5.2" apply false
+              id("org.jetbrains.kotlin.android") version "1.9.24" apply false
+          }
+          EOF
+
+          cat > gradle.properties << 'EOF'
+          android.useAndroidX=true
+          org.gradle.jvmargs=-Xmx2g
+          EOF
+
+          cat > app/build.gradle.kts << 'EOF'
+          plugins {
+              id("com.android.application")
+              id("org.jetbrains.kotlin.android")
+          }
+
+          android {
+              namespace = "com.example.tvplayer"
+              compileSdk = 34
+
+              defaultConfig {
+                  applicationId = "com.example.tvplayer"
+                  minSdk = 21
+                  targetSdk = 34
+                  versionCode = 1
+                  versionName = "1.0"
+              }
+
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+              kotlinOptions {
+                  jvmTarget = "17"
+              }
+          }
+
+          dependencies {
+              implementation("androidx.media3:media3-exoplayer:1.3.1")
+              implementation("androidx.media3:media3-exoplayer-hls:1.3.1")
+              implementation("androidx.media3:media3-ui:1.3.1")
+          }
+          EOF
+
+          cat > app/src/main/AndroidManifest.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.INTERNET" />
+              <uses-feature android:name="android.software.leanback" android:required="false" />
+              <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+              <application
+                  android:label="TV Player"
+                  android:usesCleartextTraffic="true"
+                  android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                          <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF
+
+          cat > app/src/main/java/com/example/tvplayer/Channel.kt << 'EOF'
+          package com.example.tvplayer
+
+          data class Channel(val name: String, val url: String)
+
+          val channels = listOf(
+              Channel("Test - Big Buck Bunny", "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"),
+              Channel("Test - Apple BipBop", "https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_fmp4/master.m3u8")
+          )
+          EOF
+
+          cat > app/src/main/java/com/example/tvplayer/MainActivity.kt << 'EOF'
+          package com.example.tvplayer
+
+          import android.app.Activity
+          import android.graphics.Color
+          import android.os.Bundle
+          import android.widget.ArrayAdapter
+          import android.widget.LinearLayout
+          import android.widget.ListView
+          import androidx.media3.common.MediaItem
+          import androidx.media3.exoplayer.ExoPlayer
+          import androidx.media3.ui.PlayerView
+
+          class MainActivity : Activity() {
+              private var player: ExoPlayer? = null
+
+              override fun onCreate(savedInstanceState: Bundle?) {
+                  super.onCreate(savedInstanceState)
+
+                  val root = LinearLayout(this)
+                  root.orientation = LinearLayout.VERTICAL
+                  root.setBackgroundColor(Color.BLACK)
+
+                  val playerView = PlayerView(this)
+                  root.addView(playerView, LinearLayout.LayoutParams(-1, 0, 2f))
+
+                  val list = ListView(this)
+                  root.addView(list, LinearLayout.LayoutParams(-1, 0, 3f))
+                  setContentView(root)
+
+                  val exo = ExoPlayer.Builder(this).build()
+                  player = exo
+                  playerView.player = exo
+
+                  list.adapter = ArrayAdapter(
+                      this,
+                      android.R.layout.simple_list_item_1,
+                      channels.map { it.name }
+                  )
+                  list.setOnItemClickListener { _, _, position, _ ->
+                      exo.setMediaItem(MediaItem.fromUri(channels[position].url))
+                      exo.prepare()
+                      exo.playWhenReady = true
+                  }
+              }
+
+              override fun onDestroy() {
+                  player?.release()
+                  player = null
+                  super.onDestroy()
+              }
+          }
+          EOF
 
       - name: Build APK
-        run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug
+        run: gradle assembleDebug --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: tvplayer-apk
-          path: android/app/build/outputs/apk/debug/*.apk
+          path: app/build/outputs/apk/debug/*.apk

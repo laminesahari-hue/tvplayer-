@@ -2064,12 +2064,6 @@ jobs:
                   for (a in accounts()) {
                       fetchXtream(a, true)
                       n++
-         - name: Créer une Publication (Release)
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v1.0.${{ github.run_number }}
-          name: Version APK n° ${{ github.run_number }}
-          files: app/build/outputs/apk/debug/*.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    
 

@@ -67,8 +67,8 @@ jobs:
                   applicationId = "com.example.tvplayer"
                   minSdk = 21
                   targetSdk = 34
-                  versionCode = 1
-                  versionName = "1.0"
+                  versionCode = 2
+                  versionName = "2.0"
               }
 
               compileOptions {
@@ -99,7 +99,8 @@ jobs:
                   android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
                   <activity
                       android:name=".MainActivity"
-                      android:exported="true">
+                      android:exported="true"
+                      android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout">
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
                           <category android:name="android.intent.category.LAUNCHER" />
@@ -115,56 +116,298 @@ jobs:
 
           data class Channel(val name: String, val url: String)
 
-          val channels = listOf(
+          val defaultChannels = listOf(
               Channel("Test - Big Buck Bunny", "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"),
               Channel("Test - Apple BipBop", "https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_fmp4/master.m3u8")
           )
+
+          fun parseM3u(text: String): List<Channel> {
+              val out = mutableListOf<Channel>()
+              var pending: String? = null
+              for (raw in text.lines()) {
+                  val line = raw.trim()
+                  if (line.startsWith("#EXTINF")) {
+                      pending = line.substringAfterLast(",", "").trim()
+                  } else if (line.isNotEmpty() && !line.startsWith("#")) {
+                      val n = pending
+                      out.add(Channel(if (n.isNullOrEmpty()) line else n, line))
+                      pending = null
+                  }
+              }
+              return out
+          }
           EOF
 
           cat > app/src/main/java/com/example/tvplayer/MainActivity.kt << 'EOF'
           package com.example.tvplayer
 
           import android.app.Activity
+          import android.app.AlertDialog
+          import android.content.SharedPreferences
+          import android.content.pm.ActivityInfo
           import android.graphics.Color
           import android.os.Bundle
+          import android.text.Editable
+          import android.text.TextWatcher
+          import android.view.View
+          import android.view.WindowManager
           import android.widget.ArrayAdapter
+          import android.widget.Button
+          import android.widget.EditText
           import android.widget.LinearLayout
           import android.widget.ListView
+          import android.widget.Toast
           import androidx.media3.common.MediaItem
+          import androidx.media3.common.PlaybackException
+          import androidx.media3.common.Player
           import androidx.media3.exoplayer.ExoPlayer
           import androidx.media3.ui.PlayerView
+          import java.net.HttpURLConnection
+          import java.net.URL
 
           class MainActivity : Activity() {
               private var player: ExoPlayer? = null
+              private lateinit var prefs: SharedPreferences
+              private lateinit var playerView: PlayerView
+              private lateinit var toolbar: LinearLayout
+              private lateinit var search: EditText
+              private lateinit var list: ListView
+              private lateinit var adapter: ArrayAdapter<String>
+
+              private var all = mutableListOf<Channel>()
+              private var shown = listOf<Channel>()
+              private var current = -1
+              private var fullscreen = false
 
               override fun onCreate(savedInstanceState: Bundle?) {
                   super.onCreate(savedInstanceState)
+                  window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                  prefs = getSharedPreferences("tvplayer", MODE_PRIVATE)
+                  load()
 
                   val root = LinearLayout(this)
                   root.orientation = LinearLayout.VERTICAL
                   root.setBackgroundColor(Color.BLACK)
 
-                  val playerView = PlayerView(this)
+                  playerView = PlayerView(this)
                   root.addView(playerView, LinearLayout.LayoutParams(-1, 0, 2f))
 
-                  val list = ListView(this)
+                  toolbar = LinearLayout(this)
+                  toolbar.orientation = LinearLayout.HORIZONTAL
+                  toolbar.addView(btn("◀") { step(-1) }, LinearLayout.LayoutParams(0, -2, 1f))
+                  toolbar.addView(btn("▶") { step(1) }, LinearLayout.LayoutParams(0, -2, 1f))
+                  toolbar.addView(btn("⛶") { setFullscreen(true) }, LinearLayout.LayoutParams(0, -2, 1f))
+                  toolbar.addView(btn("+") { addChannelDialog() }, LinearLayout.LayoutParams(0, -2, 1f))
+                  toolbar.addView(btn("M3U") { m3uDialog() }, LinearLayout.LayoutParams(0, -2, 1f))
+                  toolbar.addView(btn("Vider") { clearDialog() }, LinearLayout.LayoutParams(0, -2, 1f))
+                  root.addView(toolbar, LinearLayout.LayoutParams(-1, -2))
+
+                  search = EditText(this)
+                  search.hint = "Rechercher une chaine"
+                  search.setTextColor(Color.WHITE)
+                  search.setHintTextColor(Color.GRAY)
+                  search.isSingleLine = true
+                  root.addView(search, LinearLayout.LayoutParams(-1, -2))
+
+                  list = ListView(this)
                   root.addView(list, LinearLayout.LayoutParams(-1, 0, 3f))
                   setContentView(root)
 
                   val exo = ExoPlayer.Builder(this).build()
                   player = exo
                   playerView.player = exo
+                  exo.addListener(object : Player.Listener {
+                      override fun onPlayerError(error: PlaybackException) {
+                          Toast.makeText(this@MainActivity, "Chaine indisponible", Toast.LENGTH_SHORT).show()
+                      }
+                  })
 
-                  list.adapter = ArrayAdapter(
-                      this,
-                      android.R.layout.simple_list_item_1,
-                      channels.map { it.name }
-                  )
-                  list.setOnItemClickListener { _, _, position, _ ->
-                      exo.setMediaItem(MediaItem.fromUri(channels[position].url))
-                      exo.prepare()
-                      exo.playWhenReady = true
+                  adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, mutableListOf<String>())
+                  list.adapter = adapter
+                  list.setOnItemClickListener { _, _, position, _ -> play(position) }
+                  list.setOnItemLongClickListener { _, _, position, _ ->
+                      val ch = shown[position]
+                      AlertDialog.Builder(this)
+                          .setTitle("Supprimer cette chaine ?")
+                          .setMessage(ch.name)
+                          .setPositiveButton("Supprimer") { _, _ ->
+                              all.remove(ch)
+                              save()
+                              refresh()
+                          }
+                          .setNegativeButton("Annuler", null)
+                          .show()
+                      true
                   }
+
+                  search.addTextChangedListener(object : TextWatcher {
+                      override fun beforeTextChanged(s: CharSequence?, st: Int, c: Int, a: Int) {}
+                      override fun onTextChanged(s: CharSequence?, st: Int, b: Int, c: Int) {}
+                      override fun afterTextChanged(s: Editable?) { refresh() }
+                  })
+
+                  refresh()
+              }
+
+              private fun btn(label: String, action: () -> Unit): Button {
+                  val b = Button(this)
+                  b.text = label
+                  b.textSize = 12f
+                  b.isAllCaps = false
+                  b.setOnClickListener { action() }
+                  return b
+              }
+
+              private fun load() {
+                  val s = prefs.getString("channels", null)
+                  all = if (s == null) {
+                      defaultChannels.toMutableList()
+                  } else {
+                      s.lines().filter { it.contains("\t") }.map {
+                          val p = it.split("\t", limit = 2)
+                          Channel(p[0], p[1])
+                      }.toMutableList()
+                  }
+              }
+
+              private fun save() {
+                  val s = all.joinToString("\n") {
+                      it.name.replace("\t", " ").replace("\n", " ") + "\t" + it.url
+                  }
+                  prefs.edit().putString("channels", s).apply()
+              }
+
+              private fun refresh() {
+                  val q = search.text.toString().trim().lowercase()
+                  shown = if (q.isEmpty()) all.toList() else all.filter { it.name.lowercase().contains(q) }
+                  adapter.clear()
+                  adapter.addAll(shown.map { it.name })
+                  adapter.notifyDataSetChanged()
+              }
+
+              private fun play(index: Int) {
+                  if (index < 0 || index >= shown.size) return
+                  val exo = player ?: return
+                  current = index
+                  exo.setMediaItem(MediaItem.fromUri(shown[index].url))
+                  exo.prepare()
+                  exo.playWhenReady = true
+              }
+
+              private fun step(delta: Int) {
+                  if (shown.isEmpty()) return
+                  val next = if (current < 0) 0 else (current + delta + shown.size) % shown.size
+                  play(next)
+              }
+
+              private fun setFullscreen(on: Boolean) {
+                  fullscreen = on
+                  val vis = if (on) View.GONE else View.VISIBLE
+                  toolbar.visibility = vis
+                  search.visibility = vis
+                  list.visibility = vis
+                  requestedOrientation = if (on) ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                  else ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                  window.decorView.systemUiVisibility = if (on) {
+                      View.SYSTEM_UI_FLAG_FULLSCREEN or
+                          View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                          View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                          View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                          View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                  } else {
+                      View.SYSTEM_UI_FLAG_VISIBLE
+                  }
+              }
+
+              private fun addChannelDialog() {
+                  val box = LinearLayout(this)
+                  box.orientation = LinearLayout.VERTICAL
+                  box.setPadding(40, 20, 40, 0)
+                  val n = EditText(this)
+                  n.hint = "Nom de la chaine"
+                  val u = EditText(this)
+                  u.hint = "Lien du flux (.m3u8)"
+                  box.addView(n)
+                  box.addView(u)
+                  AlertDialog.Builder(this)
+                      .setTitle("Ajouter une chaine")
+                      .setView(box)
+                      .setPositiveButton("Ajouter") { _, _ ->
+                          val name = n.text.toString().trim()
+                          val url = u.text.toString().trim()
+                          if (url.isNotEmpty()) {
+                              all.add(Channel(if (name.isEmpty()) url else name, url))
+                              save()
+                              refresh()
+                          }
+                      }
+                      .setNegativeButton("Annuler", null)
+                      .show()
+              }
+
+              private fun m3uDialog() {
+                  val box = LinearLayout(this)
+                  box.orientation = LinearLayout.VERTICAL
+                  box.setPadding(40, 20, 40, 0)
+                  val u = EditText(this)
+                  u.hint = "Lien de la playlist (.m3u)"
+                  box.addView(u)
+                  AlertDialog.Builder(this)
+                      .setTitle("Importer une playlist")
+                      .setView(box)
+                      .setPositiveButton("Importer") { _, _ ->
+                          val url = u.text.toString().trim()
+                          if (url.isNotEmpty()) loadM3u(url)
+                      }
+                      .setNegativeButton("Annuler", null)
+                      .show()
+              }
+
+              private fun clearDialog() {
+                  AlertDialog.Builder(this)
+                      .setTitle("Supprimer toutes les chaines ?")
+                      .setPositiveButton("Oui") { _, _ ->
+                          all.clear()
+                          save()
+                          refresh()
+                      }
+                      .setNegativeButton("Annuler", null)
+                      .show()
+              }
+
+              private fun loadM3u(link: String) {
+                  Toast.makeText(this, "Chargement...", Toast.LENGTH_SHORT).show()
+                  Thread {
+                      try {
+                          val conn = URL(link).openConnection() as HttpURLConnection
+                          conn.connectTimeout = 15000
+                          conn.readTimeout = 30000
+                          conn.instanceFollowRedirects = true
+                          val text = conn.inputStream.bufferedReader().use { it.readText() }
+                          val found = parseM3u(text)
+                          runOnUiThread {
+                              val known = all.map { it.url }.toSet()
+                              val fresh = found.filter { it.url !in known }
+                              all.addAll(fresh)
+                              save()
+                              refresh()
+                              Toast.makeText(this, "${fresh.size} chaines ajoutees", Toast.LENGTH_LONG).show()
+                          }
+                      } catch (e: Exception) {
+                          runOnUiThread {
+                              Toast.makeText(this, "Erreur : ${e.message}", Toast.LENGTH_LONG).show()
+                          }
+                      }
+                  }.start()
+              }
+
+              override fun onBackPressed() {
+                  if (fullscreen) setFullscreen(false) else super.onBackPressed()
+              }
+
+              override fun onStop() {
+                  player?.pause()
+                  super.onStop()
               }
 
               override fun onDestroy() {

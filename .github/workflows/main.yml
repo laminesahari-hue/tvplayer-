@@ -10,21 +10,37 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21
 
-      - uses: gradle/actions/setup-gradle@v4
+      - name: Prepare web files
+        run: |
+          mkdir -p www
+          rsync -a --exclude='.git' --exclude='.github' --exclude='www' ./ www/
+          ls www
 
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
+      - name: Create Android project
+        run: |
+          npm init -y
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npx cap init "TV Player" com.lamine.tvplayer --web-dir=www
+          npx cap add android
+          npx cap sync android
 
-      - name: Build debug APK
-        run: ./gradlew assembleDebug
+      - name: Build APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: tvplayer-apk
-          path: "**/build/outputs/apk/debug/*.apk"
+          path: android/app/build/outputs/apk/debug/*.apk

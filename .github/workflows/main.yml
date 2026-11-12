@@ -21,8 +21,7 @@ jobs:
 
       - name: Create project files
         run: |
-          mkdir -p app/src/main/java/com/example/tvplayer
-          mkdir -p app/src/main/res/drawable
+
 
           cat > settings.gradle.kts << 'EOF'
           pluginManagement {

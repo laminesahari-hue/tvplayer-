@@ -2064,7 +2064,7 @@ jobs:
                   for (a in accounts()) {
                       fetchXtream(a, true)
                       n++
-        - name: Build APK
+      - name: Build APK
         run: gradle assembleDebug
       - name: Upload APK
         uses: actions/upload-artifact@v4

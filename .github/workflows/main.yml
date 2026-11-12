@@ -2063,5 +2063,188 @@ jobs:
                   var n = 0
                   for (a in accounts()) {
                       fetchXtream(a, true)
+                      n++                  }
+                  for (u in playlists()) {
+                      fetchPlaylist(u, true)
                       n++
-   
+                  }
+                  if (n == 0) {
+                      toast(tr("Aucune source enregistrée", "No saved source", "لا يوجد مصدر محفوظ", "Ninguna fuente guardada"))
+                  }
+                  fetchEpg(true)
+              }
+
+              // ---------- playlists et guide ----------
+
+              private fun m3uLinkDialog() {
+                  val u = field(tr("Lien de la playlist (.m3u)", "Playlist link (.m3u)", "رابط قائمة التشغيل (.m3u)", "Enlace de la lista (.m3u)"))
+                  dialog().setTitle(tr("Importer une playlist", "Import a playlist", "استيراد قائمة تشغيل", "Importar lista")).setView(form(u))
+                      .setPositiveButton(tr("Importer", "Import", "استيراد", "Importar")) { _, _ ->
+                          val url = u.text.toString().trim()
+                          if (url.isNotEmpty()) {
+                              val l = playlists()
+                              if (!l.contains(url)) {
+                                  l.add(url)
+                                  savePlaylists(l)
+                              }
+                              fetchPlaylist(url, true)
+                          }
+                      }
+                      .setNegativeButton(tr("Annuler", "Cancel", "إلغاء", "Cancelar"), null).show()
+              }
+
+              private fun fetchPlaylist(link: String, manual: Boolean) {
+                  if (manual) toast(tr("Chargement…", "Loading…", "جارٍ التحميل…", "Cargando…"))
+                  pool.execute {
+                      try {
+                          val text = httpGet(link)
+                          val pl = parseM3u(text)
+                          runOnUiThread { mergeChannels(pl, manual) }
+                      } catch (e: Exception) {
+                          runOnUiThread {
+                              if (manual) toast(tr("Erreur : ", "Error: ", "خطأ: ", "Error: ") + e.message)
+                          }
+                      }
+                  }
+              }
+
+              private fun mergeChannels(pl: Playlist, manual: Boolean) {
+                  val byUrl = HashMap<String, Channel>()
+                  for (c in all) byUrl[c.url] = c
+                  var added = 0
+                  for (n in pl.channels) {
+                      val old = byUrl[n.url]
+                      if (old == null) {
+                          all.add(n)
+                          byUrl[n.url] = n
+                          added++
+                      } else {
+                          old.group = n.group
+                          old.logo = n.logo
+                          old.tvgId = n.tvgId
+                      }
+                  }
+                  if (pl.epgUrl.isNotBlank() && (prefs.getString("epg", "") ?: "").isBlank()) {
+                      prefs.edit().putString("epg", pl.epgUrl).apply()
+                  }
+                  save()
+                  refresh(true)
+                  if (manual) {
+                      toast(added.toString() + tr(" nouvelles chaînes", " new channels", " قنوات جديدة", " canales nuevos"))
+                  }
+                  fetchEpg(false)
+              }
+
+              private fun epgSources(): List<String> {
+                  val out = LinkedHashSet<String>()
+                  val m = prefs.getString("epg", "") ?: ""
+                  if (m.isNotBlank()) out.add(m)
+                  for (a in accounts()) out.add(a.server + "/xmltv.php?" + xtreamAuth(a))
+                  return out.toList()
+              }
+
+              private fun fetchEpg(manual: Boolean) {
+                  val sources = epgSources()
+                  if (sources.isEmpty()) {
+                      if (manual) toast(tr("Aucune source de guide TV", "No TV guide source", "لا يوجد مصدر لدليل البرامج", "Sin fuente de guía TV"))
+                      return
+                  }
+                  val wanted = HashSet<String>()
+                  for (c in all) {
+                      if (c.tvgId.isNotBlank()) wanted.add(c.tvgId.lowercase())
+                  }
+                  if (wanted.isEmpty()) {
+                      if (manual) toast(tr("Vos chaînes n'ont pas de tvg-id", "Your channels have no tvg-id", "قنواتك بلا tvg-id", "Tus canales no tienen tvg-id"))
+                      return
+                  }
+                  if (manual) toast(tr("Chargement du guide TV…", "Loading TV guide…", "جارٍ تحميل دليل البرامج…", "Cargando guía TV…"))
+                  pool.execute {
+                      val merged = HashMap<String, MutableList<Programme>>()
+                      var okCount = 0
+                      var err = ""
+                      for (url in sources) {
+                          try {
+                              val c = URL(url).openConnection() as HttpURLConnection
+                              c.connectTimeout = 15000
+                              c.readTimeout = 120000
+                              c.instanceFollowRedirects = true
+                              c.setRequestProperty("User-Agent", "Mozilla/5.0")
+                              val r = c.inputStream.use { Epg.parse(it, wanted) }
+                              for ((k, v) in r) merged.getOrPut(k) { mutableListOf() }.addAll(v)
+                              okCount++
+                          } catch (e: Exception) {
+                              err = e.message ?: ""
+                          }
+                      }
+                      for (l in merged.values) l.sortBy { it.start }
+                      if (okCount > 0) Epg.data = merged
+                      runOnUiThread {
+                          adapter.notifyDataSetChanged()
+                          if (banner.visibility == View.VISIBLE) showBanner(null, controlsVisible)
+                          if (manual) {
+                              if (okCount > 0) {
+                                  toast(tr("Guide TV : ", "TV guide: ", "دليل البرامج: ", "Guía TV: ") + merged.size)
+                              } else {
+                                  toast(tr("Erreur guide : ", "Guide error: ", "خطأ في الدليل: ", "Error de guía: ") + err)
+                              }
+                          }
+                      }
+                  }
+              }
+
+              private fun pickFile() {
+                  val i = Intent(Intent.ACTION_OPEN_DOCUMENT)
+                  i.addCategory(Intent.CATEGORY_OPENABLE)
+                  i.type = "*/*"
+                  startActivityForResult(i, 11)
+              }
+
+              override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+                  super.onActivityResult(requestCode, resultCode, data)
+                  if (requestCode == 11 && resultCode == RESULT_OK) {
+                      val uri = data?.data ?: return
+                      pool.execute {
+                          try {
+                              val stream = contentResolver.openInputStream(uri)
+                              val text = stream!!.bufferedReader().use { it.readText() }
+                              val pl = parseM3u(text)
+                              runOnUiThread { mergeChannels(pl, true) }
+                          } catch (e: Exception) {
+                              runOnUiThread { toast(tr("Erreur : ", "Error: ", "خطأ: ", "Error: ") + e.message) }
+                          }
+                      }
+                  }
+              }
+
+              // ---------- cycle de vie ----------
+
+              override fun onStart() {
+                  super.onStart()
+                  if (resumeOnStart) player?.play()
+              }
+
+              override fun onStop() {
+                  resumeOnStart = player?.playWhenReady == true
+                  if (!inPip) player?.pause()
+                  super.onStop()
+              }
+
+              override fun onDestroy() {
+                  ui.removeCallbacksAndMessages(null)
+                  player?.release()
+                  player = null
+                  pool.shutdownNow()
+                  super.onDestroy()
+              }
+          }
+          EOF
+
+      - name: Build APK
+        run: gradle assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: tvplayer-apk
+          path: app/build/outputs/apk/debug/*.apk
+                                                                                                                                       

@@ -7,6 +7,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -23,6 +25,8 @@ jobs:
         run: |
           mkdir -p app/src/main/java/com/example/tvplayer
           mkdir -p app/src/main/res/drawable
+
+          echo "MIIKLAIBAzCCCdYGCSqGSIb3DQEHAaCCCccEggnDMIIJvzCCBaYGCSqGSIb3DQEHAaCCBZcEggWTMIIFjzCCBYsGCyqGSIb3DQEMCgECoIIFQDCCBTwwZgYJKoZIhvcNAQUNMFkwOAYJKoZIhvcNAQUMMCsEFJE4Jcgnmh/o0lRkVhNT+5kaWyIjAgInEAIBIDAMBggqhkiG9w0CCQUAMB0GCWCGSAFlAwQBKgQQk/Sn227XzySxP14BBZkdIASCBNBK92COntMT9j7C18TvvaJXkB9YNBFJCpbyte5OV2wZmg5CnYM5/vzKtWxhI/PC+3gjVEJKLsrFvbKe3dzI9nforlAgAsQq1D2nR3iZQxGSa4+nD2jlEr4nyXyYq7UwHhTmrj5ew6b6XytMTmQd5atvEE0HKeKZva4pEhqI129Ne4aDNNUjLSWg+0wwp0EsPAx9nvnwiwf1X7rtfGNQP/5qu96ldDMspI+qtBSXITkS1+5gHOoz/179P7v9Zjw/eMgVva4HUBEas46jM73/67P6H/J7GMLrSZDdCDBY0bb7vl6oN3Bus/KkrzdoA1418rBC/akFcJ8MKzLDe1kkmuOnGfZPwEEBpRO2QSCwx7DxCsMGEPMAMd21vOHjJz3qUQu5CwRu4AztXxTa9obFgCacafVLtYBo2bjES9e798L5IJ3IlO380LVUfcOxGoyAW4wI1VrQHFeKcDKcM+NZR4/HSQWaSBfGdc3nZ82PB2IGtlr3GuB/Mrg7Xddf5YlQhDu4zw+LxAXNSo8FxIJVDJoSZWj1HNd+y+imV7RBGDQ7SKQdS47ynodOx7oZjznaaCCk4UTF7Dv2wQBvr6AFCTZgVUt0RLaFfh8Cs1OBZS/+bcGl+86UTGKtUMlDMOJr6OpTNJOc4Fz3Mh5NSjy5RVx1UarydP1j8pbkfQXDPARytPQAgFsqtZQ/eWslkirCXgC9HqC7pO/sV0wofm3S+wbMJR8qNq+4yV2QVK9YFuvRnDy0YiHxhU0cL4mLqHj+ARPd1J5Z/uuGac+fFqYQwAb6kYpfVpfnGosQZp/kOmgRwCBcugHe3acQ0BtrZhngx0caRr8bcMbJHtx4wgAAbs7dEsrbLZqPYyCq4/yrX7pxOvOr2E4ucakmBmJLpipzF69q7oBogaa9JJd2EKiRT6cOOiGwQUYvuixGb2H3aJ2Y3xhyEcSkzlj+mUJ0VPhm/Ek5hSZMg9Ydpa/k80w5AyyAdbfgeBUZv5fuoO0mveSeTj4rzzfH6MvzFqXJ85Qa6P2etIYNGCk8Sbo0JiJSH5EZhmtFXfd0044bq5gVRDlW2qUSv+gs6QNWdgGm48+cvtoQjQwEjTsfl6XziqNLvXghBY42gfqvMVeLToA6XlsaOIL1Z9KLWR31dvF8oF33L13wSeRPZ//pCKr9ZOlAF8SZVsXFwVhtJj8m3j8LDbWX4mjm3vIR0XHqpIFkvzNYIZZEG2YezCFd/fo6GjxQBs6l/FinsGNkme9yKJK+v+qYXg1iOOAuXi3w4j1zTL1c3WSmElT/Ymbzh556O9BfqFAmAlyG8uopeH43oYoka4fDp3LbcecWSDlqfQm5vgtWtGKBVLvby8QY9CRdTBFROsbzc2Cpdv7TWYcS/SvXKyN703kck7GUskmiqRz/AraCj7LItPR1itMIMl21RxenoQEBUnU0E1H5LLZoPzFVz+jfpQA1BJ2LGMsXYTaIKK+ffXCC6YTv9q9Dk9sNl2ghp5wEdH/6ACzYmLkWTBivhY8Jk+BDi2KiDMNokyvccrt06xiBOp6eUY2mRbRYt7Wg8iqiCduYTPCZifXQdlHK4kXUqChOdF1+LaU42mKiFsBemR56vkuAd/2JhFj5RB97G+RAK0JHTcz6hQfMRwA1ZluC1zE4MBMGCSqGSIb3DQEJFDEGHgQAdAB2MCEGCSqGSIb3DQEJFTEUBBJUaW1lIDE3OTQ2MDgzMDQ0MjkwggQRBgkqhkiG9w0BBwagggQCMIID/gIBADCCA/cGCSqGSIb3DQEHATBmBgkqhkiG9w0BBQ0wWTA4BgkqhkiG9w0BBQwwKwQUipNL4NoDPSJ/7HSidwukEVpbxzoCAicQAgEgMAwGCCqGSIb3DQIJBQAwHQYJYIZIAWUDBAEqBBA9SN0BJusdSjyk84U2UpWWgIIDgFSdfY1NZ2jvRuExKuUqAqZ2rWCSFz198fyPzoD3FmLFBWRF9vyvZTFmv79blO0hJThmzFd3EVkzV07xJQPR4b86v3KfKEPGlo0C+MN10sjdbUvq3EKnWmJY21LMIE0M4P43RziqRjz2FywiJompA+Z/bAO3PPVeUQ06zkgSHvMc0U5tGakaOdlnbIjEYfkaRLCHIcep9mObcfCc93j0LP+MP0hBMLxWeAxXNRzM560lBlBVnwshTkVl8i7j7mYrSnyGJPxRCIe9LQ7pUNwWC4ctIjE1uixkaY3Mhc757de+dV/bXP7oKvLSmBvivPTwZFtHWez56rCeOTXERlkikTndZRCkyRyViCS+6B+uxbEbTqTgCThIlwnxxNYXAF/MPlpqtxegFGYOu1DCL/xYua/Jg1AKG47Qsy8VZuYZuBm7qNx3ZwrjWFnsGgzpFVya0AHNQ0ZlAEpn5TMN+8Hs/KTkTIOCP2EQlrtP1nrylc411M6MOUZXUv0GTC8/A64SISHfB0JFJL6buxIuCkVknUbnvpMxzlCkJFjlTq3olt0c+nd2i8t5FIgldr3gT+74p9rIgiSNQKwpWScUSpnee07++4GaU3fcuvBRzrcgwf47MKZ/dONf/pCiN50Sk1YZ8DI6Er7vehvQo02yOMkvGof0k4gGsGAG0XpRDPZhoDAaaxTpcPfT36L+saVaemt4lItG7z2lvdQNi5efNkZl1Ioc3kUA5DJtNDIZJ+3EEawxAnqH6xFshpJivf2yHmyZWiRxZeNDpgrnWPdgME5X35JSx4acpvIjYBBGqdxdpnl/WTeFllfk+s16BHQ/5QTeZldCiCj/ZWDRXgVOqE/hgflZEOonZLATl5eouFnyuEPIPE/TITdPESAUMKMepEirc0wlMsgOqubW0D7JfS67gJIukee7AFFgkNMFQWOzV+BhS62Nrd+cYp+DjH5EqwoxdHgsUHXzkEvB4M+zdc2/s3QPJ0CWs2kpLSabtFax9MYfw9a+xiKYuek7jvBTz1vKZjI4qozdI9nrLCRRwifEZ1f0XcG0dkGmQmrnEwuQ/Q9WCtIRBZDa0pFUEBl6U1MGMKgLF4IX0RqtZwhCFsQhHiJP2l+09SixLJTzaXSKQo3GdLGZArTgHfIaOhovCudKCAkdGpjcb6lvG9TRjapRDeKk664sZ0YYDDrYsdAJsK03ME0wMTANBglghkgBZQMEAgEFAAQgdcbq4ZKf12gmELvzCnQQxuLA5W9M9gVhct1TQw35OoQEFM4opSxqf7/ViaeaWGlg0agsgNgmAgInEA==" | base64 -d > app/tv.keystore
 
           cat > settings.gradle.kts << 'EOF'
           pluginManagement {
@@ -51,7 +55,7 @@ jobs:
 
           cat > gradle.properties << 'EOF'
           android.useAndroidX=true
-          org.gradle.jvmargs=-Xmx2g
+          org.gradle.jvmargs=-Xmx3g
           EOF
 
           cat > app/build.gradle.kts << 'EOF'
@@ -68,8 +72,23 @@ jobs:
                   applicationId = "com.example.tvplayer"
                   minSdk = 21
                   targetSdk = 34
-                  versionCode = 5
-                  versionName = "5.0"
+                  versionCode = 6
+                  versionName = "6.0"
+              }
+
+              signingConfigs {
+                  create("fixed") {
+                      storeFile = file("tv.keystore")
+                      storePassword = "tvplayer"
+                      keyAlias = "tv"
+                      keyPassword = "tvplayer"
+                  }
+              }
+
+              buildTypes {
+                  getByName("debug") {
+                      signingConfig = signingConfigs.getByName("fixed")
+                  }
               }
 
               compileOptions {
@@ -126,6 +145,7 @@ jobs:
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET" />
+              <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
               <uses-feature android:name="android.software.leanback" android:required="false" />
               <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
               <application
@@ -133,6 +153,7 @@ jobs:
                   android:icon="@drawable/ic_launcher"
                   android:banner="@drawable/ic_banner"
                   android:supportsRtl="true"
+                  android:largeHeap="true"
                   android:usesCleartextTraffic="true"
                   android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
                   <activity
@@ -163,6 +184,26 @@ jobs:
               var fav: Boolean = false,
               var tvgId: String = "",
               var src: String = ""
+          )
+
+          data class Vod(
+              val id: String,
+              var name: String,
+              val poster: String,
+              val group: String,
+              val kind: Int,
+              val ext: String,
+              val src: String,
+              val rating: String = ""
+          )
+
+          data class Episode(
+              val id: String,
+              val title: String,
+              val season: Int,
+              val num: Int,
+              val ext: String,
+              val plot: String
           )
 
           data class Playlist(val channels: List<Channel>, val epgUrl: String)
@@ -238,7 +279,7 @@ jobs:
           import java.util.zip.GZIPInputStream
           import org.xmlpull.v1.XmlPullParser
 
-          data class Programme(val start: Long, val stop: Long, val title: String)
+          data class Programme(val start: Long, val stop: Long, val title: String, val desc: String = "")
 
           object Epg {
               @Volatile
@@ -258,6 +299,13 @@ jobs:
                   val cur = l.firstOrNull { it.start <= t && t < it.stop }
                   val from = if (cur != null) cur.stop else t
                   return l.firstOrNull { it.start >= from }
+              }
+
+              fun list(id: String): List<Programme> {
+                  if (id.isBlank()) return emptyList()
+                  val l = data[id.lowercase()] ?: return emptyList()
+                  val t = System.currentTimeMillis()
+                  return l.filter { it.stop > t }
               }
 
               private fun parseTime(s: String?, f1: SimpleDateFormat, f2: SimpleDateFormat): Long {
@@ -302,6 +350,7 @@ jobs:
                   var start = 0L
                   var stop = 0L
                   var title = ""
+                  var desc = ""
 
                   var ev = parser.eventType
                   while (ev != XmlPullParser.END_DOCUMENT) {
@@ -313,13 +362,16 @@ jobs:
                               start = parseTime(parser.getAttributeValue(null, "start"), f1, f2)
                               stop = parseTime(parser.getAttributeValue(null, "stop"), f1, f2)
                               title = ""
+                              desc = ""
                           } else if (n == "title" && inProg && title.isEmpty()) {
                               title = parser.nextText().trim()
+                          } else if (n == "desc" && inProg && desc.isEmpty()) {
+                              desc = parser.nextText().trim().take(300)
                           }
                       } else if (ev == XmlPullParser.END_TAG) {
                           if (parser.name == "programme") {
                               if (inProg && wanted.contains(ch) && stop > minT && start < maxT) {
-                                  out.getOrPut(ch) { mutableListOf() }.add(Programme(start, stop, title))
+                                  out.getOrPut(ch) { mutableListOf() }.add(Programme(start, stop, title, desc))
                               }
                               inProg = false
                           }
@@ -338,6 +390,7 @@ jobs:
           import android.app.Activity
           import android.app.AlertDialog
           import android.app.PictureInPictureParams
+          import android.app.UiModeManager
           import android.content.ClipData
           import android.content.ClipboardManager
           import android.content.Context
@@ -360,6 +413,8 @@ jobs:
           import android.text.InputType
           import android.text.TextUtils
           import android.text.TextWatcher
+          import android.util.JsonReader
+          import android.util.JsonToken
           import android.util.LruCache
           import android.util.Rational
           import android.view.Gravity
@@ -376,21 +431,28 @@ jobs:
           import android.widget.ImageView
           import android.widget.LinearLayout
           import android.widget.ProgressBar
+          import android.widget.ScrollView
           import android.widget.TextView
           import android.widget.Toast
           import androidx.media3.common.AudioAttributes
+          import androidx.media3.common.C
           import androidx.media3.common.MediaItem
           import androidx.media3.common.PlaybackException
           import androidx.media3.common.Player
+          import androidx.media3.common.TrackSelectionOverride
+          import androidx.media3.common.VideoSize
           import androidx.media3.datasource.DefaultHttpDataSource
           import androidx.media3.exoplayer.DefaultLoadControl
           import androidx.media3.exoplayer.ExoPlayer
           import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
           import androidx.media3.ui.AspectRatioFrameLayout
           import androidx.media3.ui.PlayerView
+          import androidx.recyclerview.widget.GridLayoutManager
           import androidx.recyclerview.widget.LinearLayoutManager
           import androidx.recyclerview.widget.RecyclerView
+          import java.io.BufferedReader
           import java.io.File
+          import java.io.InputStreamReader
           import java.net.HttpURLConnection
           import java.net.URL
           import java.text.SimpleDateFormat
@@ -413,11 +475,21 @@ jobs:
               val star: TextView
           ) : RecyclerView.ViewHolder(v)
 
+          class VodHolder(
+              v: View,
+              val card: LinearLayout,
+              val img: ImageView,
+              val letter: TextView,
+              val title: TextView,
+              val sub: TextView
+          ) : RecyclerView.ViewHolder(v)
+
           class MainActivity : Activity() {
 
               private val BG = Color.parseColor("#0E1117")
               private val CARD = Color.parseColor("#181C25")
               private val CARD_FOCUS = Color.parseColor("#2B3342")
+              private val CARD_ACTIVE = Color.parseColor("#1D2B47")
               private var ACCENT = Color.parseColor("#4F8CFF")
               private val SUB = Color.parseColor("#98A0AE")
               private val F_FAV = "~fav"
@@ -433,9 +505,14 @@ jobs:
 
               private val ui = Handler(Looper.getMainLooper())
               private val pool = Executors.newFixedThreadPool(4)
-              private val logos = LruCache<String, Bitmap>(150)
+              private val logos = object : LruCache<String, Bitmap>(24 * 1024 * 1024) {
+                  override fun sizeOf(key: String, value: Bitmap): Int = value.byteCount
+              }
               private val failed = HashSet<String>()
               private val timeFmt = SimpleDateFormat("HH:mm", Locale.getDefault())
+              private val dayFmt = SimpleDateFormat("EEE HH:mm", Locale.getDefault())
+
+              private val tv: Boolean by lazy { detectTv() }
 
               private var langIdx = 1
               private var player: ExoPlayer? = null
@@ -444,6 +521,7 @@ jobs:
               private lateinit var playerFrame: FrameLayout
               private lateinit var playerView: PlayerView
               private lateinit var overlay: TextView
+              private lateinit var numberBadge: TextView
               private lateinit var banner: LinearLayout
               private lateinit var bannerLogo: ImageView
               private lateinit var bannerLetter: TextView
@@ -451,24 +529,54 @@ jobs:
               private lateinit var bannerNow: TextView
               private lateinit var bannerBar: ProgressBar
               private lateinit var bannerNext: TextView
+              private lateinit var bannerClock: TextView
+              private lateinit var bannerInfo: TextView
               private lateinit var controls: HorizontalScrollView
               private lateinit var playBtn: TextView
               private lateinit var listBtn: TextView
+              private lateinit var seekBack: TextView
+              private lateinit var seekFwd: TextView
               private lateinit var panel: LinearLayout
+              private lateinit var tabs: LinearLayout
               private lateinit var search: EditText
+              private lateinit var chipsScroll: HorizontalScrollView
               private lateinit var chips: LinearLayout
+              private lateinit var groupScroll: ScrollView
+              private lateinit var groupCol: LinearLayout
               private lateinit var recycler: RecyclerView
               private lateinit var emptyText: TextView
+              private lateinit var details: LinearLayout
+              private lateinit var detTitle: TextView
+              private lateinit var detTime: TextView
+              private lateinit var detDesc: TextView
+              private lateinit var quickScroll: ScrollView
+              private lateinit var quickList: LinearLayout
               private lateinit var adapter: ChannelAdapter
+              private lateinit var vodAdapter: VodAdapter
 
               private var all = mutableListOf<Channel>()
               private var shown = listOf<Channel>()
               private var numbers = HashMap<String, Int>()
               private var recent = mutableListOf<String>()
+              private var hiddenSet = HashSet<String>()
+              private val groupViews = HashMap<String, TextView>()
+
+              private var vods = mutableListOf<Vod>()
+              private var shownVod = listOf<Vod>()
+              private var vodLoaded = false
+              private var section = 0
+              private var vfilter = ""
+              private var posterW = 0
+              private var modeKey = -1
+              private var isVod = false
+              private var vodTitle = ""
+              private var liveUrl = ""
+
               private var filter = ""
               private var currentUrl = ""
               private var previousUrl = ""
               private var panelOpen = false
+              private var quickOpen = false
               private var forcedLandscape = false
               private var inPip = false
               private var resizeIndex = 0
@@ -476,6 +584,8 @@ jobs:
               private var digits = ""
               private var controlsVisible = false
               private var resumeOnStart = false
+              private var muted = false
+              private var videoInfo = ""
               private var downX = 0f
               private var downY = 0f
               private var lastTapTime = 0L
@@ -486,6 +596,7 @@ jobs:
                   controlsVisible = false
               }
               private val hideOverlay = Runnable { overlay.visibility = View.GONE }
+              private val hideBadge = Runnable { numberBadge.visibility = View.GONE }
               private val tapRunnable = Runnable { onSingleTap() }
               private val sleepRunnable = Runnable {
                   player?.pause()
@@ -496,17 +607,48 @@ jobs:
                   digits = ""
                   if (n != null) {
                       val c = all.getOrNull(n - 1)
-                      if (c != null) play(c)
-                      else showOverlay(tr("Chaîne introuvable", "Channel not found", "القناة غير موجودة", "Canal no encontrado"))
+                      if (c != null) {
+                          play(c)
+                      } else {
+                          showOverlay(tr("Chaîne introuvable", "Channel not found", "القناة غير موجودة", "Canal no encontrado"))
+                      }
                   }
               }
               private val ticker = object : Runnable {
                   override fun run() {
-                      adapter.notifyDataSetChanged()
-                      if (banner.visibility == View.VISIBLE) showBanner(null, controlsVisible)
+                      if (!panelOpen && !recycler.isComputingLayout) {
+                          if (section == 0) adapter.notifyDataSetChanged()
+                      }
+                      if (banner.visibility == View.VISIBLE && !isVod) showBanner(null, controlsVisible)
                       ui.postDelayed(this, 60000)
                   }
               }
+              private val vodTicker = object : Runnable {
+                  override fun run() {
+                      if (isVod && player != null) {
+                          if (banner.visibility == View.VISIBLE) updateVodProgress()
+                          ui.postDelayed(this, 1000)
+                      }
+                  }
+              }
+
+              // ---------- plateforme ----------
+
+              private fun detectTv(): Boolean {
+                  val pm = packageManager
+                  if (pm.hasSystemFeature("android.software.leanback")) return true
+                  if (pm.hasSystemFeature("amazon.hardware.fire_tv")) return true
+                  return try {
+                      val um = getSystemService(Context.UI_MODE_SERVICE) as UiModeManager
+                      um.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION
+                  } catch (e: Exception) {
+                      false
+                  }
+              }
+
+              private fun ts(v: Float): Float = if (tv) v * 1.25f else v
+
+              private fun ph(base: Int): Int = if (tv) base + 10 else base
 
               // ---------- langue ----------
 
@@ -533,6 +675,13 @@ jobs:
                       "es" -> 3
                       else -> 1
                   }
+              }
+
+              private fun langCode(): String = when (langIdx) {
+                  0 -> "fr"
+                  2 -> "ar"
+                  3 -> "es"
+                  else -> "en"
               }
 
               private fun tr(fr: String, en: String, ar: String, es: String): String = when (langIdx) {
@@ -562,7 +711,34 @@ jobs:
                   return g
               }
 
+              private fun rowBg(active: Boolean, focused: Boolean): GradientDrawable {
+                  val g = GradientDrawable()
+                  g.cornerRadius = dp(12).toFloat()
+                  if (focused) {
+                      g.setColor(CARD_FOCUS)
+                      g.setStroke(dp(2), ACCENT)
+                  } else if (active) {
+                      g.setColor(CARD_ACTIVE)
+                      g.setStroke(dp(1), ACCENT)
+                  } else {
+                      g.setColor(CARD)
+                  }
+                  return g
+              }
+
               private fun fmtTime(ms: Long): String = timeFmt.format(Date(ms))
+
+              private fun fmtDur(ms: Long): String {
+                  val s = ms / 1000
+                  val h = s / 3600
+                  val m = (s % 3600) / 60
+                  val sec = s % 60
+                  return if (h > 0) {
+                      String.format(Locale.US, "%d:%02d:%02d", h, m, sec)
+                  } else {
+                      String.format(Locale.US, "%d:%02d", m, sec)
+                  }
+              }
 
               private fun progressOf(p: Programme): Int {
                   val total = p.stop - p.start
@@ -582,7 +758,7 @@ jobs:
               private fun pill(label: String, selected: Boolean): TextView {
                   val t = TextView(this)
                   t.text = label
-                  t.textSize = 14f
+                  t.textSize = ts(14f)
                   t.setTextColor(Color.WHITE)
                   t.gravity = Gravity.CENTER
                   t.setPadding(dp(14), 0, dp(14), 0)
@@ -627,12 +803,17 @@ jobs:
 
               private fun js(o: JSONObject, k: String): String = if (o.isNull(k)) "" else o.optString(k, "").trim()
 
+              private fun userAgent(): String {
+                  val u = prefs.getString("ua", "") ?: ""
+                  return if (u.isBlank()) "Mozilla/5.0 (Linux; Android) TVPlayer/6.0" else u
+              }
+
               private fun httpGet(link: String, readTimeout: Int = 60000): String {
                   val c = URL(link).openConnection() as HttpURLConnection
                   c.connectTimeout = 15000
                   c.readTimeout = readTimeout
                   c.instanceFollowRedirects = true
-                  c.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android) TVPlayer/5.0")
+                  c.setRequestProperty("User-Agent", userAgent())
                   return c.inputStream.bufferedReader().use { it.readText() }
               }
 
@@ -647,9 +828,12 @@ jobs:
                   ACCENT = Color.parseColor(accentColors[ai])
                   window.statusBarColor = BG
                   window.navigationBarColor = BG
+                  if (tv) requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
 
+                  hiddenSet = loadHidden()
                   load()
                   currentUrl = prefs.getString("last", "") ?: ""
+                  liveUrl = currentUrl
                   previousUrl = prefs.getString("prev", "") ?: ""
                   recent = (prefs.getString("recent", "") ?: "").lines().filter { it.isNotBlank() }.toMutableList()
                   resizeIndex = prefs.getInt("resize", 0).coerceIn(0, 2)
@@ -661,8 +845,10 @@ jobs:
 
                   buildPlayerArea()
                   buildPanel()
+                  buildQuickPanel()
                   root.addView(playerFrame)
                   root.addView(panel)
+                  root.addView(quickScroll, FrameLayout.LayoutParams(dp(320), -1))
                   setContentView(root)
 
                   initPlayer()
@@ -671,7 +857,7 @@ jobs:
                   root.requestFocus()
 
                   val start = all.firstOrNull { it.url == currentUrl } ?: all.firstOrNull()
-                  if (start != null) play(start)
+                  if (start != null && prefs.getBoolean("autoplay", true)) play(start)
                   fetchEpg(false)
                   autoConnect()
                   ui.postDelayed(ticker, 60000)
@@ -700,7 +886,7 @@ jobs:
 
                   overlay = TextView(this)
                   overlay.setTextColor(Color.WHITE)
-                  overlay.textSize = 14f
+                  overlay.textSize = ts(14f)
                   overlay.setPadding(dp(12), dp(6), dp(12), dp(6))
                   overlay.background = rounded(Color.parseColor("#99000000"), 8)
                   overlay.visibility = View.GONE
@@ -708,6 +894,17 @@ jobs:
                   olp.gravity = Gravity.TOP or Gravity.START
                   olp.setMargins(dp(10), dp(10), dp(10), 0)
                   playerFrame.addView(overlay, olp)
+
+                  numberBadge = TextView(this)
+                  numberBadge.textSize = ts(30f)
+                  numberBadge.typeface = Typeface.DEFAULT_BOLD
+                  numberBadge.setTextColor(Color.WHITE)
+                  numberBadge.setShadowLayer(6f, 0f, 2f, Color.BLACK)
+                  numberBadge.visibility = View.GONE
+                  val nlp = FrameLayout.LayoutParams(-2, -2)
+                  nlp.gravity = Gravity.TOP or Gravity.END
+                  nlp.setMargins(dp(16), dp(14), dp(20), 0)
+                  playerFrame.addView(numberBadge, nlp)
 
                   banner = LinearLayout(this)
                   banner.orientation = LinearLayout.VERTICAL
@@ -726,7 +923,7 @@ jobs:
                   logoBox.background = rounded(Color.parseColor("#33FFFFFF"), 10)
                   bannerLetter = TextView(this)
                   bannerLetter.gravity = Gravity.CENTER
-                  bannerLetter.textSize = 18f
+                  bannerLetter.textSize = ts(18f)
                   bannerLetter.typeface = Typeface.DEFAULT_BOLD
                   bannerLetter.setTextColor(Color.WHITE)
                   logoBox.addView(bannerLetter, FrameLayout.LayoutParams(-1, -1))
@@ -740,19 +937,19 @@ jobs:
                   col.orientation = LinearLayout.VERTICAL
                   col.setPadding(dp(12), 0, dp(12), 0)
                   bannerTitle = TextView(this)
-                  bannerTitle.textSize = 17f
+                  bannerTitle.textSize = ts(17f)
                   bannerTitle.typeface = Typeface.DEFAULT_BOLD
                   bannerTitle.setTextColor(Color.WHITE)
                   bannerTitle.isSingleLine = true
                   bannerTitle.ellipsize = TextUtils.TruncateAt.END
                   bannerNow = TextView(this)
-                  bannerNow.textSize = 13f
+                  bannerNow.textSize = ts(13f)
                   bannerNow.setTextColor(Color.WHITE)
                   bannerNow.isSingleLine = true
                   bannerNow.ellipsize = TextUtils.TruncateAt.END
                   bannerBar = thinBar()
                   bannerNext = TextView(this)
-                  bannerNext.textSize = 12f
+                  bannerNext.textSize = ts(12f)
                   bannerNext.setTextColor(SUB)
                   bannerNext.isSingleLine = true
                   bannerNext.ellipsize = TextUtils.TruncateAt.END
@@ -764,6 +961,20 @@ jobs:
                   col.addView(bannerBar, blp)
                   col.addView(bannerNext)
                   infoRow.addView(col, LinearLayout.LayoutParams(0, -2, 1f))
+
+                  val right = LinearLayout(this)
+                  right.orientation = LinearLayout.VERTICAL
+                  right.gravity = Gravity.END
+                  bannerClock = TextView(this)
+                  bannerClock.textSize = ts(18f)
+                  bannerClock.typeface = Typeface.DEFAULT_BOLD
+                  bannerClock.setTextColor(Color.WHITE)
+                  bannerInfo = TextView(this)
+                  bannerInfo.textSize = ts(12f)
+                  bannerInfo.setTextColor(SUB)
+                  right.addView(bannerClock)
+                  right.addView(bannerInfo)
+                  infoRow.addView(right, LinearLayout.LayoutParams(-2, -2))
                   banner.addView(infoRow, LinearLayout.LayoutParams(-1, -2))
 
                   controls = HorizontalScrollView(this)
@@ -772,20 +983,27 @@ jobs:
                   bar.orientation = LinearLayout.HORIZONTAL
                   bar.setPadding(0, dp(10), 0, 0)
                   fun add(v: TextView) {
-                      val lp = LinearLayout.LayoutParams(-2, dp(38))
+                      val lp = LinearLayout.LayoutParams(-2, dp(ph(38)))
                       lp.setMargins(dp(4), 0, dp(4), 0)
                       bar.addView(v, lp)
                   }
                   add(ctl(tr("◀ Préc.", "◀ Prev", "◀ السابقة", "◀ Ant.")) { step(-1) })
+                  seekBack = ctl("−10 s") { seekBy(-10000L) }
+                  seekBack.visibility = View.GONE
+                  add(seekBack)
                   playBtn = ctl(tr("❚❚ Pause", "❚❚ Pause", "❚❚ إيقاف", "❚❚ Pausa")) { playPause() }
                   add(playBtn)
+                  seekFwd = ctl("+10 s") { seekBy(10000L) }
+                  seekFwd.visibility = View.GONE
+                  add(seekFwd)
                   add(ctl(tr("Suiv. ▶", "Next ▶", "التالية ▶", "Sig. ▶")) { step(1) })
                   add(ctl(tr("↺ Dernière", "↺ Last", "↺ الأخيرة", "↺ Última")) { lastChannel() })
                   add(ctl(tr("Format", "Aspect", "النسبة", "Formato")) { cycleResize() })
                   add(ctl(tr("⛶ Écran", "⛶ Screen", "⛶ ملء الشاشة", "⛶ Pantalla")) { toggleFullscreen() })
-                  listBtn = ctl(tr("☰ Chaînes", "☰ Channels", "☰ القنوات", "☰ Canales")) { openPanel() }
+                  listBtn = ctl(tr("☰ Chaînes", "☰ Browse", "☰ التصفح", "☰ Explorar")) { openPanel() }
                   add(listBtn)
-                  add(ctl("PiP") { enterPip() })
+                  add(ctl("⋮ " + tr("Options", "Options", "خيارات", "Opciones")) { openQuick() })
+                  if (!tv) add(ctl("PiP") { enterPip() })
                   add(ctl("⚙") { menuDialog() })
                   controls.addView(bar)
                   controls.visibility = View.GONE
@@ -805,11 +1023,17 @@ jobs:
                               val dx = ev.x - downX
                               val dy = ev.y - downY
                               if (abs(dy) > dp(70) && abs(dy) > abs(dx) * 1.5f) {
-                                  if (dy < 0) step(1) else step(-1)
+                                  if (!isVod) {
+                                      if (dy < 0) step(1) else step(-1)
+                                  }
                               } else if (abs(dx) > dp(90) && abs(dx) > abs(dy) * 1.5f) {
                                   if (isLandscape()) {
-                                      val open = if (isRtl()) dx < 0 else dx > 0
-                                      if (open) openPanel() else closePanel()
+                                      val toStart = if (isRtl()) dx < 0 else dx > 0
+                                      if (toStart) {
+                                          if (quickOpen) closeQuick() else openPanel()
+                                      } else {
+                                          if (panelOpen) closePanel() else openQuick()
+                                      }
                                   }
                               } else if (abs(dx) < dp(14) && abs(dy) < dp(14)) {
                                   val t = ev.eventTime
@@ -833,14 +1057,20 @@ jobs:
                   panel.orientation = LinearLayout.VERTICAL
                   panel.isClickable = true
 
+                  tabs = LinearLayout(this)
+                  tabs.orientation = LinearLayout.HORIZONTAL
+                  tabs.setPadding(dp(10), dp(10), dp(10), dp(2))
+                  panel.addView(tabs, LinearLayout.LayoutParams(-1, -2))
+
                   val top = LinearLayout(this)
                   top.orientation = LinearLayout.HORIZONTAL
                   top.gravity = Gravity.CENTER_VERTICAL
-                  top.setPadding(dp(12), dp(10), dp(12), dp(6))
+                  top.setPadding(dp(12), dp(6), dp(12), dp(6))
 
                   search = EditText(this)
                   search.setTextColor(Color.WHITE)
                   search.setHintTextColor(SUB)
+                  search.textSize = ts(15f)
                   search.isSingleLine = true
                   search.imeOptions = EditorInfo.IME_ACTION_DONE
                   search.setPadding(dp(16), 0, dp(16), 0)
@@ -849,16 +1079,16 @@ jobs:
                       hideKeyboard()
                       true
                   }
-                  top.addView(search, LinearLayout.LayoutParams(0, dp(44), 1f))
+                  top.addView(search, LinearLayout.LayoutParams(0, dp(ph(44)), 1f))
 
                   val settings = pill("⚙", false)
                   settings.setOnClickListener { menuDialog() }
-                  val slp = LinearLayout.LayoutParams(dp(44), dp(44))
+                  val slp = LinearLayout.LayoutParams(dp(ph(44)), dp(ph(44)))
                   slp.setMargins(dp(8), 0, dp(8), 0)
                   top.addView(settings, slp)
                   panel.addView(top, LinearLayout.LayoutParams(-1, -2))
 
-                  val chipsScroll = HorizontalScrollView(this)
+                  chipsScroll = HorizontalScrollView(this)
                   chipsScroll.isHorizontalScrollBarEnabled = false
                   chips = LinearLayout(this)
                   chips.orientation = LinearLayout.HORIZONTAL
@@ -866,34 +1096,99 @@ jobs:
                   chipsScroll.addView(chips)
                   panel.addView(chipsScroll, LinearLayout.LayoutParams(-1, -2))
 
+                  val body = LinearLayout(this)
+                  body.orientation = LinearLayout.HORIZONTAL
+
+                  groupScroll = ScrollView(this)
+                  groupScroll.isVerticalScrollBarEnabled = false
+                  groupCol = LinearLayout(this)
+                  groupCol.orientation = LinearLayout.VERTICAL
+                  groupCol.setPadding(dp(8), dp(4), dp(4), dp(12))
+                  groupScroll.addView(groupCol)
+                  body.addView(groupScroll, LinearLayout.LayoutParams(dp(170), -1))
+
                   val listFrame = FrameLayout(this)
                   recycler = RecyclerView(this)
                   recycler.layoutManager = LinearLayoutManager(this)
+                  recycler.itemAnimator = null
                   recycler.clipToPadding = false
                   recycler.setPadding(dp(10), 0, dp(10), dp(12))
                   adapter = ChannelAdapter()
+                  vodAdapter = VodAdapter()
                   recycler.adapter = adapter
                   listFrame.addView(recycler, FrameLayout.LayoutParams(-1, -1))
 
                   emptyText = TextView(this)
-                  emptyText.text = tr(
-                      "Aucune chaîne\n\nTouchez ⚙ pour ajouter une chaîne, un compte Xtream ou une playlist",
-                      "No channels\n\nTap ⚙ to add a channel, an Xtream account or a playlist",
-                      "لا توجد قنوات\n\nاضغط ⚙ لإضافة قناة أو حساب Xtream أو قائمة تشغيل",
-                      "Sin canales\n\nToca ⚙ para añadir un canal, una cuenta Xtream o una lista"
-                  )
                   emptyText.setTextColor(SUB)
                   emptyText.gravity = Gravity.CENTER
+                  emptyText.textSize = ts(14f)
                   emptyText.setPadding(dp(32), dp(32), dp(32), dp(32))
                   emptyText.visibility = View.GONE
                   listFrame.addView(emptyText, FrameLayout.LayoutParams(-1, -1))
-                  panel.addView(listFrame, LinearLayout.LayoutParams(-1, 0, 1f))
+                  body.addView(listFrame, LinearLayout.LayoutParams(0, -1, 1f))
+                  panel.addView(body, LinearLayout.LayoutParams(-1, 0, 1f))
+
+                  details = LinearLayout(this)
+                  details.orientation = LinearLayout.VERTICAL
+                  details.setPadding(dp(14), dp(10), dp(14), dp(10))
+                  details.background = rounded(Color.parseColor("#1F2430"), 12)
+                  detTitle = TextView(this)
+                  detTitle.textSize = ts(15f)
+                  detTitle.typeface = Typeface.DEFAULT_BOLD
+                  detTitle.setTextColor(Color.WHITE)
+                  detTitle.isSingleLine = true
+                  detTitle.ellipsize = TextUtils.TruncateAt.END
+                  detTime = TextView(this)
+                  detTime.textSize = ts(13f)
+                  detTime.setTextColor(ACCENT)
+                  detTime.isSingleLine = true
+                  detTime.ellipsize = TextUtils.TruncateAt.END
+                  detDesc = TextView(this)
+                  detDesc.textSize = ts(12f)
+                  detDesc.setTextColor(SUB)
+                  detDesc.maxLines = 3
+                  detDesc.ellipsize = TextUtils.TruncateAt.END
+                  details.addView(detTitle)
+                  details.addView(detTime)
+                  details.addView(detDesc)
+                  val dlp = LinearLayout.LayoutParams(-1, -2)
+                  dlp.setMargins(dp(10), dp(4), dp(10), dp(10))
+                  panel.addView(details, dlp)
 
                   search.addTextChangedListener(object : TextWatcher {
                       override fun beforeTextChanged(s: CharSequence?, st: Int, c: Int, a: Int) {}
                       override fun onTextChanged(s: CharSequence?, st: Int, b: Int, c: Int) {}
                       override fun afterTextChanged(s: Editable?) { refresh(false) }
                   })
+                  updateTabs()
+              }
+
+              private fun updateTabs() {
+                  tabs.removeAllViews()
+                  val labels = arrayOf(
+                      tr("TV", "Live TV", "البث المباشر", "TV en vivo"),
+                      tr("Films", "Movies", "أفلام", "Películas"),
+                      tr("Séries", "Series", "مسلسلات", "Series")
+                  )
+                  for (i in 0 until 3) {
+                      val p = pill(labels[i], section == i)
+                      p.setOnClickListener { setSection(i) }
+                      val lp = LinearLayout.LayoutParams(0, dp(ph(38)), 1f)
+                      lp.setMargins(dp(3), 0, dp(3), 0)
+                      tabs.addView(p, lp)
+                  }
+              }
+
+              private fun buildQuickPanel() {
+                  quickList = LinearLayout(this)
+                  quickList.orientation = LinearLayout.VERTICAL
+                  quickList.setPadding(dp(10), dp(12), dp(10), dp(12))
+                  quickScroll = ScrollView(this)
+                  quickScroll.addView(quickList)
+                  quickScroll.isClickable = true
+                  quickScroll.isVerticalScrollBarEnabled = false
+                  quickScroll.setBackgroundColor(Color.parseColor("#F20E1117"))
+                  quickScroll.visibility = View.GONE
               }
 
               private fun initPlayer() {
@@ -901,10 +1196,12 @@ jobs:
                       .setAllowCrossProtocolRedirects(true)
                       .setConnectTimeoutMs(10000)
                       .setReadTimeoutMs(15000)
-                      .setUserAgent("Mozilla/5.0 (Linux; Android) TVPlayer/5.0")
-                  val lc = DefaultLoadControl.Builder()
-                      .setBufferDurationsMs(15000, 50000, 1500, 3000)
-                      .build()
+                      .setUserAgent(userAgent())
+                  val lc = when (prefs.getInt("buffer", 1)) {
+                      0 -> DefaultLoadControl.Builder().setBufferDurationsMs(8000, 30000, 1000, 2000).build()
+                      2 -> DefaultLoadControl.Builder().setBufferDurationsMs(30000, 90000, 2500, 5000).build()
+                      else -> DefaultLoadControl.Builder().setBufferDurationsMs(15000, 50000, 1500, 3000).build()
+                  }
                   val exo = ExoPlayer.Builder(this)
                       .setMediaSourceFactory(DefaultMediaSourceFactory(this).setDataSourceFactory(http))
                       .setLoadControl(lc)
@@ -914,6 +1211,7 @@ jobs:
                   player = exo
                   playerView.player = exo
                   playerView.setResizeMode(resizeModes[resizeIndex])
+                  exo.volume = if (muted) 0f else 1f
                   exo.addListener(object : Player.Listener {
                       override fun onPlaybackStateChanged(playbackState: Int) {
                           if (playbackState == Player.STATE_READY) retries = 0
@@ -925,6 +1223,17 @@ jobs:
                           } else {
                               tr("▶ Lecture", "▶ Play", "▶ تشغيل", "▶ Reproducir")
                           }
+                      }
+
+                      override fun onVideoSizeChanged(videoSize: VideoSize) {
+                          val h = videoSize.height
+                          videoInfo = if (h > 0) {
+                              videoSize.width.toString() + "×" + h.toString() +
+                                  (if (h >= 2160) " 4K" else if (h >= 1080) " FHD" else if (h >= 720) " HD" else " SD")
+                          } else {
+                              ""
+                          }
+                          if (banner.visibility == View.VISIBLE) bannerInfo.text = videoInfo
                       }
 
                       override fun onPlayerError(error: PlaybackException) {
@@ -943,30 +1252,46 @@ jobs:
                               ui.postDelayed({ player?.prepare() }, 2000L * retries)
                           } else {
                               showOverlay(
-                                  tr("⚠ Chaîne indisponible", "⚠ Channel unavailable", "⚠ القناة غير متاحة", "⚠ Canal no disponible")
+                                  tr("⚠ Lecture impossible", "⚠ Cannot play", "⚠ تعذر التشغيل", "⚠ No se puede reproducir")
                               )
                           }
                       }
                   })
               }
 
-              // ---------- liste ----------
+              private fun rebuildPlayer() {
+                  player?.release()
+                  player = null
+                  initPlayer()
+                  if (isVod) return
+                  val c = all.firstOrNull { it.url == currentUrl }
+                  if (c != null) play(c)
+              }
+
+              // ---------- listes ----------
 
               inner class ChannelAdapter : RecyclerView.Adapter<RowHolder>() {
+                  init {
+                      setHasStableIds(true)
+                  }
+
                   override fun getItemCount(): Int = shown.size
+
+                  override fun getItemId(position: Int): Long = shown[position].url.hashCode().toLong()
 
                   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RowHolder = newRow()
 
                   override fun onBindViewHolder(h: RowHolder, position: Int) {
                       val ch = shown[position]
                       val active = ch.url == currentUrl
+                      h.card.background = rowBg(active, h.itemView.hasFocus())
                       h.num.text = (numbers[ch.url] ?: 0).toString()
                       h.name.text = ch.name
                       h.name.setTextColor(if (active) ACCENT else Color.WHITE)
                       h.letter.text = ch.name.trim().take(1).uppercase()
                       val now = Epg.now(ch.tvgId)
                       if (now != null) {
-                          h.prog.text = now.title
+                          h.prog.text = fmtTime(now.start) + "  " + now.title
                           h.prog.visibility = View.VISIBLE
                           h.bar.progress = progressOf(now)
                           h.bar.visibility = View.VISIBLE
@@ -982,6 +1307,10 @@ jobs:
                           save()
                           refresh(false)
                       }
+                      h.itemView.setOnFocusChangeListener { _, has ->
+                          h.card.background = rowBg(ch.url == currentUrl, has)
+                          if (has) showDetails(ch)
+                      }
                       h.itemView.setOnClickListener {
                           play(ch)
                           if (isLandscape()) closePanel()
@@ -990,7 +1319,35 @@ jobs:
                           channelMenu(ch)
                           true
                       }
-                      loadLogo(ch.logo, h.logo, h.letter)
+                      loadLogo(ch.logo, h.logo, h.letter, 120)
+                  }
+              }
+
+              inner class VodAdapter : RecyclerView.Adapter<VodHolder>() {
+                  init {
+                      setHasStableIds(true)
+                  }
+
+                  override fun getItemCount(): Int = shownVod.size
+
+                  override fun getItemId(position: Int): Long {
+                      val v = shownVod[position]
+                      return (v.src + "|" + v.kind + "|" + v.id).hashCode().toLong()
+                  }
+
+                  override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VodHolder = newPoster()
+
+                  override fun onBindViewHolder(h: VodHolder, position: Int) {
+                      val v = shownVod[position]
+                      h.card.background = rowBg(false, h.itemView.hasFocus())
+                      h.title.text = v.name
+                      h.sub.text = if (v.rating.isBlank() || v.rating == "0") v.group else "★ " + v.rating
+                      h.letter.text = v.name.trim().take(1).uppercase()
+                      h.itemView.setOnFocusChangeListener { _, has ->
+                          h.card.background = rowBg(false, has)
+                      }
+                      h.itemView.setOnClickListener { openVod(v) }
+                      loadLogo(v.poster, h.img, h.letter, 300)
                   }
               }
 
@@ -1004,13 +1361,10 @@ jobs:
                   card.orientation = LinearLayout.HORIZONTAL
                   card.gravity = Gravity.CENTER_VERTICAL
                   card.setPadding(dp(8), dp(10), dp(4), dp(10))
-                  card.background = rounded(CARD, 12)
-                  outer.setOnFocusChangeListener { _, has ->
-                      card.background = rounded(if (has) CARD_FOCUS else CARD, 12)
-                  }
+                  card.background = rowBg(false, false)
 
                   val num = TextView(this)
-                  num.textSize = 12f
+                  num.textSize = ts(12f)
                   num.gravity = Gravity.CENTER
                   num.setTextColor(SUB)
                   card.addView(num, LinearLayout.LayoutParams(dp(34), -2))
@@ -1019,7 +1373,7 @@ jobs:
                   logoBox.background = rounded(Color.parseColor("#262B36"), 10)
                   val letter = TextView(this)
                   letter.gravity = Gravity.CENTER
-                  letter.textSize = 18f
+                  letter.textSize = ts(18f)
                   letter.typeface = Typeface.DEFAULT_BOLD
                   letter.setTextColor(ACCENT)
                   logoBox.addView(letter, FrameLayout.LayoutParams(-1, -1))
@@ -1033,11 +1387,11 @@ jobs:
                   texts.orientation = LinearLayout.VERTICAL
                   texts.setPadding(dp(12), 0, dp(8), 0)
                   val name = TextView(this)
-                  name.textSize = 16f
+                  name.textSize = ts(16f)
                   name.isSingleLine = true
                   name.ellipsize = TextUtils.TruncateAt.END
                   val prog = TextView(this)
-                  prog.textSize = 12f
+                  prog.textSize = ts(12f)
                   prog.setTextColor(SUB)
                   prog.isSingleLine = true
                   prog.ellipsize = TextUtils.TruncateAt.END
@@ -1050,7 +1404,7 @@ jobs:
                   card.addView(texts, LinearLayout.LayoutParams(0, -2, 1f))
 
                   val star = TextView(this)
-                  star.textSize = 22f
+                  star.textSize = ts(22f)
                   star.setPadding(dp(10), dp(6), dp(10), dp(6))
                   star.isClickable = true
                   card.addView(star, LinearLayout.LayoutParams(-2, -2))
@@ -1059,7 +1413,51 @@ jobs:
                   return RowHolder(outer, card, num, letter, logo, name, prog, bar, star)
               }
 
-              private fun loadLogo(url: String, iv: ImageView, letter: TextView?) {
+              private fun newPoster(): VodHolder {
+                  val pw = if (posterW > 0) posterW else dp(110)
+                  val outer = FrameLayout(this)
+                  outer.layoutParams = RecyclerView.LayoutParams(-1, -2)
+                  outer.setPadding(dp(4), dp(4), dp(4), dp(4))
+                  outer.isFocusable = true
+
+                  val card = LinearLayout(this)
+                  card.orientation = LinearLayout.VERTICAL
+                  card.setPadding(dp(4), dp(4), dp(4), dp(6))
+                  card.background = rowBg(false, false)
+
+                  val box = FrameLayout(this)
+                  box.background = rounded(Color.parseColor("#262B36"), 8)
+                  val letter = TextView(this)
+                  letter.gravity = Gravity.CENTER
+                  letter.textSize = ts(26f)
+                  letter.typeface = Typeface.DEFAULT_BOLD
+                  letter.setTextColor(ACCENT)
+                  box.addView(letter, FrameLayout.LayoutParams(-1, -1))
+                  val img = ImageView(this)
+                  img.scaleType = ImageView.ScaleType.CENTER_CROP
+                  box.addView(img, FrameLayout.LayoutParams(-1, -1))
+                  card.addView(box, LinearLayout.LayoutParams(-1, pw * 3 / 2))
+
+                  val title = TextView(this)
+                  title.textSize = ts(12f)
+                  title.setTextColor(Color.WHITE)
+                  title.maxLines = 2
+                  title.ellipsize = TextUtils.TruncateAt.END
+                  title.setPadding(dp(2), dp(4), dp(2), 0)
+                  val sub = TextView(this)
+                  sub.textSize = ts(11f)
+                  sub.setTextColor(SUB)
+                  sub.isSingleLine = true
+                  sub.ellipsize = TextUtils.TruncateAt.END
+                  sub.setPadding(dp(2), 0, dp(2), 0)
+                  card.addView(title)
+                  card.addView(sub)
+
+                  outer.addView(card, FrameLayout.LayoutParams(-1, -2))
+                  return VodHolder(outer, card, img, letter, title, sub)
+              }
+
+              private fun loadLogo(url: String, iv: ImageView, letter: TextView?, maxPx: Int) {
                   iv.setImageDrawable(null)
                   iv.tag = url
                   letter?.visibility = View.VISIBLE
@@ -1076,7 +1474,7 @@ jobs:
                           c.connectTimeout = 8000
                           c.readTimeout = 8000
                           val bmp = c.inputStream.use { BitmapFactory.decodeStream(it) } ?: throw Exception("bad image")
-                          val ratio = 120f / maxOf(bmp.width, bmp.height)
+                          val ratio = maxPx.toFloat() / maxOf(bmp.width, bmp.height)
                           val scaled = if (ratio < 1f) {
                               Bitmap.createScaledBitmap(
                                   bmp,
@@ -1084,7 +1482,9 @@ jobs:
                                   (bmp.height * ratio).toInt().coerceAtLeast(1),
                                   true
                               )
-                          } else bmp
+                          } else {
+                              bmp
+                          }
                           runOnUiThread {
                               logos.put(url, scaled)
                               if (iv.tag == url) {
@@ -1092,7 +1492,7 @@ jobs:
                                   letter?.visibility = View.GONE
                               }
                           }
-                      } catch (e: Exception) {
+                      } catch (e: Throwable) {
                           runOnUiThread { failed.add(url) }
                       }
                   }
@@ -1101,6 +1501,8 @@ jobs:
               // ---------- donnees ----------
 
               private fun channelsFile(): File = File(filesDir, "channels_v5.json")
+
+              private fun vodFile(): File = File(filesDir, "vod_v6.json")
 
               private fun load() {
                   var out: MutableList<Channel>? = null
@@ -1128,7 +1530,8 @@ jobs:
                   } catch (e: Exception) {
                       out = null
                   }
-                  all = out ?: defaultChannels.map { it.copy() }.toMutableList()
+                  val base = out ?: defaultChannels.map { it.copy() }.toMutableList()
+                  all = base.distinctBy { it.url }.toMutableList()
               }
 
               private fun save() {
@@ -1149,6 +1552,77 @@ jobs:
                       channelsFile().writeText(arr.toString())
                   } catch (e: Exception) {
                   }
+              }
+
+              private fun loadVodFile(): MutableList<Vod> {
+                  val out = ArrayList<Vod>()
+                  try {
+                      val f = vodFile()
+                      if (f.exists()) {
+                          val arr = JSONArray(f.readText())
+                          for (i in 0 until arr.length()) {
+                              val o = arr.getJSONObject(i)
+                              out.add(
+                                  Vod(
+                                      o.getString("i"),
+                                      o.getString("n"),
+                                      o.optString("p", ""),
+                                      o.optString("g", ""),
+                                      o.optInt("k", 1),
+                                      o.optString("e", "mp4"),
+                                      o.optString("s", ""),
+                                      o.optString("r", "")
+                                  )
+                              )
+                          }
+                      }
+                  } catch (e: Throwable) {
+                  }
+                  return out
+              }
+
+              private fun saveVodFile(list: List<Vod>) {
+                  try {
+                      val arr = JSONArray()
+                      for (v in list) {
+                          arr.put(
+                              JSONObject()
+                                  .put("i", v.id)
+                                  .put("n", v.name)
+                                  .put("p", v.poster)
+                                  .put("g", v.group)
+                                  .put("k", v.kind)
+                                  .put("e", v.ext)
+                                  .put("s", v.src)
+                                  .put("r", v.rating)
+                          )
+                      }
+                      vodFile().writeText(arr.toString())
+                  } catch (e: Throwable) {
+                  }
+              }
+
+              @Synchronized
+              private fun vodLoadOnce() {
+                  if (!vodLoaded) {
+                      vods = loadVodFile()
+                      vodLoaded = true
+                  }
+              }
+
+              private fun ensureVod() {
+                  if (vodLoaded) return
+                  pool.execute {
+                      vodLoadOnce()
+                      runOnUiThread {
+                          if (section != 0) refresh(true)
+                      }
+                  }
+              }
+
+              private fun loadHidden(): HashSet<String> {
+                  val s = prefs.getString("hidden", "") ?: ""
+                  return HashSet(s.lines().filter { it.isNotBlank() })
               }
 
               private fun playlists(): MutableList<String> {
@@ -1181,6 +1655,8 @@ jobs:
                   prefs.edit().putString("accounts", arr.toString()).apply()
               }
 
+              private fun accountFor(key: String): Account? = accounts().firstOrNull { it.key() == key }
+
               private fun groupLabel(f: String): String = when (f) {
                   "" -> tr("Tous", "All", "الكل", "Todos")
                   F_FAV -> tr("★ Favoris", "★ Favorites", "★ المفضلة", "★ Favoritos")
@@ -1189,11 +1665,12 @@ jobs:
               }
 
               private fun groupList(): List<String> {
-                  val groups = all.map { it.group }.filter { it.isNotBlank() }.distinct().sorted()
+                  val groups = all.map { it.group }.filter { it.isNotBlank() && !hiddenSet.contains(it) }.distinct().sorted()
                   return listOf("", F_FAV, F_RECENT) + groups
               }
 
               private fun changeGroup(delta: Int) {
+                  if (section != 0) return
                   val l = groupList()
                   var i = l.indexOf(filter)
                   if (i < 0) i = 0
@@ -1202,18 +1679,32 @@ jobs:
                   showOverlay(groupLabel(filter))
               }
 
-              private fun refresh(rebuildChips: Boolean) {
+              private fun renumber() {
                   numbers = HashMap()
                   for ((i, c) in all.withIndex()) numbers[c.url] = i + 1
+              }
+
+              private fun refresh(rebuild: Boolean) {
+                  renumber()
+                  if (section != 0) {
+                      refreshVod(rebuild)
+                      return
+                  }
                   val q = search.text.toString().trim().lowercase()
                   val base: List<Channel> = when (filter) {
-                      "" -> all
+                      "" -> if (hiddenSet.isEmpty()) all else all.filter { !hiddenSet.contains(it.group) }
                       F_FAV -> all.filter { it.fav }
                       F_RECENT -> recent.mapNotNull { u -> all.firstOrNull { it.url == u } }
                       else -> all.filter { it.group == filter }
                   }
                   shown = if (q.isEmpty()) base.toList() else base.filter { it.name.lowercase().contains(q) }
                   adapter.notifyDataSetChanged()
+                  emptyText.text = tr(
+                      "Aucune chaîne\n\nTouchez ⚙ pour ajouter une chaîne, un compte Xtream ou une playlist",
+                      "No channels\n\nTap ⚙ to add a channel, an Xtream account or a playlist",
+                      "لا توجد قنوات\n\nاضغط ⚙ لإضافة قناة أو حساب Xtream أو قائمة تشغيل",
+                      "Sin canales\n\nToca ⚙ para añadir un canal, una cuenta Xtream o una lista"
+                  )
                   emptyText.visibility = if (shown.isEmpty()) View.VISIBLE else View.GONE
                   search.hint = tr(
                       "Rechercher parmi " + all.size + " chaînes",
@@ -1221,20 +1712,136 @@ jobs:
                       "ابحث في " + all.size + " قناة",
                       "Buscar entre " + all.size + " canales"
                   )
-                  if (rebuildChips) rebuildChips()
+                  if (rebuild) rebuildGroups()
               }
 
-              private fun rebuildChips() {
+              private fun refreshVod(rebuild: Boolean) {
+                  val kind = section
+                  val q = search.text.toString().trim().lowercase()
+                  val base = vods.filter { it.kind == kind && (vfilter.isEmpty() || it.group == vfilter) }
+                  shownVod = if (q.isEmpty()) base else base.filter { it.name.lowercase().contains(q) }
+                  vodAdapter.notifyDataSetChanged()
+                  emptyText.text = if (!vodLoaded) {
+                      tr("Chargement…", "Loading…", "جارٍ التحميل…", "Cargando…")
+                  } else {
+                      tr(
+                          "Aucun contenu\n\nAjoutez un compte Xtream (⚙ → Xtream) pour charger films et séries",
+                          "Nothing here\n\nAdd an Xtream account (⚙ → Xtream) to load movies and series",
+                          "لا يوجد محتوى\n\nأضف حساب Xtream (⚙ ← Xtream) لتحميل الأفلام والمسلسلات",
+                          "Sin contenido\n\nAñade una cuenta Xtream (⚙ → Xtream) para cargar películas y series"
+                      )
+                  }
+                  emptyText.visibility = if (shownVod.isEmpty()) View.VISIBLE else View.GONE
+                  search.hint = if (kind == 1) {
+                      tr("Rechercher un film", "Search movies", "ابحث عن فيلم", "Buscar una película")
+                  } else {
+                      tr("Rechercher une série", "Search series", "ابحث عن مسلسل", "Buscar una serie")
+                  }
+                  if (rebuild) rebuildGroups()
+              }
+
+              private fun isSelectedGroup(value: String): Boolean = if (section == 0) filter == value else vfilter == value
+
+              private fun groupRow(label: String, count: Int, value: String): TextView {
+                  val t = TextView(this)
+                  t.text = label + "  " + count
+                  t.textSize = ts(14f)
+                  t.setTextColor(Color.WHITE)
+                  t.isSingleLine = true
+                  t.ellipsize = TextUtils.TruncateAt.END
+                  t.setPadding(dp(12), dp(10), dp(8), dp(10))
+                  t.isFocusable = true
+                  t.isClickable = true
+                  t.background = rounded(if (isSelectedGroup(value)) CARD_ACTIVE else Color.TRANSPARENT, 10)
+                  t.setOnFocusChangeListener { v, has ->
+                      v.background = rounded(
+                          if (has) ACCENT else if (isSelectedGroup(value)) CARD_ACTIVE else Color.TRANSPARENT,
+                          10
+                      )
+                  }
+                  return t
+              }
+
+              private fun pickGroup(value: String) {
+                  if (section == 0) {
+                      filter = value
+                  } else {
+                      vfilter = value
+                  }
+                  refresh(true)
+                  groupViews[value]?.requestFocus()
+              }
+
+              private fun rebuildGroups() {
                   chips.removeAllViews()
-                  for (g in groupList()) {
-                      val c = pill(groupLabel(g), filter == g)
-                      c.setOnClickListener {
-                          filter = g
-                          refresh(true)
+                  groupCol.removeAllViews()
+                  groupViews.clear()
+                  val items = ArrayList<Triple<String, String, Int>>()
+                  if (section == 0) {
+                      val counts = HashMap<String, Int>()
+                      for (c in all) {
+                          if (c.group.isNotBlank()) counts[c.group] = (counts[c.group] ?: 0) + 1
                       }
-                      val lp = LinearLayout.LayoutParams(-2, dp(36))
+                      for (g in groupList()) {
+                          val n = when (g) {
+                              "" -> if (hiddenSet.isEmpty()) all.size else all.count { !hiddenSet.contains(it.group) }
+                              F_FAV -> all.count { it.fav }
+                              F_RECENT -> recent.size
+                              else -> counts[g] ?: 0
+                          }
+                          items.add(Triple(g, groupLabel(g), n))
+                      }
+                  } else {
+                      val counts = HashMap<String, Int>()
+                      var total = 0
+                      for (v in vods) {
+                          if (v.kind == section) {
+                              total++
+                              if (v.group.isNotBlank()) counts[v.group] = (counts[v.group] ?: 0) + 1
+                          }
+                      }
+                      items.add(Triple("", tr("Tous", "All", "الكل", "Todos"), total))
+                      for (g in counts.keys.sorted()) items.add(Triple(g, g, counts[g] ?: 0))
+                  }
+                  for (item in items) {
+                      val value = item.first
+                      val chip = pill(item.second, isSelectedGroup(value))
+                      chip.setOnClickListener { pickGroup(value) }
+                      val lp = LinearLayout.LayoutParams(-2, dp(ph(36)))
                       lp.setMargins(dp(4), 0, dp(4), 0)
-                      chips.addView(c, lp)
+                      chips.addView(chip, lp)
+
+                      val row = groupRow(item.second, item.third, value)
+                      row.setOnClickListener { pickGroup(value) }
+                      val lp2 = LinearLayout.LayoutParams(-1, -2)
+                      lp2.setMargins(0, dp(2), 0, dp(2))
+                      groupCol.addView(row, lp2)
+                      groupViews[value] = row
+                  }
+              }
+
+              private fun setSection(s: Int) {
+                  if (section == s) return
+                  section = s
+                  vfilter = ""
+                  search.setText("")
+                  updateTabs()
+                  applyListMode()
+                  updateDetailsVisibility()
+                  if (s != 0) ensureVod()
+                  refresh(true)
+              }
+
+              private fun showDetails(ch: Channel) {
+                  val n = numbers[ch.url]
+                  detTitle.text = (if (n != null) n.toString() + "  " else "") + ch.name
+                  val now = Epg.now(ch.tvgId)
+                  if (now != null) {
+                      detTime.text = fmtTime(now.start) + " – " + fmtTime(now.stop) + "  " + now.title
+                      detDesc.text = now.desc
+                  } else {
+                      detTime.text = ch.group
+                      detDesc.text = ""
                   }
               }
 
@@ -1242,8 +1849,14 @@ jobs:
 
               private fun play(ch: Channel) {
                   val exo = player ?: return
-                  if (ch.url != currentUrl) previousUrl = currentUrl
+                  if (ch.url != currentUrl && !isVod) previousUrl = currentUrl
+                  isVod = false
+                  vodTitle = ""
+                  seekBack.visibility = View.GONE
+                  seekFwd.visibility = View.GONE
+                  ui.removeCallbacks(vodTicker)
                   currentUrl = ch.url
+                  liveUrl = ch.url
                   retries = 0
                   recent.remove(ch.url)
                   recent.add(0, ch.url)
@@ -1256,23 +1869,161 @@ jobs:
                   exo.setMediaItem(MediaItem.fromUri(ch.url))
                   exo.prepare()
                   exo.playWhenReady = true
+                  val n = numbers[ch.url]
+                  if (n != null) {
+                      numberBadge.text = n.toString()
+                      numberBadge.visibility = View.VISIBLE
+                      ui.removeCallbacks(hideBadge)
+                      ui.postDelayed(hideBadge, 3000)
+                  }
                   showBanner(ch, false)
-                  adapter.notifyDataSetChanged()
+                  if (section == 0) adapter.notifyDataSetChanged()
+              }
+
+              private fun playVod(title: String, url: String) {
+                  val exo = player ?: return
+                  if (!isVod) liveUrl = currentUrl
+                  isVod = true
+                  vodTitle = title
+                  currentUrl = url
+                  retries = 0
+                  exo.setMediaItem(MediaItem.fromUri(url))
+                  exo.prepare()
+                  exo.playWhenReady = true
+                  numberBadge.visibility = View.GONE
+                  seekBack.visibility = View.VISIBLE
+                  seekFwd.visibility = View.VISIBLE
+                  showBanner(null, false)
+                  ui.removeCallbacks(vodTicker)
+                  ui.postDelayed(vodTicker, 1000)
+              }
+
+              private fun stopVod() {
+                  isVod = false
+                  vodTitle = ""
+                  seekBack.visibility = View.GONE
+                  seekFwd.visibility = View.GONE
+                  ui.removeCallbacks(vodTicker)
+                  val c = all.firstOrNull { it.url == liveUrl }
+                  if (c != null) {
+                      play(c)
+                  } else {
+                      player?.stop()
+                  }
+              }
+
+              private fun openVod(v: Vod) {
+                  if (v.kind == 1) {
+                      val a = accountFor(v.src)
+                      if (a == null) {
+                          toast(tr("Compte introuvable", "Account not found", "الحساب غير موجود", "Cuenta no encontrada"))
+                          return
+                      }
+                      val url = a.server + "/movie/" + Uri.encode(a.user) + "/" + Uri.encode(a.pass) + "/" + v.id + "." + v.ext
+                      playVod(v.name, url)
+                      if (isLandscape()) closePanel()
+                  } else {
+                      seriesDialog(v)
+                  }
+              }
+
+              private fun parseEpisodes(o: JSONObject): List<Episode> {
+                  val out = ArrayList<Episode>()
+                  val e = o.opt("episodes")
+                  fun addArr(arr: JSONArray, defSeason: Int) {
+                      for (i in 0 until arr.length()) {
+                          val x = arr.optJSONObject(i) ?: continue
+                          val info = x.optJSONObject("info")
+                          val season = x.optString("season", "").toIntOrNull() ?: defSeason
+                          val num = js(x, "episode_num").toIntOrNull() ?: (i + 1)
+                          val title = js(x, "title").ifEmpty { "Episode " + num }
+                          val ext = js(x, "container_extension").ifEmpty { "mp4" }
+                          val plot = if (info != null) js(info, "plot") else ""
+                          out.add(Episode(js(x, "id"), title, season, num, ext, plot))
+                      }
+                  }
+                  if (e is JSONObject) {
+                      val keys = e.keys()
+                      while (keys.hasNext()) {
+                          val k = keys.next()
+                          val arr = e.optJSONArray(k) ?: continue
+                          addArr(arr, k.toIntOrNull() ?: 0)
+                      }
+                  } else if (e is JSONArray) {
+                      for (i in 0 until e.length()) {
+                          val arr = e.optJSONArray(i)
+                          if (arr != null) addArr(arr, i + 1)
+                      }
+                  }
+                  out.sortWith(compareBy({ it.season }, { it.num }))
+                  return out
+              }
+
+              private fun seriesDialog(v: Vod) {
+                  val a = accountFor(v.src)
+                  if (a == null) {
+                      toast(tr("Compte introuvable", "Account not found", "الحساب غير موجود", "Cuenta no encontrada"))
+                      return
+                  }
+                  toast(tr("Chargement…", "Loading…", "جارٍ التحميل…", "Cargando…"))
+                  pool.execute {
+                      try {
+                          val txt = httpGet(a.server + "/player_api.php?" + xtreamAuth(a) + "&action=get_series_info&series_id=" + v.id)
+                          val eps = parseEpisodes(JSONObject(txt))
+                          runOnUiThread {
+                              if (eps.isEmpty()) {
+                                  toast(tr("Aucun épisode", "No episodes", "لا توجد حلقات", "Sin episodios"))
+                              } else {
+                                  seasonDialog(a, v, eps)
+                              }
+                          }
+                      } catch (e: Exception) {
+                          runOnUiThread { toast(tr("Erreur : ", "Error: ", "خطأ: ", "Error: ") + e.message) }
+                      }
+                  }
+              }
+
+              private fun seasonDialog(a: Account, v: Vod, eps: List<Episode>) {
+                  val seasons = eps.map { it.season }.distinct().sorted()
+                  if (seasons.size <= 1) {
+                      episodeDialog(a, v, eps)
+                      return
+                  }
+                  val labels = seasons.map { s ->
+                      tr("Saison ", "Season ", "الموسم ", "Temporada ") + s + "  (" + eps.count { it.season == s } + ")"
+                  }
+                  dialog().setTitle(v.name).setItems(labels.toTypedArray()) { _, i ->
+                      episodeDialog(a, v, eps.filter { it.season == seasons[i] })
+                  }.show()
+              }
+
+              private fun episodeDialog(a: Account, v: Vod, list: List<Episode>) {
+                  val labels = list.map { e -> "E" + e.num + "   " + e.title }
+                  dialog().setTitle(v.name).setItems(labels.toTypedArray()) { _, i ->
+                      val e = list[i]
+                      val url = a.server + "/series/" + Uri.encode(a.user) + "/" + Uri.encode(a.pass) + "/" + e.id + "." + e.ext
+                      playVod(v.name + "  S" + e.season + "E" + e.num, url)
+                      if (isLandscape()) closePanel()
+                  }.show()
               }
 
               private fun step(delta: Int) {
-                  val list = if (shown.isEmpty()) all else shown
+                  if (isVod) return
+                  val list = if (section == 0 && shown.isNotEmpty()) shown else all
                   if (list.isEmpty()) return
                   val idx = list.indexOfFirst { it.url == currentUrl }
                   val next = if (idx < 0) 0 else (idx + delta + list.size) % list.size
                   play(list[next])
-                  if (list === shown) recycler.scrollToPosition(next)
+                  if (section == 0 && list === shown) recycler.scrollToPosition(next)
               }
 
               private fun lastChannel() {
                   val c = all.firstOrNull { it.url == previousUrl }
-                  if (c != null) play(c)
-                  else toast(tr("Pas de chaîne précédente", "No previous channel", "لا توجد قناة سابقة", "Sin canal anterior"))
+                  if (c != null) {
+                      play(c)
+                  } else {
+                      toast(tr("Pas de chaîne précédente", "No previous channel", "لا توجد قناة سابقة", "Sin canal anterior"))
+                  }
               }
 
               private fun toggleFavCurrent() {
@@ -1297,6 +2048,43 @@ jobs:
                   }
               }
 
+              private fun toggleMute() {
+                  val p = player ?: return
+                  muted = !muted
+                  p.volume = if (muted) 0f else 1f
+                  showOverlay(
+                      if (muted) tr("Son coupé", "Muted", "تم كتم الصوت", "Silenciado")
+                      else tr("Son activé", "Sound on", "تم تشغيل الصوت", "Sonido activado")
+                  )
+              }
+
+              private fun seekBy(ms: Long) {
+                  val p = player ?: return
+                  if (!isVod) return
+                  val dur = p.duration
+                  var t = p.currentPosition + ms
+                  if (t < 0L) t = 0L
+                  if (dur > 0L && dur != C.TIME_UNSET && t > dur - 1000L) t = dur - 1000L
+                  p.seekTo(t)
+                  showBanner(null, controlsVisible)
+                  updateVodProgress()
+              }
+
+              private fun updateVodProgress() {
+                  val p = player ?: return
+                  val dur = p.duration
+                  val pos = p.currentPosition
+                  if (dur > 0L && dur != C.TIME_UNSET) {
+                      bannerBar.visibility = View.VISIBLE
+                      bannerBar.progress = ((pos * 100) / dur).toInt().coerceIn(0, 100)
+                      bannerNow.text = fmtDur(pos) + " / " + fmtDur(dur)
+                      bannerNow.visibility = View.VISIBLE
+                  } else {
+                      bannerBar.visibility = View.GONE
+                      bannerNow.visibility = View.GONE
+                  }
+              }
+
               private fun showOverlay(text: String) {
                   overlay.text = text
                   overlay.visibility = View.VISIBLE
@@ -1306,30 +2094,42 @@ jobs:
 
               private fun showBanner(ch: Channel?, controlsOn: Boolean) {
                   if (inPip) return
-                  val c = ch ?: all.firstOrNull { it.url == currentUrl }
-                  if (c != null) {
-                      val n = numbers[c.url]
-                      bannerTitle.text = (if (n != null) n.toString() + "   " else "") + c.name
-                      bannerLetter.text = c.name.trim().take(1).uppercase()
-                      loadLogo(c.logo, bannerLogo, bannerLetter)
-                      val now = Epg.now(c.tvgId)
-                      val nxt = Epg.next(c.tvgId)
-                      if (now != null) {
-                          bannerNow.text = fmtTime(now.start) + " – " + fmtTime(now.stop) + "  " + now.title
-                          bannerNow.visibility = View.VISIBLE
-                          bannerBar.progress = progressOf(now)
-                          bannerBar.visibility = View.VISIBLE
-                      } else {
-                          bannerNow.text = c.group
-                          bannerNow.visibility = if (c.group.isBlank()) View.GONE else View.VISIBLE
-                          bannerBar.visibility = View.GONE
-                      }
-                      if (nxt != null) {
-                          bannerNext.text = tr("Ensuite : ", "Next: ", "التالي: ", "Siguiente: ") +
-                              fmtTime(nxt.start) + "  " + nxt.title
-                          bannerNext.visibility = View.VISIBLE
-                      } else {
-                          bannerNext.visibility = View.GONE
+                  bannerClock.text = fmtTime(System.currentTimeMillis())
+                  bannerInfo.text = videoInfo +
+                      (if (muted) "  " + tr("Muet", "Muted", "صامت", "Silencio") else "")
+                  if (isVod) {
+                      bannerTitle.text = vodTitle
+                      bannerLetter.text = vodTitle.trim().take(1).uppercase()
+                      bannerLetter.visibility = View.VISIBLE
+                      bannerLogo.setImageDrawable(null)
+                      bannerNext.visibility = View.GONE
+                      updateVodProgress()
+                  } else {
+                      val c = ch ?: all.firstOrNull { it.url == currentUrl }
+                      if (c != null) {
+                          val n = numbers[c.url]
+                          bannerTitle.text = (if (n != null) n.toString() + "   " else "") + c.name
+                          bannerLetter.text = c.name.trim().take(1).uppercase()
+                          loadLogo(c.logo, bannerLogo, bannerLetter, 120)
+                          val now = Epg.now(c.tvgId)
+                          val nxt = Epg.next(c.tvgId)
+                          if (now != null) {
+                              bannerNow.text = fmtTime(now.start) + " – " + fmtTime(now.stop) + "  " + now.title
+                              bannerNow.visibility = View.VISIBLE
+                              bannerBar.progress = progressOf(now)
+                              bannerBar.visibility = View.VISIBLE
+                          } else {
+                              bannerNow.text = c.group
+                              bannerNow.visibility = if (c.group.isBlank()) View.GONE else View.VISIBLE
+                              bannerBar.visibility = View.GONE
+                          }
+                          if (nxt != null) {
+                              bannerNext.text = tr("Ensuite : ", "Next: ", "التالي: ", "Siguiente: ") +
+                                  fmtTime(nxt.start) + "  " + nxt.title
+                              bannerNext.visibility = View.VISIBLE
+                          } else {
+                              bannerNext.visibility = View.GONE
+                          }
                       }
                   }
                   banner.visibility = View.VISIBLE
@@ -1342,6 +2142,10 @@ jobs:
               private fun onSingleTap() {
                   if (panelOpen) {
                       closePanel()
+                      return
+                  }
+                  if (quickOpen) {
+                      closeQuick()
                       return
                   }
                   if (banner.visibility == View.VISIBLE && controlsVisible) {
@@ -1367,34 +2171,75 @@ jobs:
 
               // ---------- affichage ----------
 
+              private fun computePosterW(): Int {
+                  val m = resources.displayMetrics
+                  val land = m.widthPixels > m.heightPixels
+                  val listW = if (land) minOf(dp(580), m.widthPixels * 86 / 100) - dp(170) else m.widthPixels
+                  return ((listW - dp(28)) / 3) - dp(8)
+              }
+
+              private fun applyListMode() {
+                  posterW = computePosterW()
+                  val key = section * 100000 + posterW
+                  if (key == modeKey) return
+                  modeKey = key
+                  if (section == 0) {
+                      recycler.layoutManager = LinearLayoutManager(this)
+                      recycler.adapter = adapter
+                  } else {
+                      recycler.layoutManager = GridLayoutManager(this, 3)
+                      recycler.adapter = vodAdapter
+                  }
+              }
+
+              private fun updateDetailsVisibility() {
+                  val m = resources.displayMetrics
+                  val land = m.widthPixels > m.heightPixels
+                  details.visibility = if (section == 0 && land && m.heightPixels >= dp(420)) View.VISIBLE else View.GONE
+              }
+
               private fun applyLayout() {
                   val m = resources.displayMetrics
                   val land = m.widthPixels > m.heightPixels
                   val pl: FrameLayout.LayoutParams
                   val ql: FrameLayout.LayoutParams
+                  val qp = FrameLayout.LayoutParams(minOf(dp(320), m.widthPixels * 70 / 100), -1)
+                  qp.gravity = Gravity.END
                   if (inPip) {
                       pl = FrameLayout.LayoutParams(-1, -1)
                       ql = FrameLayout.LayoutParams(-1, -1)
                       panel.visibility = View.GONE
+                      quickScroll.visibility = View.GONE
                   } else if (land) {
                       pl = FrameLayout.LayoutParams(-1, -1)
-                      ql = FrameLayout.LayoutParams(minOf(dp(400), m.widthPixels * 55 / 100), -1)
+                      ql = FrameLayout.LayoutParams(minOf(dp(580), m.widthPixels * 86 / 100), -1)
                       ql.gravity = Gravity.START
-                      panel.setBackgroundColor(Color.parseColor("#F20E1117"))
+                      panel.setBackgroundColor(Color.parseColor("#F00E1117"))
                       panel.visibility = if (panelOpen) View.VISIBLE else View.GONE
+                      quickScroll.visibility = if (quickOpen) View.VISIBLE else View.GONE
+                      groupScroll.visibility = View.VISIBLE
+                      chipsScroll.visibility = View.GONE
                   } else {
                       panelOpen = false
-                      val ph = m.widthPixels * 9 / 16
-                      pl = FrameLayout.LayoutParams(-1, ph)
+                      quickOpen = false
+                      val playerH = m.widthPixels * 9 / 16
+                      pl = FrameLayout.LayoutParams(-1, playerH)
                       ql = FrameLayout.LayoutParams(-1, -1)
-                      ql.topMargin = ph
+                      ql.topMargin = playerH
                       panel.setBackgroundColor(BG)
                       panel.visibility = View.VISIBLE
+                      quickScroll.visibility = View.GONE
+                      groupScroll.visibility = View.GONE
+                      chipsScroll.visibility = View.VISIBLE
                   }
                   panel.translationX = 0f
+                  quickScroll.translationX = 0f
                   playerFrame.layoutParams = pl
                   panel.layoutParams = ql
+                  quickScroll.layoutParams = qp
                   listBtn.visibility = if (land) View.VISIBLE else View.GONE
+                  applyListMode()
+                  updateDetailsVisibility()
                   applySystemUi()
               }
 
@@ -1427,18 +2272,33 @@ jobs:
                   return if (isRtl()) w else -w
               }
 
-              private fun openPanel() {
+              private fun quickHidden(): Float {
+                  val w = quickScroll.layoutParams.width.toFloat()
+                  return if (isRtl()) -w else w
+              }
+
+              private fun openPanel(focusRows: Boolean = true) {
                   if (!isLandscape() || inPip) return
+                  if (quickOpen) closeQuick()
+                  if (panelOpen) return
                   panelOpen = true
                   panel.visibility = View.VISIBLE
                   panel.translationX = hiddenShift()
                   panel.animate().translationX(0f).setDuration(180).start()
                   ui.removeCallbacks(hideBanner)
                   hideBanner.run()
-                  val idx = shown.indexOfFirst { it.url == currentUrl }.coerceAtLeast(0)
-                  recycler.scrollToPosition(idx)
-                  recycler.post {
-                      recycler.findViewHolderForAdapterPosition(idx)?.itemView?.requestFocus()
+                  if (focusRows) {
+                      if (section == 0) {
+                          val idx = shown.indexOfFirst { it.url == currentUrl }.coerceAtLeast(0)
+                          recycler.scrollToPosition(idx)
+                          recycler.postDelayed({
+                              recycler.findViewHolderForAdapterPosition(idx)?.itemView?.requestFocus()
+                          }, 80)
+                      } else {
+                          recycler.postDelayed({
+                              recycler.findViewHolderForAdapterPosition(0)?.itemView?.requestFocus()
+                          }, 80)
+                      }
                   }
               }
 
@@ -1450,6 +2310,36 @@ jobs:
                       if (!panelOpen) {
                           panel.visibility = View.GONE
                           panel.translationX = 0f
+                      }
+                  }.start()
+                  root.requestFocus()
+              }
+
+              private fun openQuick() {
+                  if (inPip) return
+                  if (!isLandscape()) {
+                      quickDialog()
+                      return
+                  }
+                  if (panelOpen) closePanel()
+                  if (quickOpen) return
+                  populateQuick()
+                  quickOpen = true
+                  quickScroll.visibility = View.VISIBLE
+                  quickScroll.translationX = quickHidden()
+                  quickScroll.animate().translationX(0f).setDuration(180).start()
+                  ui.removeCallbacks(hideBanner)
+                  hideBanner.run()
+                  quickList.postDelayed({ quickList.getChildAt(1)?.requestFocus() }, 80)
+              }
+
+              private fun closeQuick() {
+                  if (!quickOpen) return
+                  quickOpen = false
+                  quickScroll.animate().translationX(quickHidden()).setDuration(160).withEndAction {
+                      if (!quickOpen) {
+                          quickScroll.visibility = View.GONE
+                          quickScroll.translationX = 0f
                       }
                   }.start()
                   root.requestFocus()
@@ -1487,6 +2377,7 @@ jobs:
                   inPip = isInPictureInPictureMode
                   if (inPip) {
                       panelOpen = false
+                      quickOpen = false
                       ui.removeCallbacks(hideBanner)
                       hideBanner.run()
                   }
@@ -1495,10 +2386,14 @@ jobs:
 
               override fun onUserLeaveHint() {
                   super.onUserLeaveHint()
-                  if (isLandscape() && player?.isPlaying == true) enterPip()
+                  if (!tv && isLandscape() && player?.isPlaying == true) enterPip()
               }
 
               override fun onBackPressed() {
+                  if (quickOpen) {
+                      closeQuick()
+                      return
+                  }
                   if (panelOpen) {
                       closePanel()
                       return
@@ -1506,6 +2401,10 @@ jobs:
                   if (controlsVisible) {
                       ui.removeCallbacks(hideBanner)
                       hideBanner.run()
+                      return
+                  }
+                  if (isVod) {
+                      stopVod()
                       return
                   }
                   if (forcedLandscape) {
@@ -1527,15 +2426,28 @@ jobs:
                   k == KeyEvent.KEYCODE_DPAD_CENTER || k == KeyEvent.KEYCODE_ENTER || k == KeyEvent.KEYCODE_NUMPAD_ENTER
 
               private fun okAction() {
+                  if (isVod) {
+                      playPause()
+                      showBanner(null, true)
+                      return
+                  }
                   when (prefs.getInt("ok_action", 0)) {
                       0 -> openPanel()
                       1 -> showBanner(null, true)
-                      else -> playPause()
+                      2 -> playPause()
+                      else -> openQuick()
                   }
               }
 
+              private fun goSearch() {
+                  if (isLandscape()) openPanel(false)
+                  search.requestFocus()
+                  val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                  imm.showSoftInput(search, 0)
+              }
+
               override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-                  if (keyCode >= KeyEvent.KEYCODE_0 && keyCode <= KeyEvent.KEYCODE_9) {
+                  if (keyCode >= KeyEvent.KEYCODE_0 && keyCode <= KeyEvent.KEYCODE_9 && !search.hasFocus() && !isVod) {
                       digits += (keyCode - KeyEvent.KEYCODE_0).toString()
                       if (digits.length > 4) digits = digits.takeLast(4)
                       showOverlay(tr("Chaîne ", "Channel ", "القناة ", "Canal ") + digits)
@@ -1561,11 +2473,11 @@ jobs:
                           return true
                       }
                       KeyEvent.KEYCODE_MEDIA_REWIND -> {
-                          changeGroup(-1)
+                          if (isVod) seekBy(-30000L) else changeGroup(-1)
                           return true
                       }
                       KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> {
-                          changeGroup(1)
+                          if (isVod) seekBy(30000L) else changeGroup(1)
                           return true
                       }
                       KeyEvent.KEYCODE_INFO -> {
@@ -1592,16 +2504,69 @@ jobs:
                           menuDialog()
                           return true
                       }
+                      KeyEvent.KEYCODE_CAPTIONS -> {
+                          trackDialog(C.TRACK_TYPE_TEXT)
+                          return true
+                      }
+                      KeyEvent.KEYCODE_MEDIA_AUDIO_TRACK -> {
+                          trackDialog(C.TRACK_TYPE_AUDIO)
+                          return true
+                      }
+                      KeyEvent.KEYCODE_SEARCH -> {
+                          goSearch()
+                          return true
+                      }
+                      KeyEvent.KEYCODE_BOOKMARK -> {
+                          if (section != 0) setSection(0)
+                          filter = F_FAV
+                          refresh(true)
+                          openPanel()
+                          return true
+                      }
                   }
                   if (isLandscape() && !inPip) {
-                      if (!panelOpen) {
-                          if (isCenter(keyCode)) {
-                              if (event != null && event.repeatCount == 0) event.startTracking()
+                      val startKey = if (isRtl()) KeyEvent.KEYCODE_DPAD_RIGHT else KeyEvent.KEYCODE_DPAD_LEFT
+                      val endKey = if (isRtl()) KeyEvent.KEYCODE_DPAD_LEFT else KeyEvent.KEYCODE_DPAD_RIGHT
+                      if (quickOpen) {
+                          if (keyCode == startKey) {
+                              closeQuick()
                               return true
                           }
+                          return super.onKeyDown(keyCode, event)
+                      }
+                      if (panelOpen) {
+                          if (keyCode == startKey && groupCol.hasFocus()) {
+                              closePanel()
+                              return true
+                          }
+                          return super.onKeyDown(keyCode, event)
+                      }
+                      if (isCenter(keyCode)) {
+                          if (event != null && event.repeatCount == 0) event.startTracking()
+                          return true
+                      }
+                      if (isVod) {
+                          val big = event != null && event.repeatCount > 2
+                          when (keyCode) {
+                              KeyEvent.KEYCODE_DPAD_LEFT -> {
+                                  seekBy(if (big) -30000L else -10000L)
+                                  return true
+                              }
+                              KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                                  seekBy(if (big) 30000L else 10000L)
+                                  return true
+                              }
+                              KeyEvent.KEYCODE_DPAD_UP -> {
+                                  showBanner(null, true)
+                                  return true
+                              }
+                              KeyEvent.KEYCODE_DPAD_DOWN -> {
+                                  openQuick()
+                                  return true
+                              }
+                          }
+                      } else {
                           val inv = prefs.getBoolean("inv_updown", false)
-                          val startKey = if (isRtl()) KeyEvent.KEYCODE_DPAD_RIGHT else KeyEvent.KEYCODE_DPAD_LEFT
-                          val endKey = if (isRtl()) KeyEvent.KEYCODE_DPAD_LEFT else KeyEvent.KEYCODE_DPAD_RIGHT
                           if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
                               step(if (inv) 1 else -1)
                               return true
@@ -1615,13 +2580,7 @@ jobs:
                               return true
                           }
                           if (keyCode == endKey) {
-                              showBanner(null, true)
-                              return true
-                          }
-                      } else {
-                          val endKey = if (isRtl()) KeyEvent.KEYCODE_DPAD_LEFT else KeyEvent.KEYCODE_DPAD_RIGHT
-                          if (keyCode == endKey && !search.hasFocus()) {
-                              closePanel()
+                              openQuick()
                               return true
                           }
                       }
@@ -1630,7 +2589,7 @@ jobs:
               }
 
               override fun onKeyLongPress(keyCode: Int, event: KeyEvent?): Boolean {
-                  if (isCenter(keyCode) && isLandscape() && !inPip && !panelOpen) {
+                  if (isCenter(keyCode) && isLandscape() && !inPip && !panelOpen && !quickOpen && !isVod) {
                       toggleFavCurrent()
                       return true
                   }
@@ -1638,7 +2597,7 @@ jobs:
               }
 
               override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
-                  if (isCenter(keyCode) && isLandscape() && !inPip && !panelOpen &&
+                  if (isCenter(keyCode) && isLandscape() && !inPip && !panelOpen && !quickOpen &&
                       event != null && event.isTracking && !event.isCanceled
                   ) {
                       okAction()
@@ -1647,47 +2606,167 @@ jobs:
                   return super.onKeyUp(keyCode, event)
               }
 
-              private fun remoteDialog() {
-                  val inv = prefs.getBoolean("inv_updown", false)
-                  val ok = prefs.getInt("ok_action", 0).coerceIn(0, 2)
-                  val okNames = arrayOf(
-                      tr("Liste des chaînes", "Channel list", "قائمة القنوات", "Lista de canales"),
-                      tr("Infos", "Info", "معلومات", "Info"),
-                      tr("Pause / Lecture", "Pause / Play", "إيقاف / تشغيل", "Pausa / Reproducir")
+              // ---------- panneau d'options ----------
+
+              private fun qi(label: String, action: () -> Unit): Pair<String, () -> Unit> = Pair(label, action)
+
+              private fun quickItems(): List<Pair<String, () -> Unit>> {
+                  val c = all.firstOrNull { it.url == currentUrl }
+                  val l = ArrayList<Pair<String, () -> Unit>>()
+                  l.add(qi(tr("Audio", "Audio", "الصوت", "Audio")) { trackDialog(C.TRACK_TYPE_AUDIO) })
+                  l.add(qi(tr("Sous-titres", "Subtitles", "الترجمة", "Subtítulos")) { trackDialog(C.TRACK_TYPE_TEXT) })
+                  l.add(qi(tr("Qualité vidéo", "Video quality", "جودة الفيديو", "Calidad de vídeo")) { trackDialog(C.TRACK_TYPE_VIDEO) })
+                  l.add(qi(tr("Format : ", "Aspect: ", "النسبة: ", "Formato: ") + resizeName(resizeIndex)) { cycleResize() })
+                  l.add(
+                      qi(
+                          if (muted) tr("Réactiver le son", "Unmute", "تشغيل الصوت", "Activar sonido")
+                          else tr("Couper le son", "Mute", "كتم الصوت", "Silenciar")
+                      ) { toggleMute() }
                   )
-                  val items = arrayOf(
-                      tr("Haut/Bas : ", "Up/Down: ", "أعلى/أسفل: ", "Arriba/Abajo: ") +
-                          (if (inv) tr("inversé", "reversed", "معكوس", "invertido") else tr("normal", "normal", "عادي", "normal")),
-                      tr("Touche OK : ", "OK button: ", "زر OK: ", "Botón OK: ") + okNames[ok],
-                      tr("Aide des touches", "Key guide", "دليل الأزرار", "Guía de teclas")
-                  )
-                  dialog().setTitle(tr("Télécommande", "Remote control", "جهاز التحكم", "Mando a distancia"))
-                      .setItems(items) { _, i ->
-                          when (i) {
-                              0 -> {
-                                  prefs.edit().putBoolean("inv_updown", !inv).apply()
-                                  remoteDialog()
-                              }
-                              1 -> {
-                                  prefs.edit().putInt("ok_action", (ok + 1) % 3).apply()
-                                  remoteDialog()
-                              }
-                              2 -> remoteHelp()
-                          }
-                      }.show()
+                  if (!isVod) {
+                      l.add(
+                          qi(
+                              if (c != null && c.fav) tr("Retirer des favoris", "Remove from favorites", "إزالة من المفضلة", "Quitar de favoritos")
+                              else tr("Ajouter aux favoris", "Add to favorites", "إضافة للمفضلة", "Añadir a favoritos")
+                          ) { toggleFavCurrent() }
+                      )
+                      l.add(qi(tr("Programmes de la chaîne", "Channel schedule", "برامج القناة", "Programación del canal")) {
+                          if (c != null) guideDialog(c)
+                      })
+                      l.add(qi(tr("Chaîne précédente", "Last channel", "القناة الأخيرة", "Último canal")) { lastChannel() })
+                  } else {
+                      l.add(qi("−30 s") { seekBy(-30000L) })
+                      l.add(qi("+30 s") { seekBy(30000L) })
+                      l.add(qi(tr("Arrêter et revenir à la TV", "Stop and back to TV", "إيقاف والعودة للتلفاز", "Parar y volver a la TV")) { stopVod() })
+                  }
+                  l.add(qi(tr("Minuteur de veille", "Sleep timer", "مؤقت النوم", "Temporizador")) { sleepDialog() })
+                  l.add(qi(tr("Rechercher", "Search", "بحث", "Buscar")) { goSearch() })
+                  if (!tv) l.add(qi("PiP") { enterPip() })
+                  l.add(qi(tr("Réglages", "Settings", "الإعدادات", "Ajustes")) { menuDialog() })
+                  return l
               }
 
-              private fun remoteHelp() {
-                  val msg = tr(
-                      "0-9 : numéro de chaîne\nCH+ / CH− : chaîne suivante / précédente\nHaut / Bas : changer de chaîne\nGauche ou OK : liste des chaînes\nDroite ou INFO : informations\nOK long : ajouter aux favoris\nLAST : chaîne précédente\n◀◀ / ▶▶ : groupe précédent / suivant\nROUGE : favori\nVERT : format de l'image\nJAUNE : minuteur de veille\nBLEU ou MENU : réglages\nGUIDE : liste des chaînes\nRetour : fermer, puis quitter (2 fois)",
-                      "0-9: channel number\nCH+ / CH−: next / previous channel\nUp / Down: change channel\nLeft or OK: channel list\nRight or INFO: information\nLong OK: toggle favorite\nLAST: previous channel\n◀◀ / ▶▶: previous / next group\nRED: favorite\nGREEN: picture format\nYELLOW: sleep timer\nBLUE or MENU: settings\nGUIDE: channel list\nBack: close, then exit (twice)",
-                      "0-9: رقم القناة\nCH+ / CH−: القناة التالية / السابقة\nأعلى / أسفل: تغيير القناة\nيسار أو OK: قائمة القنوات\nيمين أو INFO: معلومات\nضغطة طويلة على OK: إضافة للمفضلة\nLAST: القناة السابقة\n◀◀ / ▶▶: المجموعة السابقة / التالية\nأحمر: المفضلة\nأخضر: حجم الصورة\nأصفر: مؤقت النوم\nأزرق أو MENU: الإعدادات\nGUIDE: قائمة القنوات\nرجوع: إغلاق ثم خروج (مرتين)",
-                      "0-9: número de canal\nCH+ / CH−: canal siguiente / anterior\nArriba / Abajo: cambiar de canal\nIzquierda u OK: lista de canales\nDerecha o INFO: información\nOK largo: añadir a favoritos\nLAST: canal anterior\n◀◀ / ▶▶: grupo anterior / siguiente\nROJO: favorito\nVERDE: formato de imagen\nAMARILLO: temporizador\nAZUL o MENU: ajustes\nGUIDE: lista de canales\nAtrás: cerrar y salir (2 veces)"
-                  )
-                  dialog().setTitle(tr("Aide des touches", "Key guide", "دليل الأزرار", "Guía de teclas"))
-                      .setMessage(msg)
-                      .setPositiveButton("OK", null)
+              private fun qrow(label: String, action: () -> Unit): TextView {
+                  val t = TextView(this)
+                  t.text = label
+                  t.textSize = ts(16f)
+                  t.setTextColor(Color.WHITE)
+                  t.setPadding(dp(16), dp(12), dp(16), dp(12))
+                  t.isFocusable = true
+                  t.isClickable = true
+                  t.background = rounded(CARD, 12)
+                  t.setOnFocusChangeListener { v, has -> v.background = rounded(if (has) ACCENT else CARD, 12) }
+                  t.setOnClickListener { action() }
+                  return t
+              }
+
+              private fun populateQuick() {
+                  quickList.removeAllViews()
+                  val title = TextView(this)
+                  title.text = tr("Options", "Options", "خيارات", "Opciones")
+                  title.textSize = ts(18f)
+                  title.typeface = Typeface.DEFAULT_BOLD
+                  title.setTextColor(Color.WHITE)
+                  title.setPadding(dp(8), dp(4), dp(8), dp(10))
+                  quickList.addView(title)
+                  for (item in quickItems()) {
+                      val row = qrow(item.first) {
+                          closeQuick()
+                          item.second()
+                      }
+                      val lp = LinearLayout.LayoutParams(-1, -2)
+                      lp.setMargins(0, dp(3), 0, dp(3))
+                      quickList.addView(row, lp)
+                  }
+              }
+
+              private fun quickDialog() {
+                  val items = quickItems()
+                  dialog().setTitle(tr("Options", "Options", "خيارات", "Opciones"))
+                      .setItems(items.map { it.first }.toTypedArray()) { _, i -> items[i].second() }
                       .show()
+              }
+
+              private fun trackDialog(type: Int) {
+                  val exo = player ?: return
+                  val titleText = when (type) {
+                      C.TRACK_TYPE_AUDIO -> tr("Audio", "Audio", "الصوت", "Audio")
+                      C.TRACK_TYPE_TEXT -> tr("Sous-titres", "Subtitles", "الترجمة", "Subtítulos")
+                      else -> tr("Qualité vidéo", "Video quality", "جودة الفيديو", "Calidad de vídeo")
+                  }
+                  val labels = ArrayList<String>()
+                  val actions = ArrayList<() -> Unit>()
+                  var base = 0
+                  if (type == C.TRACK_TYPE_TEXT) {
+                      base = 1
+                      labels.add(tr("Désactivés", "Off", "إيقاف", "Desactivados"))
+                      actions.add {
+                          exo.trackSelectionParameters = exo.trackSelectionParameters.buildUpon()
+                              .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
+                              .build()
+                      }
+                  } else if (type == C.TRACK_TYPE_VIDEO) {
+                      base = 1
+                      labels.add(tr("Auto", "Auto", "تلقائي", "Auto"))
+                      actions.add {
+                          exo.trackSelectionParameters = exo.trackSelectionParameters.buildUpon()
+                              .clearOverridesOfType(C.TRACK_TYPE_VIDEO)
+                              .build()
+                      }
+                  }
+                  for (g in exo.currentTracks.groups) {
+                      if (g.type != type || !g.isSupported()) continue
+                      for (i in 0 until g.length) {
+                          val f = g.getTrackFormat(i)
+                          val parts = ArrayList<String>()
+                          if (type == C.TRACK_TYPE_VIDEO) {
+                              if (f.height > 0) parts.add(f.height.toString() + "p")
+                              if (f.bitrate > 0) parts.add((f.bitrate / 1000).toString() + " kb/s")
+                          } else {
+                              val lang = f.language
+                              if (!lang.isNullOrBlank() && lang != "und") {
+                                  parts.add(Locale(lang).getDisplayLanguage(Locale(langCode())))
+                              }
+                              val lb = f.label
+                              if (!lb.isNullOrBlank()) parts.add(lb)
+                              if (type == C.TRACK_TYPE_AUDIO && f.channelCount > 0) parts.add(f.channelCount.toString() + " ch")
+                          }
+                          if (parts.isEmpty()) parts.add("#" + (labels.size + 1))
+                          labels.add((if (g.isTrackSelected(i)) "● " else "○ ") + parts.joinToString(" • "))
+                          val group = g.mediaTrackGroup
+                          val idx = i
+                          actions.add {
+                              exo.trackSelectionParameters = exo.trackSelectionParameters.buildUpon()
+                                  .setTrackTypeDisabled(type, false)
+                                  .setOverrideForType(TrackSelectionOverride(group, idx))
+                                  .build()
+                          }
+                      }
+                  }
+                  if (labels.size <= base) {
+                      toast(tr("Aucune piste disponible", "No tracks available", "لا توجد مسارات", "Sin pistas disponibles"))
+                      return
+                  }
+                  dialog().setTitle(titleText).setItems(labels.toTypedArray()) { _, i -> actions[i]() }.show()
+              }
+
+              private fun guideDialog(ch: Channel) {
+                  val l = Epg.list(ch.tvgId).take(60)
+                  if (l.isEmpty()) {
+                      toast(tr("Pas de guide pour cette chaîne", "No guide for this channel", "لا يوجد دليل لهذه القناة", "Sin guía para este canal"))
+                      return
+                  }
+                  val t = System.currentTimeMillis()
+                  val labels = l.map { p ->
+                      (if (p.start <= t) "▶ " else "") + dayFmt.format(Date(p.start)) + "  " + p.title
+                  }
+                  dialog().setTitle(ch.name).setItems(labels.toTypedArray()) { _, i ->
+                      val p = l[i]
+                      dialog().setTitle(p.title)
+                          .setMessage(fmtTime(p.start) + " – " + fmtTime(p.stop) + "\n\n" + p.desc)
+                          .setPositiveButton("OK", null)
+                          .show()
+                  }.show()
               }
 
               // ---------- menus ----------
@@ -1711,7 +2790,14 @@ jobs:
 
               private fun menuDialog() {
                   val auto = prefs.getBoolean("autoconnect", true)
+                  val autoplay = prefs.getBoolean("autoplay", true)
                   val ext = prefs.getString("xt_ext", "m3u8") ?: "m3u8"
+                  val buf = prefs.getInt("buffer", 1).coerceIn(0, 2)
+                  val bufNames = arrayOf(
+                      tr("rapide", "fast", "سريع", "rápido"),
+                      tr("normale", "normal", "عادي", "normal"),
+                      tr("stable", "stable", "مستقر", "estable")
+                  )
                   val on = tr("activée", "on", "مفعّل", "activada")
                   val off = tr("désactivée", "off", "معطّل", "desactivada")
                   val items = arrayOf(
@@ -1719,17 +2805,21 @@ jobs:
                       "Xtream / " + tr("Portail", "Portal", "البوابة", "Portal"),
                       tr("Importer une playlist (lien)", "Import a playlist (link)", "استيراد قائمة تشغيل (رابط)", "Importar lista (enlace)"),
                       tr("Importer un fichier M3U", "Import an M3U file", "استيراد ملف M3U", "Importar archivo M3U"),
-                      tr("Tout actualiser (sources et guide)", "Refresh all (sources and guide)", "تحديث الكل (المصادر والدليل)", "Actualizar todo (fuentes y guía)"),
+                      tr("Tout actualiser (sources, films, guide)", "Refresh all (sources, movies, guide)", "تحديث الكل (المصادر والأفلام والدليل)", "Actualizar todo (fuentes, películas, guía)"),
                       tr("Source du guide TV (EPG)", "TV guide source (EPG)", "مصدر دليل البرامج (EPG)", "Fuente de la guía TV (EPG)"),
                       tr("Connexion automatique : ", "Auto-connect: ", "الاتصال التلقائي: ", "Conexión automática: ") + (if (auto) on else off),
                       tr("Flux Xtream : ", "Xtream stream: ", "بث Xtream: ", "Flujo Xtream: ") + ext,
+                      tr("Gérer les groupes (masquer)", "Manage groups (hide)", "إدارة المجموعات (إخفاء)", "Gestionar grupos (ocultar)"),
                       tr("Télécommande", "Remote control", "جهاز التحكم", "Mando a distancia"),
                       tr("Langue", "Language", "اللغة", "Idioma"),
                       tr("Couleur du thème", "Theme color", "لون السمة", "Color del tema"),
                       tr("Format de l'image", "Picture format", "حجم الصورة", "Formato de imagen"),
                       tr("Minuteur de veille", "Sleep timer", "مؤقت النوم", "Temporizador"),
+                      tr("Mémoire tampon : ", "Buffer: ", "المخزن المؤقت: ", "Búfer: ") + bufNames[buf],
+                      "User-Agent",
+                      tr("Lecture au démarrage : ", "Play on start: ", "التشغيل عند البدء: ", "Reproducir al iniciar: ") + (if (autoplay) on else off),
                       tr("Trier A → Z", "Sort A → Z", "ترتيب أبجدي", "Ordenar A → Z"),
-                      tr("Vider la liste", "Clear the list", "مسح القائمة", "Vaciar la lista"),
+                      tr("Vider la liste des chaînes", "Clear the channel list", "مسح قائمة القنوات", "Vaciar la lista de canales"),
                       tr("Réinitialiser", "Reset", "إعادة الضبط", "Restablecer"),
                       tr("À propos", "About", "حول", "Acerca de")
                   )
@@ -1749,41 +2839,135 @@ jobs:
                               prefs.edit().putString("xt_ext", if (ext == "m3u8") "ts" else "m3u8").apply()
                               for (a in accounts()) fetchXtream(a, true)
                           }
-                          8 -> remoteDialog()
-                          9 -> languageDialog()
-                          10 -> accentDialog()
-                          11 -> cycleResize()
-                          12 -> sleepDialog()
-                          13 -> {
+                          8 -> groupsDialog()
+                          9 -> remoteDialog()
+                          10 -> languageDialog()
+                          11 -> accentDialog()
+                          12 -> cycleResize()
+                          13 -> sleepDialog()
+                          14 -> {
+                              prefs.edit().putInt("buffer", (buf + 1) % 3).apply()
+                              rebuildPlayer()
+                              toast(tr("Mémoire tampon : ", "Buffer: ", "المخزن المؤقت: ", "Búfer: ") + bufNames[(buf + 1) % 3])
+                          }
+                          15 -> uaDialog()
+                          16 -> {
+                              prefs.edit().putBoolean("autoplay", !autoplay).apply()
+                              toast(tr("Lecture au démarrage ", "Play on start ", "التشغيل عند البدء ", "Reproducir al iniciar ") + (if (autoplay) off else on))
+                          }
+                          17 -> {
                               all.sortBy { it.name.lowercase() }
                               save()
                               refresh(true)
                           }
-                          14 -> confirm(tr("Supprimer toutes les chaînes ?", "Delete all channels?", "حذف كل القنوات؟", "¿Borrar todos los canales?")) {
+                          18 -> confirm(tr("Supprimer toutes les chaînes ?", "Delete all channels?", "حذف كل القنوات؟", "¿Borrar todos los canales?")) {
                               all.clear()
                               save()
                               refresh(true)
                           }
-                          15 -> confirm(tr("Tout réinitialiser (comptes, playlists) ?", "Reset everything (accounts, playlists)?", "إعادة ضبط الكل (الحسابات والقوائم)؟", "¿Restablecer todo (cuentas, listas)?")) {
+                          19 -> confirm(tr("Tout réinitialiser (comptes, playlists, films) ?", "Reset everything (accounts, playlists, movies)?", "إعادة ضبط الكل (الحسابات والقوائم والأفلام)؟", "¿Restablecer todo (cuentas, listas, películas)?")) {
                               all = defaultChannels.map { it.copy() }.toMutableList()
                               savePlaylists(emptyList())
                               saveAccounts(emptyList())
+                              vods = mutableListOf()
+                              vodLoaded = true
+                              saveVodFile(vods)
+                              hiddenSet = HashSet()
+                              prefs.edit().putString("hidden", "").apply()
                               filter = ""
+                              vfilter = ""
                               save()
                               refresh(true)
                           }
-                          16 -> dialog().setTitle("TV Player 5.0")
+                          20 -> dialog().setTitle("TV Player 6.0")
                               .setMessage(
                                   tr(
-                                      "Lecteur de chaînes TV (HLS, DASH, TS) avec Xtream, M3U et guide TV.\n\nAppui long sur une chaîne pour plus d'options.",
-                                      "TV channel player (HLS, DASH, TS) with Xtream, M3U and TV guide.\n\nLong-press a channel for more options.",
-                                      "مشغّل قنوات تلفزيونية (HLS وDASH وTS) مع Xtream وM3U ودليل البرامج.\n\nاضغط مطولاً على قناة لمزيد من الخيارات.",
-                                      "Reproductor de TV (HLS, DASH, TS) con Xtream, M3U y guía TV.\n\nMantén pulsado un canal para más opciones."
+                                      "Lecteur TV, films et séries (HLS, DASH, TS) avec Xtream, M3U et guide TV.\nMobile, Android TV et Fire TV.\n\nAppui long sur une chaîne pour plus d'options.",
+                                      "Live TV, movies and series player (HLS, DASH, TS) with Xtream, M3U and TV guide.\nMobile, Android TV and Fire TV.\n\nLong-press a channel for more options.",
+                                      "مشغّل تلفزيون وأفلام ومسلسلات (HLS وDASH وTS) مع Xtream وM3U ودليل البرامج.\nللهاتف وAndroid TV وFire TV.\n\nاضغط مطولاً على قناة لمزيد من الخيارات.",
+                                      "Reproductor de TV, películas y series (HLS, DASH, TS) con Xtream, M3U y guía TV.\nMóvil, Android TV y Fire TV.\n\nMantén pulsado un canal para más opciones."
                                   )
                               )
                               .setPositiveButton("OK", null).show()
                       }
                   }.show()
+              }
+
+              private fun groupsDialog() {
+                  val groups = all.map { it.group }.filter { it.isNotBlank() }.distinct().sorted()
+                  if (groups.isEmpty()) {
+                      toast(tr("Aucun groupe", "No groups", "لا توجد مجموعات", "Sin grupos"))
+                      return
+                  }
+                  val checked = BooleanArray(groups.size) { !hiddenSet.contains(groups[it]) }
+                  dialog().setTitle(tr("Groupes visibles", "Visible groups", "المجموعات الظاهرة", "Grupos visibles"))
+                      .setMultiChoiceItems(groups.toTypedArray(), checked) { _, i, isChecked -> checked[i] = isChecked }
+                      .setPositiveButton("OK") { _, _ ->
+                          val hs = HashSet<String>()
+                          for (i in groups.indices) {
+                              if (!checked[i]) hs.add(groups[i])
+                          }
+                          hiddenSet = hs
+                          prefs.edit().putString("hidden", hs.joinToString("\n")).apply()
+                          if (hs.contains(filter)) filter = ""
+                          refresh(true)
+                      }
+                      .setNegativeButton(tr("Annuler", "Cancel", "إلغاء", "Cancelar"), null)
+                      .show()
+              }
+
+              private fun uaDialog() {
+                  val u = field("User-Agent", prefs.getString("ua", "") ?: "")
+                  dialog().setTitle("User-Agent").setView(form(u))
+                      .setPositiveButton(tr("Enregistrer", "Save", "حفظ", "Guardar")) { _, _ ->
+                          prefs.edit().putString("ua", u.text.toString().trim()).apply()
+                          rebuildPlayer()
+                      }
+                      .setNegativeButton(tr("Annuler", "Cancel", "إلغاء", "Cancelar"), null).show()
+              }
+
+              private fun remoteDialog() {
+                  val inv = prefs.getBoolean("inv_updown", false)
+                  val ok = prefs.getInt("ok_action", 0).coerceIn(0, 3)
+                  val okNames = arrayOf(
+                      tr("Liste des chaînes", "Channel list", "قائمة القنوات", "Lista de canales"),
+                      tr("Infos", "Info", "معلومات", "Info"),
+                      tr("Pause / Lecture", "Pause / Play", "إيقاف / تشغيل", "Pausa / Reproducir"),
+                      tr("Options", "Options", "خيارات", "Opciones")
+                  )
+                  val items = arrayOf(
+                      tr("Haut/Bas : ", "Up/Down: ", "أعلى/أسفل: ", "Arriba/Abajo: ") +
+                          (if (inv) tr("inversé", "reversed", "معكوس", "invertido") else tr("normal", "normal", "عادي", "normal")),
+                      tr("Touche OK : ", "OK button: ", "زر OK: ", "Botón OK: ") + okNames[ok],
+                      tr("Aide des touches", "Key guide", "دليل الأزرار", "Guía de teclas")
+                  )
+                  dialog().setTitle(tr("Télécommande", "Remote control", "جهاز التحكم", "Mando a distancia"))
+                      .setItems(items) { _, i ->
+                          when (i) {
+                              0 -> {
+                                  prefs.edit().putBoolean("inv_updown", !inv).apply()
+                                  remoteDialog()
+                              }
+                              1 -> {
+                                  prefs.edit().putInt("ok_action", (ok + 1) % 4).apply()
+                                  remoteDialog()
+                              }
+                              2 -> remoteHelp()
+                          }
+                      }.show()
+              }
+
+              private fun remoteHelp() {
+                  val msg = tr(
+                      "TV en direct :\nHaut / Bas : chaîne suivante / précédente\nGauche : liste des chaînes, films et séries\nDroite : options (audio, sous-titres, qualité…)\nOK : action au choix (voir réglages)\nOK long : favori\n0-9 : numéro de chaîne\nCH+ / CH− : changer de chaîne\n◀◀ / ▶▶ : groupe précédent / suivant\n\nFilms et séries :\nGauche / Droite : −10 s / +10 s\nHaut : infos, Bas : options\nOK : pause / lecture\n◀◀ / ▶▶ : ±30 s\nRetour : arrêter et revenir à la TV\n\nAutres touches :\nMENU / BLEU : réglages\nROUGE : favori, VERT : format, JAUNE : minuteur\nINFO : infos, GUIDE : liste, LAST : dernière chaîne\nCC : sous-titres, AUDIO : pistes audio",
+                      "Live TV:\nUp / Down: next / previous channel\nLeft: channel, movie and series browser\nRight: options (audio, subtitles, quality…)\nOK: configurable action (see settings)\nLong OK: favorite\n0-9: channel number\nCH+ / CH−: change channel\n◀◀ / ▶▶: previous / next group\n\nMovies and series:\nLeft / Right: −10 s / +10 s\nUp: info, Down: options\nOK: pause / play\n◀◀ / ▶▶: ±30 s\nBack: stop and return to TV\n\nOther keys:\nMENU / BLUE: settings\nRED: favorite, GREEN: aspect, YELLOW: timer\nINFO: info, GUIDE: browser, LAST: last channel\nCC: subtitles, AUDIO: audio tracks",
+                      "البث المباشر:\nأعلى / أسفل: القناة التالية / السابقة\nيسار: قائمة القنوات والأفلام والمسلسلات\nيمين: خيارات (الصوت والترجمة والجودة…)\nOK: إجراء قابل للتعديل\nضغطة طويلة على OK: مفضلة\n0-9: رقم القناة\nCH+ / CH−: تغيير القناة\n◀◀ / ▶▶: المجموعة السابقة / التالية\n\nالأفلام والمسلسلات:\nيسار / يمين: −10 ث / +10 ث\nأعلى: معلومات، أسفل: خيارات\nOK: إيقاف مؤقت / تشغيل\n◀◀ / ▶▶: ±30 ث\nرجوع: إيقاف والعودة للتلفاز\n\nأزرار أخرى:\nMENU / أزرق: الإعدادات\nأحمر: مفضلة، أخضر: النسبة، أصفر: المؤقت\nINFO: معلومات، GUIDE: القائمة، LAST: القناة الأخيرة\nCC: الترجمة، AUDIO: مسارات الصوت",
+                      "TV en vivo:\nArriba / Abajo: canal siguiente / anterior\nIzquierda: lista de canales, películas y series\nDerecha: opciones (audio, subtítulos, calidad…)\nOK: acción configurable\nOK largo: favorito\n0-9: número de canal\nCH+ / CH−: cambiar de canal\n◀◀ / ▶▶: grupo anterior / siguiente\n\nPelículas y series:\nIzquierda / Derecha: −10 s / +10 s\nArriba: info, Abajo: opciones\nOK: pausa / reproducir\n◀◀ / ▶▶: ±30 s\nAtrás: parar y volver a la TV\n\nOtras teclas:\nMENU / AZUL: ajustes\nROJO: favorito, VERDE: formato, AMARILLO: temporizador\nINFO: info, GUIDE: lista, LAST: último canal\nCC: subtítulos, AUDIO: pistas de audio"
+                  )
+                  dialog().setTitle(tr("Aide des touches", "Key guide", "دليل الأزرار", "Guía de teclas"))
+                      .setMessage(msg)
+                      .setPositiveButton("OK", null)
+                      .show()
               }
 
               private fun languageDialog() {
@@ -1817,6 +3001,7 @@ jobs:
                   val items = arrayOf(
                       if (ch.fav) tr("Retirer des favoris", "Remove from favorites", "إزالة من المفضلة", "Quitar de favoritos")
                       else tr("Ajouter aux favoris", "Add to favorites", "إضافة للمفضلة", "Añadir a favoritos"),
+                      tr("Programmes de la chaîne", "Channel schedule", "برامج القناة", "Programación del canal"),
                       tr("Renommer", "Rename", "إعادة تسمية", "Renombrar"),
                       tr("Copier le lien", "Copy link", "نسخ الرابط", "Copiar enlace"),
                       tr("Supprimer", "Delete", "حذف", "Eliminar")
@@ -1828,7 +3013,8 @@ jobs:
                               save()
                               refresh(true)
                           }
-                          1 -> {
+                          1 -> guideDialog(ch)
+                          2 -> {
                               val n = field(tr("Nom", "Name", "الاسم", "Nombre"), ch.name)
                               dialog().setTitle(tr("Renommer", "Rename", "إعادة تسمية", "Renombrar")).setView(form(n))
                                   .setPositiveButton("OK") { _, _ ->
@@ -1841,12 +3027,12 @@ jobs:
                                   }
                                   .setNegativeButton(tr("Annuler", "Cancel", "إلغاء", "Cancelar"), null).show()
                           }
-                          2 -> {
+                          3 -> {
                               val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                               cm.setPrimaryClip(ClipData.newPlainText("link", ch.url))
                               toast(tr("Lien copié", "Link copied", "تم نسخ الرابط", "Enlace copiado"))
                           }
-                          3 -> confirm(tr("Supprimer cette chaîne ?", "Delete this channel?", "حذف هذه القناة؟", "¿Eliminar este canal?")) {
+                          4 -> confirm(tr("Supprimer cette chaîne ?", "Delete this channel?", "حذف هذه القناة؟", "¿Eliminar este canal?")) {
                               all.remove(ch)
                               save()
                               refresh(true)
@@ -1864,9 +3050,13 @@ jobs:
                           val url = u.text.toString().trim()
                           val name = n.text.toString().trim()
                           if (url.isNotEmpty()) {
-                              all.add(Channel(if (name.isEmpty()) url else name, url, g.text.toString().trim()))
-                              save()
-                              refresh(true)
+                              if (all.any { it.url == url }) {
+                                  toast(tr("Cette chaîne existe déjà", "Channel already exists", "القناة موجودة بالفعل", "El canal ya existe"))
+                              } else {
+                                  all.add(Channel(if (name.isEmpty()) url else name, url, g.text.toString().trim()))
+                                  save()
+                                  refresh(true)
+                              }
                           }
                       }
                       .setNegativeButton(tr("Annuler", "Cancel", "إلغاء", "Cancelar"), null).show()
@@ -1924,6 +3114,7 @@ jobs:
                               l.add(acc)
                               saveAccounts(l)
                               fetchXtream(acc, true)
+                              fetchVod(acc, true)
                           } else {
                               toast(tr("Champs incomplets", "Missing fields", "حقول ناقصة", "Campos incompletos"))
                           }
@@ -1933,21 +3124,33 @@ jobs:
 
               private fun xtreamAccountMenu(acc: Account) {
                   val items = arrayOf(
-                      tr("Actualiser", "Refresh", "تحديث", "Actualizar"),
+                      tr("Actualiser les chaînes", "Refresh channels", "تحديث القنوات", "Actualizar canales"),
+                      tr("Actualiser films et séries", "Refresh movies and series", "تحديث الأفلام والمسلسلات", "Actualizar películas y series"),
                       tr("Infos du compte", "Account info", "معلومات الحساب", "Info de la cuenta"),
                       tr("Supprimer", "Delete", "حذف", "Eliminar")
                   )
                   dialog().setTitle(acc.label()).setItems(items) { _, i ->
                       when (i) {
                           0 -> fetchXtream(acc, true)
-                          1 -> xtreamInfo(acc)
-                          2 -> confirm(tr("Supprimer ce compte et ses chaînes ?", "Delete this account and its channels?", "حذف هذا الحساب وقنواته؟", "¿Eliminar esta cuenta y sus canales?")) {
+                          1 -> fetchVod(acc, true)
+                          2 -> xtreamInfo(acc)
+                          3 -> confirm(tr("Supprimer ce compte, ses chaînes et ses films ?", "Delete this account, its channels and movies?", "حذف هذا الحساب وقنواته وأفلامه؟", "¿Eliminar esta cuenta, sus canales y películas?")) {
+                              val key = acc.key()
                               val l = accounts()
-                              l.removeAll { it.key() == acc.key() }
+                              l.removeAll { it.key() == key }
                               saveAccounts(l)
-                              all.removeAll { it.src == acc.key() }
+                              all.removeAll { it.src == key }
                               save()
                               refresh(true)
+                              pool.execute {
+                                  vodLoadOnce()
+                                  val keep = vods.filter { it.src != key }.toMutableList()
+                                  saveVodFile(keep)
+                                  runOnUiThread {
+                                      vods = keep
+                                      refresh(true)
+                                  }
+                              }
                           }
                       }
                   }.show()
@@ -1977,6 +3180,36 @@ jobs:
                   }
               }
 
+              private fun readArray(link: String, wanted: Set<String>, onItem: (HashMap<String, String>) -> Unit) {
+                  val c = URL(link).openConnection() as HttpURLConnection
+                  c.connectTimeout = 15000
+                  c.readTimeout = 120000
+                  c.instanceFollowRedirects = true
+                  c.setRequestProperty("User-Agent", userAgent())
+                  val reader = JsonReader(BufferedReader(InputStreamReader(c.inputStream, "UTF-8"), 65536))
+                  try {
+                      reader.beginArray()
+                      while (reader.hasNext()) {
+                          reader.beginObject()
+                          val m = HashMap<String, String>()
+                          while (reader.hasNext()) {
+                              val k = reader.nextName()
+                              val t = reader.peek()
+                              if (wanted.contains(k) && (t == JsonToken.STRING || t == JsonToken.NUMBER)) {
+                                  m[k] = reader.nextString()
+                              } else {
+                                  reader.skipValue()
+                              }
+                          }
+                          reader.endObject()
+                          onItem(m)
+                      }
+                      reader.endArray()
+                  } finally {
+                      reader.close()
+                  }
+              }
+
               private fun fetchXtream(acc: Account, manual: Boolean) {
                   if (manual) toast(tr("Connexion…", "Connecting…", "جارٍ الاتصال…", "Conectando…"))
                   pool.execute {
@@ -1989,34 +3222,32 @@ jobs:
                                   toast(tr("Identifiants refusés", "Login refused", "بيانات الدخول مرفوضة", "Credenciales rechazadas"))
                               }
                           } else {
-                              val catArr = JSONArray(httpGet(api + "&action=get_live_categories"))
                               val cats = HashMap<String, String>()
-                              for (i in 0 until catArr.length()) {
-                                  val c = catArr.getJSONObject(i)
-                                  cats[js(c, "category_id")] = js(c, "category_name")
+                              readArray(api + "&action=get_live_categories", setOf("category_id", "category_name")) { m ->
+                                  cats[m["category_id"] ?: ""] = m["category_name"] ?: ""
                               }
-                              val arr = JSONArray(httpGet(api + "&action=get_live_streams", 120000))
                               val ext = prefs.getString("xt_ext", "m3u8") ?: "m3u8"
                               val key = acc.key()
-                              val list = ArrayList<Channel>(arr.length())
-                              for (i in 0 until arr.length()) {
-                                  val o = arr.getJSONObject(i)
-                                  val id = js(o, "stream_id")
-                                  if (id.isEmpty()) continue
-                                  val url = acc.server + "/live/" + Uri.encode(acc.user) + "/" +
-                                      Uri.encode(acc.pass) + "/" + id + "." + ext
-                                  val name = js(o, "name")
-                                  list.add(
-                                      Channel(
-                                          if (name.isEmpty()) id else name,
-                                          url,
-                                          cats[js(o, "category_id")] ?: "",
-                                          js(o, "stream_icon"),
-                                          false,
-                                          js(o, "epg_channel_id"),
-                                          key
+                              val list = ArrayList<Channel>()
+                              val wanted = setOf("stream_id", "name", "stream_icon", "category_id", "epg_channel_id")
+                              readArray(api + "&action=get_live_streams", wanted) { m ->
+                                  val id = m["stream_id"]
+                                  if (!id.isNullOrEmpty()) {
+                                      val url = acc.server + "/live/" + Uri.encode(acc.user) + "/" +
+                                          Uri.encode(acc.pass) + "/" + id + "." + ext
+                                      val name = m["name"]
+                                      list.add(
+                                          Channel(
+                                              if (name.isNullOrEmpty()) id else name,
+                                              url,
+                                              cats[m["category_id"] ?: ""] ?: "",
+                                              m["stream_icon"] ?: "",
+                                              false,
+                                              m["epg_channel_id"] ?: "",
+                                              key
+                                          )
                                       )
-                                  )
+                                  }
                               }
                               runOnUiThread { mergeXtream(key, list, manual) }
                           }
@@ -2034,24 +3265,142 @@ jobs:
                       if (c.fav && c.src == key) favKeys.add(c.url.substringBeforeLast('.'))
                   }
                   all.removeAll { it.src == key }
+                  val known = HashSet<String>()
+                  for (c in all) known.add(c.url)
+                  val fresh = ArrayList<Channel>()
                   for (c in list) {
-                      if (favKeys.contains(c.url.substringBeforeLast('.'))) c.fav = true
+                      if (known.add(c.url)) {
+                          if (favKeys.contains(c.url.substringBeforeLast('.'))) c.fav = true
+                          fresh.add(c)
+                      }
                   }
-                  all.addAll(list)
+                  all.addAll(fresh)
                   save()
                   refresh(true)
                   if (manual) {
-                      toast(list.size.toString() + tr(" chaînes", " channels", " قناة", " canales"))
+                      toast(fresh.size.toString() + tr(" chaînes", " channels", " قناة", " canales"))
                   }
                   fetchEpg(false)
               }
 
+              private fun fetchVod(acc: Account, manual: Boolean) {
+                  if (manual) {
+                      toast(tr("Chargement des films et séries…", "Loading movies and series…", "جارٍ تحميل الأفلام والمسلسلات…", "Cargando películas y series…"))
+                  }
+                  pool.execute {
+                      try {
+                          val api = acc.server + "/player_api.php?" + xtreamAuth(acc)
+                          val key = acc.key()
+                          val mcats = HashMap<String, String>()
+                          val scats = HashMap<String, String>()
+                          try {
+                              readArray(api + "&action=get_vod_categories", setOf("category_id", "category_name")) { m ->
+                                  mcats[m["category_id"] ?: ""] = m["category_name"] ?: ""
+                              }
+                          } catch (e: Exception) {
+                          }
+                          try {
+                              readArray(api + "&action=get_series_categories", setOf("category_id", "category_name")) { m ->
+                                  scats[m["category_id"] ?: ""] = m["category_name"] ?: ""
+                              }
+                          } catch (e: Exception) {
+                          }
+                          val list = ArrayList<Vod>()
+                          var err = ""
+                          try {
+                              val wantedM = setOf("stream_id", "name", "stream_icon", "category_id", "container_extension", "rating")
+                              readArray(api + "&action=get_vod_streams", wantedM) { m ->
+                                  val id = m["stream_id"]
+                                  if (!id.isNullOrEmpty()) {
+                                      val name = m["name"]
+                                      list.add(
+                                          Vod(
+                                              id,
+                                              if (name.isNullOrEmpty()) id else name,
+                                              m["stream_icon"] ?: "",
+                                              mcats[m["category_id"] ?: ""] ?: "",
+                                              1,
+                                              m["container_extension"] ?: "mp4",
+                                              key,
+                                              m["rating"] ?: ""
+                                          )
+                                      )
+                                  }
+                              }
+                          } catch (e: Exception) {
+                              err = e.message ?: ""
+                          }
+                          try {
+                              val wantedS = setOf("series_id", "name", "cover", "category_id", "rating")
+                              readArray(api + "&action=get_series", wantedS) { m ->
+                                  val id = m["series_id"]
+                                  if (!id.isNullOrEmpty()) {
+                                      val name = m["name"]
+                                      list.add(
+                                          Vod(
+                                              id,
+                                              if (name.isNullOrEmpty()) id else name,
+                                              m["cover"] ?: "",
+                                              scats[m["category_id"] ?: ""] ?: "",
+                                              2,
+                                              "",
+                                              key,
+                                              m["rating"] ?: ""
+                                          )
+                                      )
+                                  }
+                              }
+                          } catch (e: Exception) {
+                              err = e.message ?: ""
+                          }
+                          if (list.isEmpty()) {
+                              runOnUiThread {
+                                  if (manual) {
+                                      toast(tr("Aucun film ni série trouvé ", "No movies or series found ", "لم يتم العثور على أفلام أو مسلسلات ", "No se encontraron películas ni series ") + err)
+                                  }
+                              }
+                          } else {
+                              vodLoadOnce()
+                              val merged = ArrayList<Vod>()
+                              for (v in vods) {
+                                  if (v.src != key) merged.add(v)
+                              }
+                              merged.addAll(list)
+                              val dedup = merged.distinctBy { it.src + "|" + it.kind + "|" + it.id }.toMutableList()
+                              saveVodFile(dedup)
+                              prefs.edit().putLong("last_vod", System.currentTimeMillis()).apply()
+                              val movies = list.count { it.kind == 1 }
+                              val series = list.count { it.kind == 2 }
+                              runOnUiThread {
+                                  vods = dedup
+                                  vodLoaded = true
+                                  if (section != 0) refresh(true)
+                                  if (manual) {
+                                      toast(
+                                          movies.toString() + tr(" films, ", " movies, ", " فيلم، ", " películas, ") +
+                                              series + tr(" séries", " series", " مسلسل", " series")
+                                      )
+                                  }
+                              }
+                          }
+                      } catch (e: Throwable) {
+                          runOnUiThread {
+                              if (manual) toast(tr("Erreur : ", "Error: ", "خطأ: ", "Error: ") + e.message)
+                          }
+                      }
+                  }
+              }
+
               private fun autoConnect() {
                   if (!prefs.getBoolean("autoconnect", true)) return
-                  val last = prefs.getLong("last_refresh", 0L)
                   val now = System.currentTimeMillis()
-                  if (now - last < 30 * 60000L) return
                   val accs = accounts()
+                  if (accs.isNotEmpty() && now - prefs.getLong("last_vod", 0L) > 12 * 3600000L) {
+                      prefs.edit().putLong("last_vod", now).apply()
+                      for (a in accs) fetchVod(a, false)
+                  }
+                  val last = prefs.getLong("last_refresh", 0L)
+                  if (now - last < 30 * 60000L) return
                   val pls = playlists()
                   if (accs.isEmpty() && pls.isEmpty()) return
                   prefs.edit().putLong("last_refresh", now).apply()
@@ -2063,7 +3412,9 @@ jobs:
                   var n = 0
                   for (a in accounts()) {
                       fetchXtream(a, true)
-                      n++                  }
+                      fetchVod(a, true)
+                      n++
+                  }
                   for (u in playlists()) {
                       fetchPlaylist(u, true)
                       n++
@@ -2168,19 +3519,19 @@ jobs:
                               c.connectTimeout = 15000
                               c.readTimeout = 120000
                               c.instanceFollowRedirects = true
-                              c.setRequestProperty("User-Agent", "Mozilla/5.0")
+                              c.setRequestProperty("User-Agent", userAgent())
                               val r = c.inputStream.use { Epg.parse(it, wanted) }
                               for ((k, v) in r) merged.getOrPut(k) { mutableListOf() }.addAll(v)
                               okCount++
-                          } catch (e: Exception) {
+                          } catch (e: Throwable) {
                               err = e.message ?: ""
                           }
                       }
                       for (l in merged.values) l.sortBy { it.start }
                       if (okCount > 0) Epg.data = merged
                       runOnUiThread {
-                          adapter.notifyDataSetChanged()
-                          if (banner.visibility == View.VISIBLE) showBanner(null, controlsVisible)
+                          if (section == 0) adapter.notifyDataSetChanged()
+                          if (banner.visibility == View.VISIBLE && !isVod) showBanner(null, controlsVisible)
                           if (manual) {
                               if (okCount > 0) {
                                   toast(tr("Guide TV : ", "TV guide: ", "دليل البرامج: ", "Guía TV: ") + merged.size)
@@ -2196,7 +3547,11 @@ jobs:
                   val i = Intent(Intent.ACTION_OPEN_DOCUMENT)
                   i.addCategory(Intent.CATEGORY_OPENABLE)
                   i.type = "*/*"
-                  startActivityForResult(i, 11)
+                  try {
+                      startActivityForResult(i, 11)
+                  } catch (e: Exception) {
+                      toast(tr("Sélecteur de fichiers indisponible", "File picker unavailable", "منتقي الملفات غير متاح", "Selector de archivos no disponible"))
+                  }
               }
 
               override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -2247,4 +3602,14 @@ jobs:
         with:
           name: tvplayer-apk
           path: app/build/outputs/apk/debug/*.apk
-                                                                                                                                       
+
+      - name: Rename APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk TVPlayer.apk
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        continue-on-error: true
+        with:
+          tag_name: latest
+          name: TV Player (latest)
+          files: TVPlayer.apk

@@ -865,7 +865,7 @@ jobs:
               }
 
               private fun esc(s: String): String =
-                  s.replace("&", "&").replace("<", "<").replace(">", ">").replace("\"", """)
+                  s.replace("&", "&").replace("<", "<").replace(">", ">").replace("\u0022", """).replace("\u0027", "'")
 
               private fun readLine(ins: InputStream): String? {
                   val bo = ByteArrayOutputStream()
@@ -971,40 +971,40 @@ jobs:
               private fun head(): String {
                   val sb = StringBuilder()
                   sb.append("<!DOCTYPE html><html")
-                  if (lang == 2) sb.append(" dir=\"rtl\"")
-                  sb.append("><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">")
-                  sb.append("<title>TV Player</title><style>").append(css).append("</style></head><body><div class=\"wrap\">")
+                  if (lang == 2) sb.append(" dir='rtl'")
+                  sb.append("><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>")
+                  sb.append("<title>TV Player</title><style>").append(css).append("</style></head><body><div class='wrap'>")
                   return sb.toString()
               }
 
               private fun loginPage(wrong: Boolean): String {
                   val sb = StringBuilder(head())
-                  sb.append("<h1>TV Player</h1><div class=\"card\"><form method=\"get\" action=\"/\"><h3>")
+                  sb.append("<h1>TV Player</h1><div class='card'><form method='get' action='/'><h3>")
                   sb.append(esc(t("Code d'accès (affiché sur la TV)", "Access code (shown on the TV)", "رمز الدخول (يظهر على التلفاز)", "Código de acceso (visible en la TV)")))
                   sb.append("</h3>")
                   if (wrong) {
-                      sb.append("<div class=\"msg\" style=\"background:#3a1a1a;color:#ffb4b4\">")
+                      sb.append("<div class='msg' style='background:#3a1a1a;color:#ffb4b4'>")
                       sb.append(esc(t("Code incorrect", "Wrong code", "رمز خاطئ", "Código incorrecto")))
                       sb.append("</div>")
                   }
-                  sb.append("<input name=\"pin\" type=\"number\" inputmode=\"numeric\" autocomplete=\"off\"><button>OK</button></form></div></div></body></html>")
+                  sb.append("<input name='pin' type='number' inputmode='numeric' autocomplete='off'><button>OK</button></form></div></div></body></html>")
                   return sb.toString()
               }
 
               private fun input(name: String, ph: String, type: String = "text", value: String = ""): String =
-                  "<input name=\"" + name + "\" placeholder=\"" + esc(ph) + "\" type=\"" + type + "\" value=\"" +
-                      esc(value) + "\" autocomplete=\"off\">"
+                  "<input name='" + name + "' placeholder='" + esc(ph) + "' type='" + type + "' value='" +
+                      esc(value) + "' autocomplete='off'>"
 
               private fun form(act: String, title: String, fields: String, btn: String, alt: Boolean = false): String =
-                  "<div class=\"card\"><form method=\"post\" action=\"/do/" + act + "\"><h3>" + esc(title) +
-                      "</h3><input type=\"hidden\" name=\"pin\" value=\"" + esc(pin) + "\">" + fields +
-                      "<button" + (if (alt) " class=\"alt\"" else "") + ">" + esc(btn) + "</button></form></div>"
+                  "<div class='card'><form method='post' action='/do/" + act + "'><h3>" + esc(title) +
+                      "</h3><input type='hidden' name='pin' value='" + esc(pin) + "'>" + fields +
+                      "<button" + (if (alt) " class='alt'" else "") + ">" + esc(btn) + "</button></form></div>"
 
               private fun page(msg: String): String {
                   val sb = StringBuilder(head())
                   sb.append("<h1>TV Player</h1>")
-                  if (msg.isNotEmpty()) sb.append("<div class=\"msg\">").append(esc(msg)).append("</div>")
-                  sb.append("<div class=\"card st\"><h3>").append(esc(t("État", "Status", "الحالة", "Estado"))).append("</h3>")
+                  if (msg.isNotEmpty()) sb.append("<div class='msg'>").append(esc(msg)).append("</div>")
+                  sb.append("<div class='card st'><h3>").append(esc(t("État", "Status", "الحالة", "Estado"))).append("</h3>")
                   try {
                       for (l in statusLines()) sb.append("<div>").append(esc(l)).append("</div>")
                   } catch (e: Exception) {
@@ -1049,7 +1049,7 @@ jobs:
                       form(
                           "add_m3u_text",
                           t("Playlist M3U (texte collé)", "M3U playlist (pasted text)", "قائمة M3U (نص)", "Lista M3U (texto)"),
-                          "<textarea name=\"text\" rows=\"6\" placeholder=\"#EXTM3U\"></textarea>",
+                          "<textarea name='text' rows='6' placeholder='#EXTM3U'></textarea>",
                           t("Importer", "Import", "استيراد", "Importar")
                       )
                   )
@@ -1064,9 +1064,9 @@ jobs:
                           t("Se connecter", "Connect", "اتصال", "Conectar")
                       )
                   )
-                  val opts = StringBuilder("<select name=\"preset\"><option value=\"\">-</option>")
+                  val opts = StringBuilder("<select name='preset'><option value=''>-</option>")
                   for (p in presets) {
-                      opts.append("<option value=\"").append(esc(p.second)).append("\">").append(esc(p.first)).append("</option>")
+                      opts.append("<option value='").append(esc(p.second)).append("'>").append(esc(p.first)).append("</option>")
                   }
                   opts.append("</select>")
                   sb.append(
@@ -4933,7 +4933,7 @@ jobs:
                   val num = q.toIntOrNull()
                   val ch = if (num != null) all.getOrNull(num - 1) else all.firstOrNull { it.name.lowercase().contains(q.lowercase()) }
                   if (ch == null) return tr("Chaîne introuvable", "Channel not found", "القناة غير موجودة", "Canal no encontrado")
-                  val m = Regex("^(\\d{1,2}):(\\d{2})$").find(hhmm.trim())
+                  val m = Regex("(\\d{1,2}):(\\d{2})").matchEntire(hhmm.trim())
                       ?: return tr("Heure invalide (HH:mm)", "Invalid time (HH:mm)", "وقت غير صالح (HH:mm)", "Hora inválida (HH:mm)")
                   val h = m.groupValues[1].toInt()
                   val mi = m.groupValues[2].toInt()

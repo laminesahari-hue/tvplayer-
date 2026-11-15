@@ -75,8 +75,8 @@ jobs:
                   applicationId = "com.example.tvplayer"
                   minSdk = 21
                   targetSdk = 34
-                  versionCode = 7
-                  versionName = "7.0"
+                  versionCode = 8
+                  versionName = "7.0.1"
               }
 
               signingConfigs {
@@ -2040,11 +2040,37 @@ jobs:
                       .setConnectTimeoutMs(10000)
                       .setReadTimeoutMs(15000)
                       .setUserAgent(userAgent())
-                  val lc = when (prefs.getInt("buffer", 1)) {
-                      0 -> DefaultLoadControl.Builder().setBufferDurationsMs(8000, 30000, 1000, 2000).build()
-                      2 -> DefaultLoadControl.Builder().setBufferDurationsMs(30000, 90000, 2500, 5000).build()
-                      else -> DefaultLoadControl.Builder().setBufferDurationsMs(15000, 50000, 1500, 3000).build()
+                  val bufLevel = prefs.getInt("buffer", 1)
+                  val tsLevel = prefs.getInt("timeshift", 1).coerceIn(0, 2)
+                  val minBuf = when (bufLevel) {
+                      0 -> 8000
+                      2 -> 30000
+                      else -> 15000
                   }
+                  val playBuf = when (bufLevel) {
+                      0 -> 1000
+                      2 -> 2500
+                      else -> 1500
+                  }
+                  val rebufBuf = when (bufLevel) {
+                      0 -> 2000
+                      2 -> 5000
+                      else -> 3000
+                  }
+                  val baseMax = when (bufLevel) {
+                      0 -> 30000
+                      2 -> 90000
+                      else -> 50000
+                  }
+                  val tsMax = when (tsLevel) {
+                      1 -> 120000
+                      2 -> 300000
+                      else -> 0
+                  }
+                  val lc = DefaultLoadControl.Builder()
+                      .setBufferDurationsMs(minBuf, maxOf(baseMax, tsMax), playBuf, rebufBuf)
+                      .setBackBuffer(if (tsLevel > 0) 60000 else 0, true)
+                      .build()
                   val exo = ExoPlayer.Builder(this)
                       .setMediaSourceFactory(DefaultMediaSourceFactory(this).setDataSourceFactory(http))
                       .setLoadControl(lc)
@@ -2062,7 +2088,9 @@ jobs:
                       }
 
                       override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+                          if (!playWhenReady && !isVod) behindLive = true
                           updatePlayButton()
+                          updateGoLive()
                       }
 
                       override fun onVideoSizeChanged(videoSize: VideoSize) {
@@ -2122,6 +2150,15 @@ jobs:
                   var s = videoInfo
                   if (videoAuto) {
                       s += (if (s.isEmpty()) "" else "  •  ") + "Auto" + (if (maxHeight > 0) " ≤" + maxHeight + "p" else "")
+                  }
+                  if (!isVod) {
+                      val p = player
+                      if (p != null && p.isCurrentMediaItemLive) {
+                          val off = p.currentLiveOffset
+                          if (off != C.TIME_UNSET) {
+                              s += "  •  " + (if (off <= 4000L) "LIVE" else "−" + (off / 1000) + " s")
+                          }
+                      }
                   }
                   if (muted) s += "  " + tr("Muet", "Muted", "صامت", "Silencio")
                   return s
@@ -2729,6 +2766,7 @@ jobs:
                   val exo = player ?: return
                   if (ch.url != currentUrl && !isVod) previousUrl = currentUrl
                   isVod = false
+                  behindLive = false
                   vodTitle = ""
                   seekBack.visibility = View.GONE
                   seekFwd.visibility = View.GONE
@@ -2949,14 +2987,21 @@ jobs:
 
               private fun seekBy(ms: Long) {
                   val p = player ?: return
-                  if (!isVod) return
+                  if (!isVod) {
+                      if (!p.isCurrentMediaItemSeekable) return
+                      val off = p.currentLiveOffset
+                      if (ms > 0L && off != C.TIME_UNSET && off <= ms + 1500L) {
+                          goToLive()
+                          return
+                      }
+                  }
                   val dur = p.duration
                   var t = p.currentPosition + ms
                   if (t < 0L) t = 0L
                   if (dur > 0L && dur != C.TIME_UNSET && t > dur - 1000L) t = dur - 1000L
                   p.seekTo(t)
                   showBanner(null, controlsVisible)
-                  updateVodProgress()
+                  if (isVod) updateVodProgress()
               }
 
               private fun updateVodProgress() {
@@ -3324,6 +3369,10 @@ jobs:
                   k == KeyEvent.KEYCODE_DPAD_CENTER || k == KeyEvent.KEYCODE_ENTER || k == KeyEvent.KEYCODE_NUMPAD_ENTER
 
               private fun okAction() {
+                  if (goLive.visibility == View.VISIBLE) {
+                      goToLive()
+                      return
+                  }
                   if (isVod) {
                       playPause()
                       showBanner(null, true)
@@ -3378,11 +3427,11 @@ jobs:
                           return true
                       }
                       KeyEvent.KEYCODE_MEDIA_REWIND -> {
-                          if (isVod) seekBy(-30000L) else changeGroup(-1)
+                          if (isVod || canSeekLive()) seekBy(-30000L) else changeGroup(-1)
                           return true
                       }
                       KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> {
-                          if (isVod) seekBy(30000L) else changeGroup(1)
+                          if (isVod || canSeekLive()) seekBy(30000L) else changeGroup(1)
                           return true
                       }
                       KeyEvent.KEYCODE_INFO -> {
@@ -3548,6 +3597,7 @@ jobs:
                           if (c != null) guideDialog(c)
                       })
                       l.add(qi(tr("Chaîne précédente", "Last channel", "القناة الأخيرة", "Último canal")) { lastChannel() })
+                      l.add(qi(tr("Retour au direct", "Go to Live", "العودة للبث المباشر", "Ir al directo")) { goToLive() })
                       l.add(
                           qi(
                               if (recorder.active) tr("Arrêter l'enregistrement", "Stop recording", "إيقاف التسجيل", "Detener grabación")
@@ -3869,10 +3919,10 @@ jobs:
 
               private fun remoteHelp() {
                   val msg = tr(
-                      "TV en direct :\nHaut / Bas : chaîne suivante / précédente\nGauche : liste des chaînes, films et séries\nDroite : options (audio, sous-titres, qualité…)\nOK : action au choix (voir réglages)\nOK long : favori\n0-9 : numéro de chaîne\nCH+ / CH− : changer de chaîne\n◀◀ / ▶▶ : groupe précédent / suivant\n\nFilms et séries :\nGauche / Droite : −10 s / +10 s\nHaut : infos, Bas : options\nOK : pause / lecture\n◀◀ / ▶▶ : ±30 s\nRetour : arrêter et revenir à la TV\n\nAutres touches :\nMENU / BLEU : réglages\nROUGE : favori, VERT : format, JAUNE : minuteur\nINFO : infos, GUIDE : liste, LAST : dernière chaîne\nCC : sous-titres, AUDIO : pistes audio",
-                      "Live TV:\nUp / Down: next / previous channel\nLeft: channel, movie and series browser\nRight: options (audio, subtitles, quality…)\nOK: configurable action (see settings)\nLong OK: favorite\n0-9: channel number\nCH+ / CH−: change channel\n◀◀ / ▶▶: previous / next group\n\nMovies and series:\nLeft / Right: −10 s / +10 s\nUp: info, Down: options\nOK: pause / play\n◀◀ / ▶▶: ±30 s\nBack: stop and return to TV\n\nOther keys:\nMENU / BLUE: settings\nRED: favorite, GREEN: aspect, YELLOW: timer\nINFO: info, GUIDE: browser, LAST: last channel\nCC: subtitles, AUDIO: audio tracks",
-                      "البث المباشر:\nأعلى / أسفل: القناة التالية / السابقة\nيسار: قائمة القنوات والأفلام والمسلسلات\nيمين: خيارات (الصوت والترجمة والجودة…)\nOK: إجراء قابل للتعديل\nضغطة طويلة على OK: مفضلة\n0-9: رقم القناة\nCH+ / CH−: تغيير القناة\n◀◀ / ▶▶: المجموعة السابقة / التالية\n\nالأفلام والمسلسلات:\nيسار / يمين: −10 ث / +10 ث\nأعلى: معلومات، أسفل: خيارات\nOK: إيقاف مؤقت / تشغيل\n◀◀ / ▶▶: ±30 ث\nرجوع: إيقاف والعودة للتلفاز\n\nأزرار أخرى:\nMENU / أزرق: الإعدادات\nأحمر: مفضلة، أخضر: النسبة، أصفر: المؤقت\nINFO: معلومات، GUIDE: القائمة، LAST: القناة الأخيرة\nCC: الترجمة، AUDIO: مسارات الصوت",
-                      "TV en vivo:\nArriba / Abajo: canal siguiente / anterior\nIzquierda: lista de canales, películas y series\nDerecha: opciones (audio, subtítulos, calidad…)\nOK: acción configurable\nOK largo: favorito\n0-9: número de canal\nCH+ / CH−: cambiar de canal\n◀◀ / ▶▶: grupo anterior / siguiente\n\nPelículas y series:\nIzquierda / Derecha: −10 s / +10 s\nArriba: info, Abajo: opciones\nOK: pausa / reproducir\n◀◀ / ▶▶: ±30 s\nAtrás: parar y volver a la TV\n\nOtras teclas:\nMENU / AZUL: ajustes\nROJO: favorito, VERDE: formato, AMARILLO: temporizador\nINFO: info, GUIDE: lista, LAST: último canal\nCC: subtítulos, AUDIO: pistas de audio"
+                      "TV en direct :\nHaut / Bas : chaîne suivante / précédente\nGauche : liste des chaînes, films et séries\nDroite : options (audio, sous-titres, qualité…)\nOK : action au choix (voir réglages)\nOK long : favori\nOK (si « Retour au direct » s'affiche) : revenir au direct\n0-9 : numéro de chaîne\nCH+ / CH− : changer de chaîne\n◀◀ / ▶▶ : groupe précédent / suivant\n\nFilms et séries :\nGauche / Droite : −10 s / +10 s\nHaut : infos, Bas : options\nOK : pause / lecture\n◀◀ / ▶▶ : ±30 s\nRetour : arrêter et revenir à la TV\n\nAutres touches :\nMENU / BLEU : réglages\nROUGE : favori, VERT : format, JAUNE : minuteur\nINFO : infos, GUIDE : liste, LAST : dernière chaîne\nCC : sous-titres, AUDIO : pistes audio",
+                      "Live TV:\nUp / Down: next / previous channel\nLeft: channel, movie and series browser\nRight: options (audio, subtitles, quality…)\nOK: configurable action (see settings)\nLong OK: favorite\nOK (when Go to Live shows): back to live\n0-9: channel number\nCH+ / CH−: change channel\n◀◀ / ▶▶: previous / next group\n\nMovies and series:\nLeft / Right: −10 s / +10 s\nUp: info, Down: options\nOK: pause / play\n◀◀ / ▶▶: ±30 s\nBack: stop and return to TV\n\nOther keys:\nMENU / BLUE: settings\nRED: favorite, GREEN: aspect, YELLOW: timer\nINFO: info, GUIDE: browser, LAST: last channel\nCC: subtitles, AUDIO: audio tracks",
+                      "البث المباشر:\nأعلى / أسفل: القناة التالية / السابقة\nيسار: قائمة القنوات والأفلام والمسلسلات\nيمين: خيارات (الصوت والترجمة والجودة…)\nOK: إجراء قابل للتعديل\nضغطة طويلة على OK: مفضلة\nOK (عند ظهور زر العودة للبث): العودة للبث المباشر\n0-9: رقم القناة\nCH+ / CH−: تغيير القناة\n◀◀ / ▶▶: المجموعة السابقة / التالية\n\nالأفلام والمسلسلات:\nيسار / يمين: −10 ث / +10 ث\nأعلى: معلومات، أسفل: خيارات\nOK: إيقاف مؤقت / تشغيل\n◀◀ / ▶▶: ±30 ث\nرجوع: إيقاف والعودة للتلفاز\n\nأزرار أخرى:\nMENU / أزرق: الإعدادات\nأحمر: مفضلة، أخضر: النسبة، أصفر: المؤقت\nINFO: معلومات، GUIDE: القائمة، LAST: القناة الأخيرة\nCC: الترجمة، AUDIO: مسارات الصوت",
+                      "TV en vivo:\nArriba / Abajo: canal siguiente / anterior\nIzquierda: lista de canales, películas y series\nDerecha: opciones (audio, subtítulos, calidad…)\nOK: acción configurable\nOK largo: favorito\nOK (si aparece Ir al directo): volver al directo\n0-9: número de canal\nCH+ / CH−: cambiar de canal\n◀◀ / ▶▶: grupo anterior / siguiente\n\nPelículas y series:\nIzquierda / Derecha: −10 s / +10 s\nArriba: info, Abajo: opciones\nOK: pausa / reproducir\n◀◀ / ▶▶: ±30 s\nAtrás: parar y volver a la TV\n\nOtras teclas:\nMENU / AZUL: ajustes\nROJO: favorito, VERDE: formato, AMARILLO: temporizador\nINFO: info, GUIDE: lista, LAST: último canal\nCC: subtítulos, AUDIO: pistas de audio"
                   )
                   dialog().setTitle(tr("Aide des touches", "Key guide", "دليل الأزرار", "Guía de teclas"))
                       .setMessage(msg)
@@ -4538,6 +4588,15 @@ jobs:
               // ---------- v7 : reglages modernes, PVR, portail web ----------
 
               private val recorder = RecorderHolder.recorder
+              private lateinit var goLive: LinearLayout
+              private var behindLive = false
+
+              private val goLiveTicker = object : Runnable {
+                  override fun run() {
+                      updateGoLive()
+                      ui.postDelayed(this, 500)
+                  }
+              }
               private lateinit var recBadge: TextView
               private lateinit var settingsPane: FrameLayout
               private lateinit var settingsScroll: ScrollView
@@ -4570,6 +4629,43 @@ jobs:
                   rlp.gravity = Gravity.TOP or Gravity.END
                   rlp.setMargins(dp(16), dp(60), dp(20), 0)
                   playerFrame.addView(recBadge, rlp)
+
+                  goLive = LinearLayout(this)
+                  goLive.orientation = LinearLayout.HORIZONTAL
+                  goLive.gravity = Gravity.CENTER_VERTICAL
+                  goLive.setPadding(dp(14), dp(8), dp(16), dp(8))
+                  val gbg = GradientDrawable()
+                  gbg.setColor(Color.parseColor("#E61A1D24"))
+                  gbg.cornerRadius = dp(24).toFloat()
+                  gbg.setStroke(dp(2), Color.parseColor("#FF3B30"))
+                  goLive.background = gbg
+                  goLive.isClickable = true
+                  goLive.isFocusable = true
+                  goLive.visibility = View.GONE
+                  val dot = TextView(this)
+                  dot.text = "●"
+                  dot.textSize = ts(14f)
+                  dot.setTextColor(Color.parseColor("#FF3B30"))
+                  dot.setPadding(0, 0, dp(8), 0)
+                  val glText = TextView(this)
+                  glText.text = tr("Retour au direct", "Go to Live", "العودة للبث المباشر", "Ir al directo")
+                  glText.textSize = ts(15f)
+                  glText.typeface = Typeface.DEFAULT_BOLD
+                  glText.setTextColor(Color.WHITE)
+                  goLive.addView(dot)
+                  goLive.addView(glText)
+                  if (tv) {
+                      val hint = TextView(this)
+                      hint.text = "   OK"
+                      hint.textSize = ts(12f)
+                      hint.setTextColor(SUB)
+                      goLive.addView(hint)
+                  }
+                  goLive.setOnClickListener { goToLive() }
+                  val glp = FrameLayout.LayoutParams(-2, -2)
+                  glp.gravity = Gravity.BOTTOM or Gravity.END
+                  glp.setMargins(dp(16), 0, dp(16), dp(28))
+                  playerFrame.addView(goLive, glp)
 
                   settingsPane = FrameLayout(this)
                   settingsPane.setBackgroundColor(BG)
@@ -4610,7 +4706,54 @@ jobs:
               private fun startExtras() {
                   if (prefs.getBoolean("portal_on", false)) startPortal()
                   ui.postDelayed(schedTicker, 5000)
+                  ui.postDelayed(goLiveTicker, 1000)
                   if (recorder.active) ui.postDelayed(recTicker, 500)
+              }
+
+              // ----- retour au direct -----
+
+              private fun canSeekLive(): Boolean = player?.isCurrentMediaItemSeekable == true
+
+              private fun updateGoLive() {
+                  val p = player
+                  if (p == null || isVod || inPip || settingsOpen || p.mediaItemCount == 0 || p.playbackState == Player.STATE_IDLE) {
+                      if (goLive.visibility != View.GONE) goLive.visibility = View.GONE
+                      return
+                  }
+                  val off = p.currentLiveOffset
+                  val behind = if (off != C.TIME_UNSET && p.isCurrentMediaItemLive) off > 4000L else behindLive
+                  val show = !p.playWhenReady || behind
+                  val canSeek = p.isCurrentMediaItemSeekable
+                  seekBack.visibility = if (canSeek) View.VISIBLE else View.GONE
+                  seekFwd.visibility = if (canSeek) View.VISIBLE else View.GONE
+                  goLive.visibility = if (show) View.VISIBLE else View.GONE
+                  val want = if (banner.visibility == View.VISIBLE) dp(if (controlsVisible) 156 else 100) else dp(28)
+                  val lp = goLive.layoutParams as FrameLayout.LayoutParams
+                  if (lp.bottomMargin != want) {
+                      lp.bottomMargin = want
+                      goLive.layoutParams = lp
+                  }
+                  if (banner.visibility == View.VISIBLE && !isVod) bannerInfo.text = infoLine()
+              }
+
+              private fun goToLive() {
+                  val p = player ?: return
+                  if (isVod) return
+                  behindLive = false
+                  if (p.isCurrentMediaItemLive && p.isCurrentMediaItemSeekable) {
+                      p.seekToDefaultPosition()
+                      p.play()
+                  } else {
+                      val c = all.firstOrNull { it.url == currentUrl }
+                      if (c != null) {
+                          p.setMediaItem(MediaItem.fromUri(c.url))
+                          p.prepare()
+                          p.play()
+                      }
+                  }
+                  goLive.visibility = View.GONE
+                  showOverlay("LIVE")
+                  updatePlayButton()
               }
 
               // ----- ecran des reglages -----
@@ -4813,6 +4956,16 @@ jobs:
                       prefs.edit().putInt("buffer", (buf + 1) % 3).apply()
                       rebuildPlayer()
                   }
+                  val tsLevel = prefs.getInt("timeshift", 1).coerceIn(0, 2)
+                  val tsNames = arrayOf(tr("désactivé", "off", "إيقاف", "desactivado"), "2 min", "5 min")
+                  row(
+                      tr("Pause en direct (timeshift)", "Pause live TV (timeshift)", "إيقاف البث مؤقتاً (تايم شيفت)", "Pausa en directo (timeshift)"),
+                      tr("Mémoire utilisée pour revenir en arrière", "Memory used to rewind", "الذاكرة المستخدمة للرجوع للخلف", "Memoria usada para retroceder"),
+                      tsNames[tsLevel]
+                  ) {
+                      prefs.edit().putInt("timeshift", (tsLevel + 1) % 3).apply()
+                      rebuildPlayer()
+                  }
                   tog(tr("Lecture au démarrage", "Play on start", "التشغيل عند البدء", "Reproducir al iniciar"), "", prefs.getBoolean("autoplay", true)) {
                       prefs.edit().putBoolean("autoplay", !prefs.getBoolean("autoplay", true)).apply()
                   }
@@ -4855,18 +5008,27 @@ jobs:
                           resetAll()
                       }
                   }
-                  row(tr("À propos", "About", "حول", "Acerca de"), "TV Player 7.0", arrow) {
-                      dialog().setTitle("TV Player 7.0")
-                          .setMessage(
-                              tr(
-                                  "TV en direct, films et séries (HLS, DASH, TS) avec Xtream, M3U, guide TV et enregistrement.\nMobile, Android TV et Fire TV.",
-                                  "Live TV, movies and series (HLS, DASH, TS) with Xtream, M3U, TV guide and recording.\nMobile, Android TV and Fire TV.",
-                                  "تلفزيون مباشر وأفلام ومسلسلات (HLS وDASH وTS) مع Xtream وM3U ودليل البرامج والتسجيل.\nللهاتف وAndroid TV وFire TV.",
-                                  "TV en vivo, películas y series (HLS, DASH, TS) con Xtream, M3U, guía TV y grabación.\nMóvil, Android TV y Fire TV."
-                              )
+                  row(
+                      tr("À propos de Player Lamine S Bouzareah", "About Player Lamine S Bouzareah", "حول Player Lamine S Bouzareah", "Acerca de Player Lamine S Bouzareah"),
+                      tr("Version 7.0.1", "Version 7.0.1", "الإصدار 7.0.1", "Versión 7.0.1"),
+                      arrow
+                  ) { aboutDialog() }
+              }
+
+              private fun aboutDialog() {
+                  dialog().setTitle(
+                      tr("À propos de Player Lamine S Bouzareah", "About Player Lamine S Bouzareah", "حول Player Lamine S Bouzareah", "Acerca de Player Lamine S Bouzareah")
+                  )
+                      .setMessage(
+                          tr(
+                              "Player Lamine S Bouzareah\nVersion 7.0.1\n\nTV en direct, films et séries (HLS, DASH, TS) avec Xtream, M3U, guide TV, enregistrement (PVR), portail web et retour au direct.\n\nMobile, Android TV et Fire TV.",
+                              "Player Lamine S Bouzareah\nVersion 7.0.1\n\nLive TV, movies and series (HLS, DASH, TS) with Xtream, M3U, TV guide, recording (PVR), web portal and Go to Live.\n\nMobile, Android TV and Fire TV.",
+                              "Player Lamine S Bouzareah\nالإصدار 7.0.1\n\nتلفزيون مباشر وأفلام ومسلسلات (HLS وDASH وTS) مع Xtream وM3U ودليل البرامج والتسجيل وبوابة الويب والعودة للبث المباشر.\n\nللهاتف وAndroid TV وFire TV.",
+                              "Player Lamine S Bouzareah\nVersión 7.0.1\n\nTV en vivo, películas y series (HLS, DASH, TS) con Xtream, M3U, guía TV, grabación (PVR), portal web e Ir al directo.\n\nMóvil, Android TV y Fire TV."
                           )
-                          .setPositiveButton("OK", null).show()
-                  }
+                      )
+                      .setPositiveButton("OK", null)
+                      .show()
               }
 
               private fun resetAll() {

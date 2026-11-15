@@ -26,6 +26,7 @@ jobs:
           mkdir -p app/src/main/java/com/example/tvplayer
           mkdir -p app/src/main/res/drawable
           mkdir -p app/src/main/res/mipmap-mdpi
+          mkdir -p app/src/main/assets
           mkdir -p app/src/main/res/mipmap-anydpi-v26
 
           echo "MIIKLAIBAzCCCdYGCSqGSIb3DQEHAaCCCccEggnDMIIJvzCCBaYGCSqGSIb3DQEHAaCCBZcEggWTMIIFjzCCBYsGCyqGSIb3DQEMCgECoIIFQDCCBTwwZgYJKoZIhvcNAQUNMFkwOAYJKoZIhvcNAQUMMCsEFJE4Jcgnmh/o0lRkVhNT+5kaWyIjAgInEAIBIDAMBggqhkiG9w0CCQUAMB0GCWCGSAFlAwQBKgQQk/Sn227XzySxP14BBZkdIASCBNBK92COntMT9j7C18TvvaJXkB9YNBFJCpbyte5OV2wZmg5CnYM5/vzKtWxhI/PC+3gjVEJKLsrFvbKe3dzI9nforlAgAsQq1D2nR3iZQxGSa4+nD2jlEr4nyXyYq7UwHhTmrj5ew6b6XytMTmQd5atvEE0HKeKZva4pEhqI129Ne4aDNNUjLSWg+0wwp0EsPAx9nvnwiwf1X7rtfGNQP/5qu96ldDMspI+qtBSXITkS1+5gHOoz/179P7v9Zjw/eMgVva4HUBEas46jM73/67P6H/J7GMLrSZDdCDBY0bb7vl6oN3Bus/KkrzdoA1418rBC/akFcJ8MKzLDe1kkmuOnGfZPwEEBpRO2QSCwx7DxCsMGEPMAMd21vOHjJz3qUQu5CwRu4AztXxTa9obFgCacafVLtYBo2bjES9e798L5IJ3IlO380LVUfcOxGoyAW4wI1VrQHFeKcDKcM+NZR4/HSQWaSBfGdc3nZ82PB2IGtlr3GuB/Mrg7Xddf5YlQhDu4zw+LxAXNSo8FxIJVDJoSZWj1HNd+y+imV7RBGDQ7SKQdS47ynodOx7oZjznaaCCk4UTF7Dv2wQBvr6AFCTZgVUt0RLaFfh8Cs1OBZS/+bcGl+86UTGKtUMlDMOJr6OpTNJOc4Fz3Mh5NSjy5RVx1UarydP1j8pbkfQXDPARytPQAgFsqtZQ/eWslkirCXgC9HqC7pO/sV0wofm3S+wbMJR8qNq+4yV2QVK9YFuvRnDy0YiHxhU0cL4mLqHj+ARPd1J5Z/uuGac+fFqYQwAb6kYpfVpfnGosQZp/kOmgRwCBcugHe3acQ0BtrZhngx0caRr8bcMbJHtx4wgAAbs7dEsrbLZqPYyCq4/yrX7pxOvOr2E4ucakmBmJLpipzF69q7oBogaa9JJd2EKiRT6cOOiGwQUYvuixGb2H3aJ2Y3xhyEcSkzlj+mUJ0VPhm/Ek5hSZMg9Ydpa/k80w5AyyAdbfgeBUZv5fuoO0mveSeTj4rzzfH6MvzFqXJ85Qa6P2etIYNGCk8Sbo0JiJSH5EZhmtFXfd0044bq5gVRDlW2qUSv+gs6QNWdgGm48+cvtoQjQwEjTsfl6XziqNLvXghBY42gfqvMVeLToA6XlsaOIL1Z9KLWR31dvF8oF33L13wSeRPZ//pCKr9ZOlAF8SZVsXFwVhtJj8m3j8LDbWX4mjm3vIR0XHqpIFkvzNYIZZEG2YezCFd/fo6GjxQBs6l/FinsGNkme9yKJK+v+qYXg1iOOAuXi3w4j1zTL1c3WSmElT/Ymbzh556O9BfqFAmAlyG8uopeH43oYoka4fDp3LbcecWSDlqfQm5vgtWtGKBVLvby8QY9CRdTBFROsbzc2Cpdv7TWYcS/SvXKyN703kck7GUskmiqRz/AraCj7LItPR1itMIMl21RxenoQEBUnU0E1H5LLZoPzFVz+jfpQA1BJ2LGMsXYTaIKK+ffXCC6YTv9q9Dk9sNl2ghp5wEdH/6ACzYmLkWTBivhY8Jk+BDi2KiDMNokyvccrt06xiBOp6eUY2mRbRYt7Wg8iqiCduYTPCZifXQdlHK4kXUqChOdF1+LaU42mKiFsBemR56vkuAd/2JhFj5RB97G+RAK0JHTcz6hQfMRwA1ZluC1zE4MBMGCSqGSIb3DQEJFDEGHgQAdAB2MCEGCSqGSIb3DQEJFTEUBBJUaW1lIDE3OTQ2MDgzMDQ0MjkwggQRBgkqhkiG9w0BBwagggQCMIID/gIBADCCA/cGCSqGSIb3DQEHATBmBgkqhkiG9w0BBQ0wWTA4BgkqhkiG9w0BBQwwKwQUipNL4NoDPSJ/7HSidwukEVpbxzoCAicQAgEgMAwGCCqGSIb3DQIJBQAwHQYJYIZIAWUDBAEqBBA9SN0BJusdSjyk84U2UpWWgIIDgFSdfY1NZ2jvRuExKuUqAqZ2rWCSFz198fyPzoD3FmLFBWRF9vyvZTFmv79blO0hJThmzFd3EVkzV07xJQPR4b86v3KfKEPGlo0C+MN10sjdbUvq3EKnWmJY21LMIE0M4P43RziqRjz2FywiJompA+Z/bAO3PPVeUQ06zkgSHvMc0U5tGakaOdlnbIjEYfkaRLCHIcep9mObcfCc93j0LP+MP0hBMLxWeAxXNRzM560lBlBVnwshTkVl8i7j7mYrSnyGJPxRCIe9LQ7pUNwWC4ctIjE1uixkaY3Mhc757de+dV/bXP7oKvLSmBvivPTwZFtHWez56rCeOTXERlkikTndZRCkyRyViCS+6B+uxbEbTqTgCThIlwnxxNYXAF/MPlpqtxegFGYOu1DCL/xYua/Jg1AKG47Qsy8VZuYZuBm7qNx3ZwrjWFnsGgzpFVya0AHNQ0ZlAEpn5TMN+8Hs/KTkTIOCP2EQlrtP1nrylc411M6MOUZXUv0GTC8/A64SISHfB0JFJL6buxIuCkVknUbnvpMxzlCkJFjlTq3olt0c+nd2i8t5FIgldr3gT+74p9rIgiSNQKwpWScUSpnee07++4GaU3fcuvBRzrcgwf47MKZ/dONf/pCiN50Sk1YZ8DI6Er7vehvQo02yOMkvGof0k4gGsGAG0XpRDPZhoDAaaxTpcPfT36L+saVaemt4lItG7z2lvdQNi5efNkZl1Ioc3kUA5DJtNDIZJ+3EEawxAnqH6xFshpJivf2yHmyZWiRxZeNDpgrnWPdgME5X35JSx4acpvIjYBBGqdxdpnl/WTeFllfk+s16BHQ/5QTeZldCiCj/ZWDRXgVOqE/hgflZEOonZLATl5eouFnyuEPIPE/TITdPESAUMKMepEirc0wlMsgOqubW0D7JfS67gJIukee7AFFgkNMFQWOzV+BhS62Nrd+cYp+DjH5EqwoxdHgsUHXzkEvB4M+zdc2/s3QPJ0CWs2kpLSabtFax9MYfw9a+xiKYuek7jvBTz1vKZjI4qozdI9nrLCRRwifEZ1f0XcG0dkGmQmrnEwuQ/Q9WCtIRBZDa0pFUEBl6U1MGMKgLF4IX0RqtZwhCFsQhHiJP2l+09SixLJTzaXSKQo3GdLGZArTgHfIaOhovCudKCAkdGpjcb6lvG9TRjapRDeKk664sZ0YYDDrYsdAJsK03ME0wMTANBglghkgBZQMEAgEFAAQgdcbq4ZKf12gmELvzCnQQxuLA5W9M9gVhct1TQw35OoQEFM4opSxqf7/ViaeaWGlg0agsgNgmAgInEA==" | base64 -d > app/tv.keystore
@@ -776,15 +777,37 @@ jobs:
           import java.io.BufferedInputStream
           import java.io.ByteArrayOutputStream
           import java.io.InputStream
+          import java.io.OutputStream
           import java.net.Inet4Address
           import java.net.NetworkInterface
           import java.net.ServerSocket
           import java.net.Socket
           import java.net.URLDecoder
 
+          fun portalLocalIps(): List<String> {
+              val out = ArrayList<String>()
+              try {
+                  val ifs = NetworkInterface.getNetworkInterfaces()
+                  while (ifs.hasMoreElements()) {
+                      val ni = ifs.nextElement()
+                      if (!ni.isUp || ni.isLoopback) continue
+                      val addrs = ni.inetAddresses
+                      while (addrs.hasMoreElements()) {
+                          val a = addrs.nextElement()
+                          if (a is Inet4Address && !a.isLoopbackAddress) {
+                              val h = a.hostAddress
+                              if (h != null) out.add(h)
+                          }
+                      }
+                  }
+              } catch (e: Exception) {
+              }
+              return out
+          }
+
           class PortalServer(
               private val pin: String,
-              private val lang: Int,
+              private val pageHtml: String,
               private val statusLines: () -> List<String>,
               private val presets: List<Pair<String, String>>,
               private val action: (String, Map<String, String>) -> String
@@ -792,32 +815,10 @@ jobs:
               @Volatile
               private var running = false
               private var server: ServerSocket? = null
+              private var portValue = 8080
+              private val crlf = String(charArrayOf(Char(13), Char(10)))
 
-              var port = 8080
-                  private set
-
-              companion object {
-                  fun localIps(): List<String> {
-                      val out = ArrayList<String>()
-                      try {
-                          val ifs = NetworkInterface.getNetworkInterfaces()
-                          while (ifs.hasMoreElements()) {
-                              val ni = ifs.nextElement()
-                              if (!ni.isUp || ni.isLoopback) continue
-                              val addrs = ni.inetAddresses
-                              while (addrs.hasMoreElements()) {
-                                  val a = addrs.nextElement()
-                                  if (a is Inet4Address && !a.isLoopbackAddress) {
-                                      val h = a.hostAddress
-                                      if (h != null) out.add(h)
-                                  }
-                              }
-                          }
-                      } catch (e: Exception) {
-                      }
-                      return out
-                  }
-              }
+              fun port(): Int = portValue
 
               fun start(): Boolean {
                   if (running) return true
@@ -830,21 +831,12 @@ jobs:
                           p++
                       }
                   }
-                  if (s == null) return false
-                  val sock: ServerSocket = s
+                  val sock = s ?: return false
                   server = sock
-                  port = p
+                  portValue = p
                   running = true
-                  Thread {
-                      while (running) {
-                          try {
-                              val c = sock.accept()
-                              Thread { handle(c) }.start()
-                          } catch (e: Exception) {
-                              if (!running) break
-                          }
-                      }
-                  }.start()
+                  val loop = Runnable { acceptLoop(sock) }
+                  Thread(loop).start()
                   return true
               }
 
@@ -857,22 +849,25 @@ jobs:
                   server = null
               }
 
-              private fun t(fr: String, en: String, ar: String, es: String): String = when (lang) {
-                  0 -> fr
-                  2 -> ar
-                  3 -> es
-                  else -> en
+              private fun acceptLoop(sock: ServerSocket) {
+                  while (running) {
+                      try {
+                          val c = sock.accept()
+                          val job = Runnable { handle(c) }
+                          Thread(job).start()
+                      } catch (e: Exception) {
+                          if (!running) return
+                      }
+                  }
               }
-
-              private fun esc(s: String): String =
-                  s.replace("&", "&").replace("<", "<").replace(">", ">").replace("\u0022", """).replace("\u0027", "'")
 
               private fun readLine(ins: InputStream): String? {
                   val bo = ByteArrayOutputStream()
                   while (true) {
                       val b = ins.read()
                       if (b < 0) {
-                          return if (bo.size() == 0) null else String(bo.toByteArray(), Charsets.UTF_8)
+                          if (bo.size() == 0) return null
+                          break
                       }
                       if (b == 10) break
                       if (b != 13) bo.write(b)
@@ -886,7 +881,7 @@ jobs:
                   if (s.isEmpty()) return m
                   for (pair in s.split("&")) {
                       if (pair.isEmpty()) continue
-                      val i = pair.indexOf('=')
+                      val i = pair.indexOf("=")
                       val k = if (i >= 0) pair.substring(0, i) else pair
                       val v = if (i >= 0) pair.substring(i + 1) else ""
                       try {
@@ -897,20 +892,36 @@ jobs:
                   return m
               }
 
+              private fun send(out: OutputStream, status: String, type: String, body: String) {
+                  val bytes = body.toByteArray(Charsets.UTF_8)
+                  val sb = StringBuilder()
+                  sb.append("HTTP/1.1 ").append(status).append(crlf)
+                  sb.append("Content-Type: ").append(type).append(crlf)
+                  sb.append("Content-Length: ").append(bytes.size).append(crlf)
+                  sb.append("Connection: close").append(crlf)
+                  sb.append("Cache-Control: no-store").append(crlf)
+                  sb.append(crlf)
+                  out.write(sb.toString().toByteArray(Charsets.UTF_8))
+                  out.write(bytes)
+                  out.flush()
+              }
+
               private fun handle(c: Socket) {
                   try {
                       c.soTimeout = 15000
                       val ins = BufferedInputStream(c.getInputStream())
-                      val reqLine = readLine(ins) ?: return
+                      val out = c.getOutputStream()
+                      val reqLine = readLine(ins)
+                      if (reqLine == null) return
                       val parts = reqLine.split(" ")
                       if (parts.size < 2) return
                       val method = parts[0]
                       val target = parts[1]
                       var len = 0
                       while (true) {
-                          val h = readLine(ins) ?: break
-                          if (h.isEmpty()) break
-                          val i = h.indexOf(':')
+                          val h = readLine(ins)
+                          if (h == null || h.isEmpty()) break
+                          val i = h.indexOf(":")
                           if (i > 0 && h.substring(0, i).trim().equals("content-length", true)) {
                               len = h.substring(i + 1).trim().toIntOrNull() ?: 0
                           }
@@ -924,28 +935,37 @@ jobs:
                           body.write(buf, 0, n)
                           remaining -= n
                       }
-                      val path = target.substringBefore('?')
+                      val path = target.substringBefore("?")
                       val params = HashMap<String, String>()
-                      params.putAll(parseForm(target.substringAfter('?', "")))
-                      if (method == "POST") params.putAll(parseForm(String(body.toByteArray(), Charsets.UTF_8)))
-                      val ok = params["pin"] == pin
-                      var status = "200 OK"
-                      val html: String
-                      if (path == "/" || path == "/index.html") {
-                          html = if (ok) page("") else loginPage(params.containsKey("pin"))
-                      } else if (path.startsWith("/do/") && method == "POST") {
-                          html = if (ok) page(action(path.removePrefix("/do/"), params)) else loginPage(true)
-                      } else {
-                          status = "404 Not Found"
-                          html = "Not found"
+                      params.putAll(parseForm(target.substringAfter("?", "")))
+                      if (method == "POST") {
+                          params.putAll(parseForm(String(body.toByteArray(), Charsets.UTF_8)))
                       }
-                      val bytes = html.toByteArray(Charsets.UTF_8)
-                      val head = "HTTP/1.1 " + status + "\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: " +
-                          bytes.size + "\r\nConnection: close\r\nCache-Control: no-store\r\n\r\n"
-                      val out = c.getOutputStream()
-                      out.write(head.toByteArray(Charsets.UTF_8))
-                      out.write(bytes)
-                      out.flush()
+                      val authed = params["pin"] == pin
+                      val plain = "text/plain; charset=utf-8"
+                      if (path == "/" || path == "/index.html") {
+                          send(out, "200 OK", "text/html; charset=utf-8", pageHtml)
+                      } else if (path == "/api/status") {
+                          if (authed) {
+                              send(out, "200 OK", plain, statusLines().joinToString("\n"))
+                          } else {
+                              send(out, "401 Unauthorized", plain, "pin")
+                          }
+                      } else if (path == "/api/presets") {
+                          if (authed) {
+                              send(out, "200 OK", plain, presets.joinToString("\n") { it.first + "|" + it.second })
+                          } else {
+                              send(out, "401 Unauthorized", plain, "pin")
+                          }
+                      } else if (path.startsWith("/api/do/") && method == "POST") {
+                          if (authed) {
+                              send(out, "200 OK", plain, action(path.removePrefix("/api/do/"), params))
+                          } else {
+                              send(out, "401 Unauthorized", plain, "pin")
+                          }
+                      } else {
+                          send(out, "404 Not Found", plain, "Not found")
+                      }
                   } catch (e: Exception) {
                   } finally {
                       try {
@@ -954,160 +974,226 @@ jobs:
                       }
                   }
               }
-
-              private val css = "*{box-sizing:border-box}body{margin:0;background:#0e1117;color:#e8ebf0;" +
-                  "font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}" +
-                  ".wrap{max-width:720px;margin:0 auto;padding:16px}h1{font-size:24px;margin:8px 0 16px}" +
-                  "h3{margin:0 0 10px;font-size:16px;color:#9ab8ff}" +
-                  ".card{background:#181c25;border-radius:14px;padding:14px;margin-bottom:12px}" +
-                  "input,select,textarea{width:100%;padding:12px;margin:5px 0;border-radius:10px;" +
-                  "border:1px solid #2b3342;background:#0e1117;color:#fff;font-size:15px}" +
-                  "button{width:100%;padding:12px;margin-top:6px;border:0;border-radius:10px;" +
-                  "background:#4f8cff;color:#fff;font-size:15px;font-weight:600}" +
-                  "button.alt{background:#2b3342}" +
-                  ".msg{background:#16341f;color:#9ff0b4;border-radius:12px;padding:12px;margin-bottom:12px}" +
-                  ".st div{padding:3px 0;color:#c8cfdb}"
-
-              private fun head(): String {
-                  val sb = StringBuilder()
-                  sb.append("<!DOCTYPE html><html")
-                  if (lang == 2) sb.append(" dir='rtl'")
-                  sb.append("><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>")
-                  sb.append("<title>TV Player</title><style>").append(css).append("</style></head><body><div class='wrap'>")
-                  return sb.toString()
-              }
-
-              private fun loginPage(wrong: Boolean): String {
-                  val sb = StringBuilder(head())
-                  sb.append("<h1>TV Player</h1><div class='card'><form method='get' action='/'><h3>")
-                  sb.append(esc(t("Code d'accès (affiché sur la TV)", "Access code (shown on the TV)", "رمز الدخول (يظهر على التلفاز)", "Código de acceso (visible en la TV)")))
-                  sb.append("</h3>")
-                  if (wrong) {
-                      sb.append("<div class='msg' style='background:#3a1a1a;color:#ffb4b4'>")
-                      sb.append(esc(t("Code incorrect", "Wrong code", "رمز خاطئ", "Código incorrecto")))
-                      sb.append("</div>")
-                  }
-                  sb.append("<input name='pin' type='number' inputmode='numeric' autocomplete='off'><button>OK</button></form></div></div></body></html>")
-                  return sb.toString()
-              }
-
-              private fun input(name: String, ph: String, type: String = "text", value: String = ""): String =
-                  "<input name='" + name + "' placeholder='" + esc(ph) + "' type='" + type + "' value='" +
-                      esc(value) + "' autocomplete='off'>"
-
-              private fun form(act: String, title: String, fields: String, btn: String, alt: Boolean = false): String =
-                  "<div class='card'><form method='post' action='/do/" + act + "'><h3>" + esc(title) +
-                      "</h3><input type='hidden' name='pin' value='" + esc(pin) + "'>" + fields +
-                      "<button" + (if (alt) " class='alt'" else "") + ">" + esc(btn) + "</button></form></div>"
-
-              private fun page(msg: String): String {
-                  val sb = StringBuilder(head())
-                  sb.append("<h1>TV Player</h1>")
-                  if (msg.isNotEmpty()) sb.append("<div class='msg'>").append(esc(msg)).append("</div>")
-                  sb.append("<div class='card st'><h3>").append(esc(t("État", "Status", "الحالة", "Estado"))).append("</h3>")
-                  try {
-                      for (l in statusLines()) sb.append("<div>").append(esc(l)).append("</div>")
-                  } catch (e: Exception) {
-                  }
-                  sb.append("</div>")
-
-                  sb.append(
-                      form(
-                          "refresh",
-                          t("Actualisation", "Refresh", "تحديث", "Actualizar"),
-                          "",
-                          t("Tout actualiser (sources, films, guide)", "Refresh all (sources, movies, guide)", "تحديث الكل", "Actualizar todo")
-                      )
-                  )
-                  sb.append(
-                      form(
-                          "play",
-                          t("Lire une chaîne", "Play a channel", "تشغيل قناة", "Reproducir un canal"),
-                          input("q", t("Numéro ou nom", "Number or name", "الرقم أو الاسم", "Número o nombre")),
-                          t("Lire sur la TV", "Play on the TV", "تشغيل على التلفاز", "Reproducir en la TV")
-                      )
-                  )
-                  sb.append(
-                      form(
-                          "add_channel",
-                          t("Ajouter une chaîne", "Add a channel", "إضافة قناة", "Añadir un canal"),
-                          input("name", t("Nom", "Name", "الاسم", "Nombre")) +
-                              input("url", t("Lien du flux (.m3u8 / .ts)", "Stream link (.m3u8 / .ts)", "رابط البث", "Enlace del flujo"), "url") +
-                              input("group", t("Groupe (facultatif)", "Group (optional)", "المجموعة (اختياري)", "Grupo (opcional)")),
-                          t("Ajouter", "Add", "إضافة", "Añadir")
-                      )
-                  )
-                  sb.append(
-                      form(
-                          "add_m3u",
-                          t("Playlist M3U (lien)", "M3U playlist (link)", "قائمة M3U (رابط)", "Lista M3U (enlace)"),
-                          input("url", "http://.../playlist.m3u", "url"),
-                          t("Importer", "Import", "استيراد", "Importar")
-                      )
-                  )
-                  sb.append(
-                      form(
-                          "add_m3u_text",
-                          t("Playlist M3U (texte collé)", "M3U playlist (pasted text)", "قائمة M3U (نص)", "Lista M3U (texto)"),
-                          "<textarea name='text' rows='6' placeholder='#EXTM3U'></textarea>",
-                          t("Importer", "Import", "استيراد", "Importar")
-                      )
-                  )
-                  sb.append(
-                      form(
-                          "add_xtream",
-                          "Xtream",
-                          input("name", t("Nom (facultatif)", "Name (optional)", "الاسم (اختياري)", "Nombre (opcional)")) +
-                              input("server", "http://host:port", "url") +
-                              input("user", t("Identifiant", "Username", "اسم المستخدم", "Usuario")) +
-                              input("pass", t("Mot de passe", "Password", "كلمة المرور", "Contraseña"), "password"),
-                          t("Se connecter", "Connect", "اتصال", "Conectar")
-                      )
-                  )
-                  val opts = StringBuilder("<select name='preset'><option value=''>-</option>")
-                  for (p in presets) {
-                      opts.append("<option value='").append(esc(p.second)).append("'>").append(esc(p.first)).append("</option>")
-                  }
-                  opts.append("</select>")
-                  sb.append(
-                      form(
-                          "set_epg",
-                          t("Guide TV (EPG)", "TV guide (EPG)", "دليل البرامج (EPG)", "Guía TV (EPG)"),
-                          opts.toString() + input("url", t("ou lien XMLTV personnalisé", "or custom XMLTV link", "أو رابط XMLTV", "o enlace XMLTV"), "url"),
-                          t("Enregistrer et charger", "Save and load", "حفظ وتحميل", "Guardar y cargar")
-                      )
-                  )
-                  sb.append(
-                      form(
-                          "rec_start",
-                          t("Enregistrement (PVR)", "Recording (PVR)", "التسجيل (PVR)", "Grabación (PVR)"),
-                          "",
-                          t("Enregistrer la chaîne en cours", "Record the current channel", "تسجيل القناة الحالية", "Grabar el canal actual")
-                      )
-                  )
-                  sb.append(
-                      form(
-                          "rec_stop",
-                          t("Arrêter", "Stop", "إيقاف", "Detener"),
-                          "",
-                          t("Arrêter l'enregistrement", "Stop recording", "إيقاف التسجيل", "Detener grabación"),
-                          true
-                      )
-                  )
-                  sb.append(
-                      form(
-                          "rec_schedule",
-                          t("Planifier un enregistrement", "Schedule a recording", "جدولة تسجيل", "Programar grabación"),
-                          input("q", t("Chaîne (numéro ou nom)", "Channel (number or name)", "القناة (رقم أو اسم)", "Canal (número o nombre)")) +
-                              input("time", "HH:mm", "time") +
-                              input("min", t("Durée (minutes)", "Duration (minutes)", "المدة (دقائق)", "Duración (minutos)"), "number", "60"),
-                          t("Planifier", "Schedule", "جدولة", "Programar")
-                      )
-                  )
-                  sb.append("</div></body></html>")
-                  return sb.toString()
-              }
           }
+          EOF
+
+          cat > app/src/main/assets/portal.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width,initial-scale=1">
+          <title>TV Player</title>
+          <style>
+          *{box-sizing:border-box}
+          body{margin:0;background:#0e1117;color:#e8ebf0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+          .wrap{max-width:720px;margin:0 auto;padding:16px}
+          h1{font-size:24px;margin:8px 0 16px}
+          h3{margin:0 0 10px;font-size:16px;color:#9ab8ff}
+          .card{background:#181c25;border-radius:14px;padding:14px;margin-bottom:12px}
+          input,select,textarea{width:100%;padding:12px;margin:5px 0;border-radius:10px;border:1px solid #2b3342;background:#0e1117;color:#fff;font-size:15px}
+          button{width:100%;padding:12px;margin-top:6px;border:0;border-radius:10px;background:#4f8cff;color:#fff;font-size:15px;font-weight:600}
+          button.alt{background:#2b3342}
+          .msg{background:#16341f;color:#9ff0b4;border-radius:12px;padding:12px;margin-bottom:12px}
+          .err{color:#ffb4b4;margin-top:6px}
+          .st div{padding:3px 0;color:#c8cfdb}
+          </style>
+          </head>
+          <body>
+          <div class="wrap">
+          <h1>TV Player</h1>
+          <div id="login" class="card" style="display:none">
+          <h3 id="tLogin"></h3>
+          <input id="pin" type="number" inputmode="numeric" autocomplete="off">
+          <button id="bLogin">OK</button>
+          <div id="err" class="err"></div>
+          </div>
+          <div id="app" style="display:none">
+          <div id="msg" class="msg" style="display:none"></div>
+          <div class="card st"><h3 id="tStatus"></h3><div id="status"></div></div>
+          <div id="forms"></div>
+          </div>
+          </div>
+          <script>
+          var D = {
+          fr: {login:"Code d'acces (affiche sur la TV)",wrong:"Code incorrect",status:"Etat",
+          refresh:"Actualisation",refreshB:"Tout actualiser (sources, films, guide)",
+          play:"Lire une chaine",playP:"Numero ou nom",playB:"Lire sur la TV",
+          addCh:"Ajouter une chaine",name:"Nom",url:"Lien du flux (.m3u8 / .ts)",group:"Groupe (facultatif)",add:"Ajouter",
+          m3u:"Playlist M3U (lien)",imp:"Importer",
+          m3uText:"Playlist M3U (texte colle)",
+          xt:"Xtream",xtName:"Nom (facultatif)",xtUser:"Identifiant",xtPass:"Mot de passe",xtB:"Se connecter",
+          epg:"Guide TV (EPG)",epgP:"ou lien XMLTV personnalise",epgB:"Enregistrer et charger",
+          rec:"Enregistrement (PVR)",recB:"Enregistrer la chaine en cours",recStop:"Arreter l'enregistrement",
+          sched:"Planifier un enregistrement",schedQ:"Chaine (numero ou nom)",schedMin:"Duree (minutes)",schedB:"Planifier"},
+          en: {login:"Access code (shown on the TV)",wrong:"Wrong code",status:"Status",
+          refresh:"Refresh",refreshB:"Refresh all (sources, movies, guide)",
+          play:"Play a channel",playP:"Number or name",playB:"Play on the TV",
+          addCh:"Add a channel",name:"Name",url:"Stream link (.m3u8 / .ts)",group:"Group (optional)",add:"Add",
+          m3u:"M3U playlist (link)",imp:"Import",
+          m3uText:"M3U playlist (pasted text)",
+          xt:"Xtream",xtName:"Name (optional)",xtUser:"Username",xtPass:"Password",xtB:"Connect",
+          epg:"TV guide (EPG)",epgP:"or custom XMLTV link",epgB:"Save and load",
+          rec:"Recording (PVR)",recB:"Record the current channel",recStop:"Stop recording",
+          sched:"Schedule a recording",schedQ:"Channel (number or name)",schedMin:"Duration (minutes)",schedB:"Schedule"},
+          es: {login:"Codigo de acceso (visible en la TV)",wrong:"Codigo incorrecto",status:"Estado",
+          refresh:"Actualizar",refreshB:"Actualizar todo (fuentes, peliculas, guia)",
+          play:"Reproducir un canal",playP:"Numero o nombre",playB:"Reproducir en la TV",
+          addCh:"Anadir un canal",name:"Nombre",url:"Enlace del flujo (.m3u8 / .ts)",group:"Grupo (opcional)",add:"Anadir",
+          m3u:"Lista M3U (enlace)",imp:"Importar",
+          m3uText:"Lista M3U (texto)",
+          xt:"Xtream",xtName:"Nombre (opcional)",xtUser:"Usuario",xtPass:"Contrasena",xtB:"Conectar",
+          epg:"Guia TV (EPG)",epgP:"o enlace XMLTV",epgB:"Guardar y cargar",
+          rec:"Grabacion (PVR)",recB:"Grabar el canal actual",recStop:"Detener grabacion",
+          sched:"Programar grabacion",schedQ:"Canal (numero o nombre)",schedMin:"Duracion (minutos)",schedB:"Programar"},
+          ar: {login:"\u0631\u0645\u0632 \u0627\u0644\u062f\u062e\u0648\u0644 (\u064a\u0638\u0647\u0631 \u0639\u0644\u0649 \u0627\u0644\u062a\u0644\u0641\u0627\u0632)",wrong:"\u0631\u0645\u0632 \u062e\u0627\u0637\u0626",status:"\u0627\u0644\u062d\u0627\u0644\u0629",
+          refresh:"\u062a\u062d\u062f\u064a\u062b",refreshB:"\u062a\u062d\u062f\u064a\u062b \u0627\u0644\u0643\u0644",
+          play:"\u062a\u0634\u063a\u064a\u0644 \u0642\u0646\u0627\u0629",playP:"\u0627\u0644\u0631\u0642\u0645 \u0623\u0648 \u0627\u0644\u0627\u0633\u0645",playB:"\u062a\u0634\u063a\u064a\u0644 \u0639\u0644\u0649 \u0627\u0644\u062a\u0644\u0641\u0627\u0632",
+          addCh:"\u0625\u0636\u0627\u0641\u0629 \u0642\u0646\u0627\u0629",name:"\u0627\u0644\u0627\u0633\u0645",url:"\u0631\u0627\u0628\u0637 \u0627\u0644\u0628\u062b (.m3u8 / .ts)",group:"\u0627\u0644\u0645\u062c\u0645\u0648\u0639\u0629 (\u0627\u062e\u062a\u064a\u0627\u0631\u064a)",add:"\u0625\u0636\u0627\u0641\u0629",
+          m3u:"\u0642\u0627\u0626\u0645\u0629 M3U (\u0631\u0627\u0628\u0637)",imp:"\u0627\u0633\u062a\u064a\u0631\u0627\u062f",
+          m3uText:"\u0642\u0627\u0626\u0645\u0629 M3U (\u0646\u0635)",
+          xt:"Xtream",xtName:"\u0627\u0644\u0627\u0633\u0645 (\u0627\u062e\u062a\u064a\u0627\u0631\u064a)",xtUser:"\u0627\u0633\u0645 \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645",xtPass:"\u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631",xtB:"\u0627\u062a\u0635\u0627\u0644",
+          epg:"\u062f\u0644\u064a\u0644 \u0627\u0644\u0628\u0631\u0627\u0645\u062c (EPG)",epgP:"\u0623\u0648 \u0631\u0627\u0628\u0637 XMLTV",epgB:"\u062d\u0641\u0638 \u0648\u062a\u062d\u0645\u064a\u0644",
+          rec:"\u0627\u0644\u062a\u0633\u062c\u064a\u0644 (PVR)",recB:"\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u0642\u0646\u0627\u0629 \u0627\u0644\u062d\u0627\u0644\u064a\u0629",recStop:"\u0625\u064a\u0642\u0627\u0641 \u0627\u0644\u062a\u0633\u062c\u064a\u0644",
+          sched:"\u062c\u062f\u0648\u0644\u0629 \u062a\u0633\u062c\u064a\u0644",schedQ:"\u0627\u0644\u0642\u0646\u0627\u0629 (\u0631\u0642\u0645 \u0623\u0648 \u0627\u0633\u0645)",schedMin:"\u0627\u0644\u0645\u062f\u0629 (\u062f\u0642\u0627\u0626\u0642)",schedB:"\u062c\u062f\u0648\u0644\u0629"}
+          };
+          var L = (navigator.language || "en").slice(0, 2);
+          if (!D[L]) { L = "en"; }
+          var T = D[L];
+          if (L === "ar") { document.documentElement.dir = "rtl"; }
+          var pin = new URLSearchParams(location.search).get("pin") || sessionStorage.getItem("pin") || "";
+          var presets = [];
+
+          function g(id) { return document.getElementById(id); }
+          function enc(o) {
+            var a = [];
+            for (var k in o) { a.push(encodeURIComponent(k) + "=" + encodeURIComponent(o[k])); }
+            return a.join("&");
+          }
+          function call(method, url, body, cb) {
+            var x = new XMLHttpRequest();
+            x.open(method, url);
+            x.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            x.onload = function () { cb(x.status, x.responseText); };
+            x.onerror = function () { cb(0, ""); };
+            x.send(body || null);
+          }
+          function showMsg(t) {
+            var m = g("msg");
+            m.textContent = t;
+            m.style.display = "block";
+            window.scrollTo(0, 0);
+          }
+          function loadStatus() {
+            call("GET", "/api/status?pin=" + encodeURIComponent(pin), null, function (s, t) {
+              if (s === 200) {
+                g("status").innerHTML = "";
+                t.split("\n").forEach(function (l) {
+                  if (l) { var d = document.createElement("div"); d.textContent = l; g("status").appendChild(d); }
+                });
+              }
+            });
+          }
+          var FORMS = [
+            {a: "refresh", t: "refresh", f: [], b: "refreshB"},
+            {a: "play", t: "play", f: [["q", "text", "playP"]], b: "playB"},
+            {a: "add_channel", t: "addCh", f: [["name", "text", "name"], ["url", "url", "url"], ["group", "text", "group"]], b: "add"},
+            {a: "add_m3u", t: "m3u", f: [["url", "url", "url"]], b: "imp"},
+            {a: "add_m3u_text", t: "m3uText", f: [["text", "area", "m3uText"]], b: "imp"},
+            {a: "add_xtream", t: "xt", f: [["name", "text", "xtName"], ["server", "url", ""], ["user", "text", "xtUser"], ["pass", "password", "xtPass"]], b: "xtB"},
+            {a: "set_epg", t: "epg", f: [["preset", "select", ""], ["url", "url", "epgP"]], b: "epgB"},
+            {a: "rec_start", t: "rec", f: [], b: "recB"},
+            {a: "rec_stop", t: "recStop", f: [], b: "recStop", alt: true},
+            {a: "rec_schedule", t: "sched", f: [["q", "text", "schedQ"], ["time", "time", ""], ["min", "number", "schedMin"]], b: "schedB"}
+          ];
+          function buildForms() {
+            var box = g("forms");
+            box.innerHTML = "";
+            FORMS.forEach(function (F) {
+              var card = document.createElement("div");
+              card.className = "card";
+              var h = document.createElement("h3");
+              h.textContent = T[F.t];
+              card.appendChild(h);
+              var fields = {};
+              F.f.forEach(function (f) {
+                var el;
+                if (f[1] === "area") {
+                  el = document.createElement("textarea");
+                  el.rows = 6;
+                  el.placeholder = "#EXTM3U";
+                } else if (f[1] === "select") {
+                  el = document.createElement("select");
+                  var o0 = document.createElement("option");
+                  o0.value = "";
+                  o0.textContent = "-";
+                  el.appendChild(o0);
+                  presets.forEach(function (p) {
+                    var o = document.createElement("option");
+                    o.value = p[1];
+                    o.textContent = p[0];
+                    el.appendChild(o);
+                  });
+                } else {
+                  el = document.createElement("input");
+                  el.type = f[1];
+                  el.placeholder = f[2] ? T[f[2]] : (f[0] === "server" ? "http://host:port" : (f[0] === "time" ? "HH:mm" : ""));
+                  if (f[0] === "min") { el.value = "60"; }
+                  el.setAttribute("autocomplete", "off");
+                }
+                fields[f[0]] = el;
+                card.appendChild(el);
+              });
+              var b = document.createElement("button");
+              b.textContent = T[F.b];
+              if (F.alt) { b.className = "alt"; }
+              b.onclick = function () {
+                var data = {pin: pin};
+                for (var k in fields) { data[k] = fields[k].value; }
+                b.disabled = true;
+                call("POST", "/api/do/" + F.a, enc(data), function (s, t) {
+                  b.disabled = false;
+                  showMsg(s === 200 ? t : "Error " + s);
+                  loadStatus();
+                });
+              };
+              card.appendChild(b);
+              box.appendChild(card);
+            });
+          }
+          function start() {
+            g("login").style.display = "none";
+            g("app").style.display = "block";
+            g("tStatus").textContent = T.status;
+            call("GET", "/api/presets?pin=" + encodeURIComponent(pin), null, function (s, t) {
+              presets = [];
+              if (s === 200) {
+                t.split("\n").forEach(function (l) {
+                  var i = l.indexOf("|");
+                  if (i > 0) { presets.push([l.substring(0, i), l.substring(i + 1)]); }
+                });
+              }
+              buildForms();
+            });
+            loadStatus();
+          }
+          function tryLogin(showError) {
+            call("GET", "/api/status?pin=" + encodeURIComponent(pin), null, function (s, t) {
+              if (s === 200) {
+                sessionStorage.setItem("pin", pin);
+                start();
+              } else {
+                g("login").style.display = "block";
+                g("tLogin").textContent = T.login;
+                g("err").textContent = showError ? T.wrong : "";
+              }
+            });
+          }
+          g("bLogin").onclick = function () { pin = g("pin").value; tryLogin(true); };
+          tryLogin(false);
+          </script>
+          </body>
+          </html>
           EOF
 
           cat > app/src/main/java/com/example/tvplayer/MainActivity.kt << 'EOF'
@@ -4666,9 +4752,9 @@ jobs:
                   )
                   val recMax = prefs.getInt("rec_max", 240)
                   val ptl = portal
-                  val ips = if (ptl != null) PortalServer.localIps() else emptyList()
+                  val ips = if (ptl != null) portalLocalIps() else emptyList()
                   val portalSub = if (ptl != null && ips.isNotEmpty()) {
-                      "http://" + ips[0] + ":" + ptl.port + "   " + tr("Code ", "Code ", "الرمز ", "Código ") + portalPin()
+                      "http://" + ips[0] + ":" + ptl.port() + "   " + tr("Code ", "Code ", "الرمز ", "Código ") + portalPin()
                   } else {
                       tr("Gérez le lecteur depuis votre téléphone", "Manage the player from your phone", "تحكم بالمشغّل من هاتفك", "Gestiona el reproductor desde tu móvil")
                   }
@@ -5035,7 +5121,12 @@ jobs:
 
               private fun startPortal(): Boolean {
                   if (portal != null) return true
-                  val srv = PortalServer(portalPin(), langIdx, { portalStatus() }, epgPresets) { n, p -> portalAction(n, p) }
+                  val html = try {
+                      assets.open("portal.html").bufferedReader().use { it.readText() }
+                  } catch (e: Exception) {
+                      "portal.html missing"
+                  }
+                  val srv = PortalServer(portalPin(), html, { portalStatus() }, epgPresets) { n, p -> portalAction(n, p) }
                   if (!srv.start()) return false
                   portal = srv
                   return true
@@ -5065,13 +5156,13 @@ jobs:
                       toast(tr("Portail désactivé", "Portal is off", "البوابة متوقفة", "Portal desactivado"))
                       return
                   }
-                  val ips = PortalServer.localIps()
+                  val ips = portalLocalIps()
                   val sb = StringBuilder()
                   sb.append(tr("Sur votre smartphone (même Wi-Fi), ouvrez :", "On your smartphone (same Wi-Fi), open:", "على هاتفك (نفس الواي فاي) افتح:", "En tu móvil (misma Wi-Fi), abre:"))
                   sb.append("\n\n")
                   if (ips.isEmpty()) sb.append(tr("Adresse IP introuvable", "IP address not found", "تعذر العثور على عنوان IP", "Dirección IP no encontrada")).append("\n")
                   for (ip in ips) {
-                      sb.append("http://").append(ip).append(":").append(p.port).append("/?pin=").append(portalPin()).append("\n")
+                      sb.append("http://").append(ip).append(":").append(p.port()).append("/?pin=").append(portalPin()).append("\n")
                   }
                   sb.append("\n").append(tr("Code : ", "Code: ", "الرمز: ", "Código: ")).append(portalPin())
                   dialog().setTitle(tr("Portail web", "Web portal", "بوابة الويب", "Portal web"))

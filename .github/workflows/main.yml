@@ -75,8 +75,8 @@ jobs:
                   applicationId = "com.example.tvplayer"
                   minSdk = 21
                   targetSdk = 34
-                  versionCode = 8
-                  versionName = "7.0.1"
+                  versionCode = 9
+                  versionName = "7.1.0"
               }
 
               signingConfigs {
@@ -265,6 +265,257 @@ jobs:
                   android:strokeWidth="3"
                   android:strokeLineJoin="round"
                   android:pathData="M30,23L30,49L51,36Z" />
+          </vector>
+          EOF
+
+          cat > app/src/main/res/drawable/osd_search.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="24dp"
+              android:height="24dp"
+              android:viewportWidth="24"
+              android:viewportHeight="24">
+              <path
+                  android:fillColor="#00000000"
+                  android:strokeColor="#FFFFFF"
+                  android:strokeWidth="1.8"
+                  android:strokeLineCap="round"
+                  android:strokeLineJoin="round"
+                  android:pathData="M16,10A6,6 0 1,1 4,10A6,6 0 1,1 16,10Z M14.5,14.5L20,20" />
+          </vector>
+          EOF
+
+          cat > app/src/main/res/drawable/osd_list.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="24dp"
+              android:height="24dp"
+              android:viewportWidth="24"
+              android:viewportHeight="24">
+              <path
+                  android:fillColor="#00000000"
+                  android:strokeColor="#FFFFFF"
+                  android:strokeWidth="1.8"
+                  android:strokeLineCap="round"
+                  android:strokeLineJoin="round"
+                  android:pathData="M8,6H20 M8,12H20 M8,18H20 M4,6H4.5 M4,12H4.5 M4,18H4.5" />
+          </vector>
+          EOF
+
+          cat > app/src/main/res/drawable/osd_dvr.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="24dp"
+              android:height="24dp"
+              android:viewportWidth="24"
+              android:viewportHeight="24">
+              <path
+                  android:fillColor="#00000000"
+                  android:strokeColor="#FFFFFF"
+                  android:strokeWidth="1.8"
+                  android:strokeLineCap="round"
+                  android:strokeLineJoin="round"
+                  android:pathData="M3,6H21V18H3Z M9.5,12A1.5,1.5 0 1,1 6.5,12A1.5,1.5 0 1,1 9.5,12Z M13,10H18 M13,14H18" />
+          </vector>
+          EOF
+
+          cat > app/src/main/res/drawable/osd_pip.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="24dp"
+              android:height="24dp"
+              android:viewportWidth="24"
+              android:viewportHeight="24">
+              <path
+                  android:fillColor="#00000000"
+                  android:strokeColor="#FFFFFF"
+                  android:strokeWidth="1.8"
+                  android:strokeLineCap="round"
+                  android:strokeLineJoin="round"
+                  android:pathData="M3,5H21V19H3Z M12,12H19V17H12Z" />
+          </vector>
+          EOF
+
+          cat > app/src/main/res/drawable/osd_video.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="24dp"
+              android:height="24dp"
+              android:viewportWidth="24"
+              android:viewportHeight="24">
+              <path
+                  android:fillColor="#00000000"
+                  android:strokeColor="#FFFFFF"
+                  android:strokeWidth="1.8"
+                  android:strokeLineCap="round"
+                  android:strokeLineJoin="round"
+                  android:pathData="M3,7H15V17H3Z M15,11L21,8V16L15,13Z" />
+          </vector>
+          EOF
+
+          cat > app/src/main/res/drawable/osd_audio.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="24dp"
+              android:height="24dp"
+              android:viewportWidth="24"
+              android:viewportHeight="24">
+              <path
+                  android:fillColor="#00000000"
+                  android:strokeColor="#FFFFFF"
+                  android:strokeWidth="1.8"
+                  android:strokeLineCap="round"
+                  android:strokeLineJoin="round"
+                  android:pathData="M4,9H8L13,5V19L8,15H4Z M16,9A4,4 0 0,1 16,15 M18.5,6.5A8,8 0 0,1 18.5,17.5" />
+          </vector>
+          EOF
+
+          cat > app/src/main/res/drawable/osd_cc.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="24dp"
+              android:height="24dp"
+              android:viewportWidth="24"
+              android:viewportHeight="24">
+              <path
+                  android:fillColor="#00000000"
+                  android:strokeColor="#FFFFFF"
+                  android:strokeWidth="1.8"
+                  android:strokeLineCap="round"
+                  android:strokeLineJoin="round"
+                  android:pathData="M3,6H21V18H3Z M10.5,10.5A2,2 0 1,0 10.5,13.5 M17.5,10.5A2,2 0 1,0 17.5,13.5" />
+          </vector>
+          EOF
+
+          cat > app/src/main/res/drawable/osd_aspect.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="24dp"
+              android:height="24dp"
+              android:viewportWidth="24"
+              android:viewportHeight="24">
+              <path
+                  android:fillColor="#00000000"
+                  android:strokeColor="#FFFFFF"
+                  android:strokeWidth="1.8"
+                  android:strokeLineCap="round"
+                  android:strokeLineJoin="round"
+                  android:pathData="M4,9V4H9 M20,9V4H15 M4,15V20H9 M20,15V20H15" />
+          </vector>
+          EOF
+
+          cat > app/src/main/res/drawable/osd_timer.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="24dp"
+              android:height="24dp"
+              android:viewportWidth="24"
+              android:viewportHeight="24">
+              <path
+                  android:fillColor="#00000000"
+                  android:strokeColor="#FFFFFF"
+                  android:strokeWidth="1.8"
+                  android:strokeLineCap="round"
+                  android:strokeLineJoin="round"
+                  android:pathData="M19,13A7,7 0 1,1 5,13A7,7 0 1,1 19,13Z M12,9V13L15,15 M10,2H14 M12,2V6" />
+          </vector>
+          EOF
+
+          cat > app/src/main/res/drawable/osd_star.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="24dp"
+              android:height="24dp"
+              android:viewportWidth="24"
+              android:viewportHeight="24">
+              <path
+                  android:fillColor="#00000000"
+                  android:strokeColor="#FFFFFF"
+                  android:strokeWidth="1.8"
+                  android:strokeLineCap="round"
+                  android:strokeLineJoin="round"
+                  android:pathData="M12,3L14.8,9L21,9.6L16.3,13.8L17.8,20L12,16.8L6.2,20L7.7,13.8L3,9.6L9.2,9Z" />
+          </vector>
+          EOF
+
+          cat > app/src/main/res/drawable/osd_options.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="24dp"
+              android:height="24dp"
+              android:viewportWidth="24"
+              android:viewportHeight="24">
+              <path
+                  android:fillColor="#00000000"
+                  android:strokeColor="#FFFFFF"
+                  android:strokeWidth="1.8"
+                  android:strokeLineCap="round"
+                  android:strokeLineJoin="round"
+                  android:pathData="M3,5H21V16H3Z M8,20H16 M12,16V20" />
+          </vector>
+          EOF
+
+          cat > app/src/main/res/drawable/osd_settings.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="24dp"
+              android:height="24dp"
+              android:viewportWidth="24"
+              android:viewportHeight="24">
+              <path
+                  android:fillColor="#00000000"
+                  android:strokeColor="#FFFFFF"
+                  android:strokeWidth="1.8"
+                  android:strokeLineCap="round"
+                  android:strokeLineJoin="round"
+                  android:pathData="M12,9A3,3 0 1,1 12,15A3,3 0 1,1 12,9Z M12,3V6 M12,18V21 M3,12H6 M18,12H21 M5.6,5.6L7.8,7.8 M16.2,16.2L18.4,18.4 M5.6,18.4L7.8,16.2 M16.2,7.8L18.4,5.6" />
+          </vector>
+          EOF
+
+          cat > app/src/main/res/drawable/osd_guide.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="24dp"
+              android:height="24dp"
+              android:viewportWidth="24"
+              android:viewportHeight="24">
+              <path
+                  android:fillColor="#00000000"
+                  android:strokeColor="#FFFFFF"
+                  android:strokeWidth="1.8"
+                  android:strokeLineCap="round"
+                  android:strokeLineJoin="round"
+                  android:pathData="M3,5H21V19H3Z M3,10H21 M9,10V19" />
+          </vector>
+          EOF
+
+          cat > app/src/main/res/drawable/osd_history.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="24dp"
+              android:height="24dp"
+              android:viewportWidth="24"
+              android:viewportHeight="24">
+              <path
+                  android:fillColor="#00000000"
+                  android:strokeColor="#FFFFFF"
+                  android:strokeWidth="1.8"
+                  android:strokeLineCap="round"
+                  android:strokeLineJoin="round"
+                  android:pathData="M4,12A8,8 0 1,0 6.3,6.3 M4,4V8H8 M12,8V12L15,14" />
+          </vector>
+          EOF
+
+          cat > app/src/main/res/drawable/osd_rec.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="24dp"
+              android:height="24dp"
+              android:viewportWidth="24"
+              android:viewportHeight="24">
+              <path
+                  android:fillColor="#FF3B30"
+                  android:pathData="M18,12A6,6 0 1,1 6,12A6,6 0 1,1 18,12Z" />
           </vector>
           EOF
 
@@ -1254,6 +1505,7 @@ jobs:
           import androidx.media3.common.PlaybackException
           import androidx.media3.common.Player
           import androidx.media3.common.TrackSelectionOverride
+          import androidx.media3.common.Tracks
           import androidx.media3.common.VideoSize
           import androidx.media3.datasource.DefaultHttpDataSource
           import androidx.media3.exoplayer.DefaultLoadControl
@@ -1347,6 +1599,16 @@ jobs:
               private lateinit var bannerNext: TextView
               private lateinit var bannerClock: TextView
               private lateinit var bannerInfo: TextView
+              private lateinit var bannerTime: TextView
+              private lateinit var bannerLeft: TextView
+              private lateinit var bannerTimeline: ProgressBar
+              private lateinit var badgeBox: LinearLayout
+              private lateinit var osdGroup: TextView
+              private lateinit var osdClock: TextView
+              private lateinit var tilesScroll: HorizontalScrollView
+              private lateinit var tilesRow: LinearLayout
+              private lateinit var optionsBar: HorizontalScrollView
+              private lateinit var optRow: LinearLayout
               private lateinit var controls: HorizontalScrollView
               private lateinit var playBtn: TextView
               private lateinit var listBtn: TextView
@@ -1409,10 +1671,7 @@ jobs:
               private var lastTapTime = 0L
               private var lastBack = 0L
 
-              private val hideBanner = Runnable {
-                  banner.visibility = View.GONE
-                  controlsVisible = false
-              }
+              private val hideBanner = Runnable { hideOsd() }
               private val hideOverlay = Runnable { overlay.visibility = View.GONE }
               private val hideBadge = Runnable { numberBadge.visibility = View.GONE }
               private val hideLogo = Runnable { logoBadge.visibility = View.GONE }
@@ -1726,7 +1985,7 @@ jobs:
                   numberBadge.visibility = View.GONE
                   val nlp = FrameLayout.LayoutParams(-2, -2)
                   nlp.gravity = Gravity.TOP or Gravity.END
-                  nlp.setMargins(dp(16), dp(14), dp(20), 0)
+                  nlp.setMargins(dp(16), dp(46), dp(24), 0)
                   playerFrame.addView(numberBadge, nlp)
 
                   logoBadge = ImageView(this)
@@ -1751,10 +2010,10 @@ jobs:
 
                   banner = LinearLayout(this)
                   banner.orientation = LinearLayout.VERTICAL
-                  banner.setPadding(dp(14), dp(28), dp(14), dp(10))
+                  banner.setPadding(dp(20), dp(40), dp(20), dp(10))
                   banner.background = GradientDrawable(
                       GradientDrawable.Orientation.BOTTOM_TOP,
-                      intArrayOf(Color.parseColor("#E6000000"), Color.TRANSPARENT)
+                      intArrayOf(Color.parseColor("#F2000000"), Color.TRANSPARENT)
                   )
                   banner.visibility = View.GONE
 
@@ -1763,45 +2022,67 @@ jobs:
                   infoRow.gravity = Gravity.CENTER_VERTICAL
 
                   val logoBox = FrameLayout(this)
-                  logoBox.background = rounded(Color.parseColor("#33FFFFFF"), 10)
                   bannerLetter = TextView(this)
                   bannerLetter.gravity = Gravity.CENTER
-                  bannerLetter.textSize = ts(18f)
+                  bannerLetter.textSize = ts(22f)
                   bannerLetter.typeface = Typeface.DEFAULT_BOLD
                   bannerLetter.setTextColor(Color.WHITE)
                   logoBox.addView(bannerLetter, FrameLayout.LayoutParams(-1, -1))
                   bannerLogo = ImageView(this)
                   bannerLogo.scaleType = ImageView.ScaleType.FIT_CENTER
-                  bannerLogo.setPadding(dp(4), dp(4), dp(4), dp(4))
                   logoBox.addView(bannerLogo, FrameLayout.LayoutParams(-1, -1))
-                  infoRow.addView(logoBox, LinearLayout.LayoutParams(dp(46), dp(46)))
+                  infoRow.addView(logoBox, LinearLayout.LayoutParams(dp(if (tv) 116 else 84), dp(if (tv) 76 else 56)))
 
                   val col = LinearLayout(this)
                   col.orientation = LinearLayout.VERTICAL
-                  col.setPadding(dp(12), 0, dp(12), 0)
+                  col.setPadding(dp(16), 0, dp(12), 0)
+
+                  bannerNow = TextView(this)
+                  bannerNow.textSize = ts(20f)
+                  bannerNow.typeface = Typeface.DEFAULT_BOLD
+                  bannerNow.setTextColor(Color.WHITE)
+                  bannerNow.isSingleLine = true
+                  bannerNow.ellipsize = TextUtils.TruncateAt.END
+
+                  val timeRow = LinearLayout(this)
+                  timeRow.orientation = LinearLayout.HORIZONTAL
+                  timeRow.gravity = Gravity.CENTER_VERTICAL
+                  bannerTime = TextView(this)
+                  bannerTime.textSize = ts(13f)
+                  bannerTime.setTextColor(Color.WHITE)
+                  bannerBar = thinBar()
+                  bannerLeft = TextView(this)
+                  bannerLeft.textSize = ts(13f)
+                  bannerLeft.setTextColor(Color.WHITE)
+                  timeRow.addView(bannerTime)
+                  val mbl = LinearLayout.LayoutParams(dp(110), dp(3))
+                  mbl.setMargins(dp(10), 0, dp(10), 0)
+                  timeRow.addView(bannerBar, mbl)
+                  timeRow.addView(bannerLeft)
+
+                  val chanRow = LinearLayout(this)
+                  chanRow.orientation = LinearLayout.HORIZONTAL
+                  chanRow.gravity = Gravity.CENTER_VERTICAL
                   bannerTitle = TextView(this)
-                  bannerTitle.textSize = ts(17f)
+                  bannerTitle.textSize = ts(15f)
                   bannerTitle.typeface = Typeface.DEFAULT_BOLD
                   bannerTitle.setTextColor(Color.WHITE)
                   bannerTitle.isSingleLine = true
                   bannerTitle.ellipsize = TextUtils.TruncateAt.END
-                  bannerNow = TextView(this)
-                  bannerNow.textSize = ts(13f)
-                  bannerNow.setTextColor(Color.WHITE)
-                  bannerNow.isSingleLine = true
-                  bannerNow.ellipsize = TextUtils.TruncateAt.END
-                  bannerBar = thinBar()
+                  badgeBox = LinearLayout(this)
+                  badgeBox.orientation = LinearLayout.HORIZONTAL
+                  chanRow.addView(bannerTitle)
+                  chanRow.addView(badgeBox, LinearLayout.LayoutParams(-2, -2))
+
                   bannerNext = TextView(this)
-                  bannerNext.textSize = ts(12f)
-                  bannerNext.setTextColor(SUB)
+                  bannerNext.textSize = ts(13f)
+                  bannerNext.setTextColor(Color.parseColor("#C8CFDB"))
                   bannerNext.isSingleLine = true
                   bannerNext.ellipsize = TextUtils.TruncateAt.END
-                  col.addView(bannerTitle)
+
                   col.addView(bannerNow)
-                  val blp = LinearLayout.LayoutParams(-1, dp(3))
-                  blp.topMargin = dp(4)
-                  blp.bottomMargin = dp(2)
-                  col.addView(bannerBar, blp)
+                  col.addView(timeRow)
+                  col.addView(chanRow)
                   col.addView(bannerNext)
                   infoRow.addView(col, LinearLayout.LayoutParams(0, -2, 1f))
 
@@ -1809,16 +2090,26 @@ jobs:
                   right.orientation = LinearLayout.VERTICAL
                   right.gravity = Gravity.END
                   bannerClock = TextView(this)
-                  bannerClock.textSize = ts(18f)
-                  bannerClock.typeface = Typeface.DEFAULT_BOLD
-                  bannerClock.setTextColor(Color.WHITE)
                   bannerInfo = TextView(this)
                   bannerInfo.textSize = ts(12f)
                   bannerInfo.setTextColor(SUB)
-                  right.addView(bannerClock)
                   right.addView(bannerInfo)
                   infoRow.addView(right, LinearLayout.LayoutParams(-2, -2))
                   banner.addView(infoRow, LinearLayout.LayoutParams(-1, -2))
+
+                  bannerTimeline = thinBar()
+                  val tll = LinearLayout.LayoutParams(-1, dp(3))
+                  tll.topMargin = dp(10)
+                  tll.bottomMargin = dp(8)
+                  banner.addView(bannerTimeline, tll)
+
+                  tilesScroll = HorizontalScrollView(this)
+                  tilesScroll.isHorizontalScrollBarEnabled = false
+                  tilesRow = LinearLayout(this)
+                  tilesRow.orientation = LinearLayout.HORIZONTAL
+                  tilesScroll.addView(tilesRow)
+                  tilesScroll.visibility = View.GONE
+                  banner.addView(tilesScroll, LinearLayout.LayoutParams(-1, -2))
 
                   controls = HorizontalScrollView(this)
                   controls.isHorizontalScrollBarEnabled = false
@@ -2093,6 +2384,10 @@ jobs:
                           updateGoLive()
                       }
 
+                      override fun onTracksChanged(tracks: Tracks) {
+                          updateBadges()
+                      }
+
                       override fun onVideoSizeChanged(videoSize: VideoSize) {
                           val h = videoSize.height
                           videoInfo = if (h > 0) {
@@ -2225,7 +2520,7 @@ jobs:
                           channelMenu(ch)
                           true
                       }
-                      loadLogo(ch.logo, h.logo, h.letter, 120)
+                      if (prefs.getBoolean("logo_list", true)) loadLogo(logoFor(ch), h.logo, h.letter, 120)
                   }
               }
 
@@ -2287,7 +2582,9 @@ jobs:
                   logo.scaleType = ImageView.ScaleType.FIT_CENTER
                   logo.setPadding(dp(4), dp(4), dp(4), dp(4))
                   logoBox.addView(logo, FrameLayout.LayoutParams(-1, -1))
-                  card.addView(logoBox, LinearLayout.LayoutParams(dp(50), dp(50)))
+                  val lsz = logoListSize()
+                  card.addView(logoBox, LinearLayout.LayoutParams(dp(lsz), dp(lsz)))
+                  if (!prefs.getBoolean("logo_list", true)) logoBox.visibility = View.GONE
 
                   val texts = LinearLayout(this)
                   texts.orientation = LinearLayout.VERTICAL
@@ -3009,13 +3306,17 @@ jobs:
                   val dur = p.duration
                   val pos = p.currentPosition
                   if (dur > 0L && dur != C.TIME_UNSET) {
+                      val pr = ((pos * 100) / dur).toInt().coerceIn(0, 100)
                       bannerBar.visibility = View.VISIBLE
-                      bannerBar.progress = ((pos * 100) / dur).toInt().coerceIn(0, 100)
-                      bannerNow.text = fmtDur(pos) + " / " + fmtDur(dur)
-                      bannerNow.visibility = View.VISIBLE
+                      bannerBar.progress = pr
+                      bannerTimeline.progress = pr
+                      bannerTime.text = fmtDur(pos) + " / " + fmtDur(dur)
+                      bannerTime.visibility = View.VISIBLE
+                      bannerLeft.visibility = View.GONE
                   } else {
                       bannerBar.visibility = View.GONE
-                      bannerNow.visibility = View.GONE
+                      bannerTime.visibility = View.GONE
+                      bannerLeft.visibility = View.GONE
                   }
               }
 
@@ -3028,15 +3329,19 @@ jobs:
 
               private fun showBanner(ch: Channel?, controlsOn: Boolean) {
                   if (inPip) return
+                  if (quickOpen) closeQuick()
                   bannerClock.text = fmtTime(System.currentTimeMillis())
                   bannerInfo.text = infoLine()
+                  updateOsdTop()
+                  updateBadges()
                   if (isVod) {
-                      bannerTitle.text = vodTitle
+                      bannerNow.text = vodTitle
+                      bannerTitle.text = ""
                       bannerLetter.text = vodTitle.trim().take(1).uppercase()
                       bannerLetter.visibility = View.VISIBLE
                       bannerLogo.setImageDrawable(null)
-                      logoBadge.visibility = View.GONE
                       bannerNext.visibility = View.GONE
+                      logoBadge.visibility = View.GONE
                       updateVodProgress()
                   } else {
                       val c = ch ?: all.firstOrNull { it.url == currentUrl }
@@ -3044,23 +3349,29 @@ jobs:
                           val n = numbers[c.url]
                           bannerTitle.text = (if (n != null) n.toString() + "   " else "") + c.name
                           bannerLetter.text = c.name.trim().take(1).uppercase()
-                          loadLogo(c.logo, bannerLogo, bannerLetter, 120)
+                          loadLogo(logoFor(c), bannerLogo, bannerLetter, 200)
                           updateLogoBadge(c)
                           val now = Epg.now(c.tvgId)
                           val nxt = Epg.next(c.tvgId)
                           if (now != null) {
-                              bannerNow.text = fmtTime(now.start) + " – " + fmtTime(now.stop) + "  " + now.title
-                              bannerNow.visibility = View.VISIBLE
+                              bannerNow.text = now.title
+                              bannerTime.text = fmtTime(now.start) + " – " + fmtTime(now.stop)
+                              bannerTime.visibility = View.VISIBLE
+                              val left = ((now.stop - System.currentTimeMillis()) / 60000L).toInt() + 1
+                              bannerLeft.text = (if (left < 1) 1 else left).toString() + " min"
+                              bannerLeft.visibility = View.VISIBLE
                               bannerBar.progress = progressOf(now)
                               bannerBar.visibility = View.VISIBLE
+                              bannerTimeline.progress = progressOf(now)
                           } else {
-                              bannerNow.text = c.group
-                              bannerNow.visibility = if (c.group.isBlank()) View.GONE else View.VISIBLE
+                              bannerNow.text = tr("Pas d'information", "No information", "لا توجد معلومات", "Sin información")
+                              bannerTime.visibility = View.GONE
+                              bannerLeft.visibility = View.GONE
                               bannerBar.visibility = View.GONE
+                              bannerTimeline.progress = 0
                           }
                           if (nxt != null) {
-                              bannerNext.text = tr("Ensuite : ", "Next: ", "التالي: ", "Siguiente: ") +
-                                  fmtTime(nxt.start) + "  " + nxt.title
+                              bannerNext.text = fmtTime(nxt.start) + " – " + fmtTime(nxt.stop) + "   " + nxt.title
                               bannerNext.visibility = View.VISIBLE
                           } else {
                               bannerNext.visibility = View.GONE
@@ -3069,9 +3380,20 @@ jobs:
                   }
                   banner.visibility = View.VISIBLE
                   controlsVisible = controlsOn
-                  controls.visibility = if (controlsOn) View.VISIBLE else View.GONE
+                  val wide = isLandscape() || tv
+                  if (controlsOn && wide) {
+                      populateTiles()
+                      tilesScroll.visibility = View.VISIBLE
+                      controls.visibility = View.GONE
+                  } else {
+                      tilesScroll.visibility = View.GONE
+                      controls.visibility = if (controlsOn) View.VISIBLE else View.GONE
+                  }
                   ui.removeCallbacks(hideBanner)
-                  ui.postDelayed(hideBanner, if (controlsOn) 6000L else 4000L)
+                  ui.postDelayed(hideBanner, if (controlsOn) 8000L else 4000L)
+                  if (controlsOn && wide) {
+                      tilesRow.postDelayed({ tilesRow.getChildAt(0)?.requestFocus() }, 80)
+                  }
               }
 
               private fun onSingleTap() {
@@ -3172,7 +3494,7 @@ jobs:
                   playerFrame.layoutParams = pl
                   panel.layoutParams = ql
                   quickScroll.layoutParams = qp
-                  val lh = if (land) dp(if (tv) 72 else 56) else dp(40)
+                  val lh = ((if (land) dp(if (tv) 72 else 56) else dp(40)) * logoScale()).toInt()
                   logoBadge.maxHeight = lh
                   logoBadge.maxWidth = lh * 3
                   if (inPip) logoBadge.visibility = View.GONE
@@ -3256,32 +3578,28 @@ jobs:
 
               private fun openQuick() {
                   if (inPip) return
-                  if (!isLandscape()) {
+                  if (!isLandscape() && !tv) {
                       quickDialog()
                       return
                   }
                   if (panelOpen) closePanel()
                   if (quickOpen) return
-                  populateQuick()
+                  populateOptions()
                   quickOpen = true
-                  quickScroll.visibility = View.VISIBLE
-                  quickScroll.translationX = quickHidden()
-                  quickScroll.animate().translationX(0f).setDuration(180).start()
                   ui.removeCallbacks(hideBanner)
-                  hideBanner.run()
-                  quickList.postDelayed({ quickList.getChildAt(1)?.requestFocus() }, 80)
+                  banner.visibility = View.GONE
+                  controlsVisible = false
+                  tilesScroll.visibility = View.GONE
+                  controls.visibility = View.GONE
+                  updateOsdTop()
+                  optionsBar.visibility = View.VISIBLE
+                  ui.postDelayed(hideBanner, 9000L)
+                  optRow.postDelayed({ optRow.getChildAt(0)?.requestFocus() }, 80)
               }
 
               private fun closeQuick() {
                   if (!quickOpen) return
-                  quickOpen = false
-                  quickScroll.animate().translationX(quickHidden()).setDuration(160).withEndAction {
-                      if (!quickOpen) {
-                          quickScroll.visibility = View.GONE
-                          quickScroll.translationX = 0f
-                      }
-                  }.start()
-                  root.requestFocus()
+                  hideOsd()
               }
 
               private fun toggleFullscreen() {
@@ -3378,7 +3696,7 @@ jobs:
                       showBanner(null, true)
                       return
                   }
-                  when (prefs.getInt("ok_action", 0)) {
+                  when (prefs.getInt("ok_action", 1)) {
                       0 -> openPanel()
                       1 -> showBanner(null, true)
                       2 -> playPause()
@@ -3486,8 +3804,11 @@ jobs:
                       val startKey = if (isRtl()) KeyEvent.KEYCODE_DPAD_RIGHT else KeyEvent.KEYCODE_DPAD_LEFT
                       val endKey = if (isRtl()) KeyEvent.KEYCODE_DPAD_LEFT else KeyEvent.KEYCODE_DPAD_RIGHT
                       if (quickOpen) {
-                          if (keyCode == startKey) {
+                          ui.removeCallbacks(hideBanner)
+                          ui.postDelayed(hideBanner, 9000L)
+                          if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
                               closeQuick()
+                              showBanner(null, true)
                               return true
                           }
                           return super.onKeyDown(keyCode, event)
@@ -3495,6 +3816,19 @@ jobs:
                       if (panelOpen) {
                           if (keyCode == startKey && groupCol.hasFocus()) {
                               closePanel()
+                              return true
+                          }
+                          return super.onKeyDown(keyCode, event)
+                      }
+                      if (controlsVisible && tilesScroll.visibility == View.VISIBLE) {
+                          ui.removeCallbacks(hideBanner)
+                          ui.postDelayed(hideBanner, 8000L)
+                          if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                              openQuick()
+                              return true
+                          }
+                          if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+                              hideOsd()
                               return true
                           }
                           return super.onKeyDown(keyCode, event)
@@ -3842,8 +4176,10 @@ jobs:
                       ui.removeCallbacks(sleepRunnable)
                       if (mins[i] > 0) {
                           ui.postDelayed(sleepRunnable, mins[i] * 60000L)
+                          sleepEnd = System.currentTimeMillis() + mins[i] * 60000L
                           toast(mins[i].toString() + " min")
                       } else {
+                          sleepEnd = 0L
                           toast(tr("Minuteur désactivé", "Timer off", "تم إيقاف المؤقت", "Temporizador desactivado"))
                       }
                   }.show()
@@ -3888,7 +4224,7 @@ jobs:
 
               private fun remoteDialog() {
                   val inv = prefs.getBoolean("inv_updown", false)
-                  val ok = prefs.getInt("ok_action", 0).coerceIn(0, 3)
+                  val ok = prefs.getInt("ok_action", 1).coerceIn(0, 3)
                   val okNames = arrayOf(
                       tr("Liste des chaînes", "Channel list", "قائمة القنوات", "Lista de canales"),
                       tr("Infos", "Info", "معلومات", "Info"),
@@ -3964,6 +4300,7 @@ jobs:
                       tr("Programmes de la chaîne", "Channel schedule", "برامج القناة", "Programación del canal"),
                       tr("Renommer", "Rename", "إعادة تسمية", "Renombrar"),
                       tr("Copier le lien", "Copy link", "نسخ الرابط", "Copiar enlace"),
+                      tr("Changer le logo", "Change logo", "تغيير الشعار", "Cambiar logo"),
                       tr("Supprimer", "Delete", "حذف", "Eliminar")
                   )
                   dialog().setTitle(ch.name).setItems(items) { _, i ->
@@ -3992,7 +4329,8 @@ jobs:
                               cm.setPrimaryClip(ClipData.newPlainText("link", ch.url))
                               toast(tr("Lien copié", "Link copied", "تم نسخ الرابط", "Enlace copiado"))
                           }
-                          4 -> confirm(tr("Supprimer cette chaîne ?", "Delete this channel?", "حذف هذه القناة؟", "¿Eliminar este canal?")) {
+                          4 -> logoDialog(ch)
+                          5 -> confirm(tr("Supprimer cette chaîne ?", "Delete this channel?", "حذف هذه القناة؟", "¿Eliminar este canal?")) {
                               all.remove(ch)
                               save()
                               refresh(true)
@@ -4619,6 +4957,7 @@ jobs:
               }
 
               private fun buildExtras() {
+                  buildOsd()
                   recBadge = TextView(this)
                   recBadge.textSize = ts(13f)
                   recBadge.setTextColor(Color.WHITE)
@@ -4627,7 +4966,7 @@ jobs:
                   recBadge.visibility = View.GONE
                   val rlp = FrameLayout.LayoutParams(-2, -2)
                   rlp.gravity = Gravity.TOP or Gravity.END
-                  rlp.setMargins(dp(16), dp(60), dp(20), 0)
+                  rlp.setMargins(dp(16), dp(84), dp(24), 0)
                   playerFrame.addView(recBadge, rlp)
 
                   goLive = LinearLayout(this)
@@ -4727,7 +5066,7 @@ jobs:
                   seekBack.visibility = if (canSeek) View.VISIBLE else View.GONE
                   seekFwd.visibility = if (canSeek) View.VISIBLE else View.GONE
                   goLive.visibility = if (show) View.VISIBLE else View.GONE
-                  val want = if (banner.visibility == View.VISIBLE) dp(if (controlsVisible) 156 else 100) else dp(28)
+                  val want = if (banner.visibility == View.VISIBLE || optionsBar.visibility == View.VISIBLE) dp(if (controlsVisible || quickOpen) 156 else 100) else dp(28)
                   val lp = goLive.layoutParams as FrameLayout.LayoutParams
                   if (lp.bottomMargin != want) {
                       lp.bottomMargin = want
@@ -4886,7 +5225,7 @@ jobs:
                       tr("toujours", "always", "دائماً", "siempre"),
                       tr("non", "off", "إيقاف", "no")
                   )
-                  val ok = prefs.getInt("ok_action", 0).coerceIn(0, 3)
+                  val ok = prefs.getInt("ok_action", 1).coerceIn(0, 3)
                   val okNames = arrayOf(
                       tr("Liste", "List", "القائمة", "Lista"),
                       tr("Infos", "Info", "معلومات", "Info"),
@@ -4969,10 +5308,6 @@ jobs:
                   tog(tr("Lecture au démarrage", "Play on start", "التشغيل عند البدء", "Reproducir al iniciar"), "", prefs.getBoolean("autoplay", true)) {
                       prefs.edit().putBoolean("autoplay", !prefs.getBoolean("autoplay", true)).apply()
                   }
-                  row(tr("Logo à l'écran", "On-screen logo", "الشعار على الشاشة", "Logo en pantalla"), "", logoNames[logoMode]) {
-                      prefs.edit().putInt("logo_mode", (logoMode + 1) % 3).apply()
-                      updateLogoBadge(all.firstOrNull { it.url == currentUrl })
-                  }
                   row(tr("Minuteur de veille", "Sleep timer", "مؤقت النوم", "Temporizador"), "", arrow) { sleepDialog() }
                   row("User-Agent", "", arrow) { uaDialog() }
 
@@ -4984,6 +5319,52 @@ jobs:
                       prefs.edit().putBoolean("inv_updown", !prefs.getBoolean("inv_updown", false)).apply()
                   }
                   row(tr("Aide des touches", "Key guide", "دليل الأزرار", "Guía de teclas"), "", arrow) { remoteHelp() }
+
+                  sec(tr("Logos", "Logos", "الشعارات", "Logos"))
+                  val logoSize = prefs.getInt("logo_size", 1).coerceIn(0, 2)
+                  val sizeNames = arrayOf(tr("petit", "small", "صغير", "pequeño"), tr("moyen", "medium", "متوسط", "medio"), tr("grand", "large", "كبير", "grande"))
+                  val logoPos = prefs.getInt("logo_pos", 0).coerceIn(0, 3)
+                  val posNames = arrayOf(
+                      tr("haut gauche", "top left", "أعلى اليسار", "arriba izquierda"),
+                      tr("haut droite", "top right", "أعلى اليمين", "arriba derecha"),
+                      tr("bas gauche", "bottom left", "أسفل اليسار", "abajo izquierda"),
+                      tr("bas droite", "bottom right", "أسفل اليمين", "abajo derecha")
+                  )
+                  tog(tr("Logos dans la liste", "Logos in the list", "الشعارات في القائمة", "Logos en la lista"), "", prefs.getBoolean("logo_list", true)) {
+                      prefs.edit().putBoolean("logo_list", !prefs.getBoolean("logo_list", true)).apply()
+                      modeKey = -1
+                      applyListMode()
+                  }
+                  row(tr("Taille des logos", "Logo size", "حجم الشعارات", "Tamaño de los logos"), "", sizeNames[logoSize]) {
+                      prefs.edit().putInt("logo_size", (logoSize + 1) % 3).apply()
+                      modeKey = -1
+                      applyListMode()
+                      applyLayout()
+                  }
+                  row(tr("Logo à l'écran", "On-screen logo", "الشعار على الشاشة", "Logo en pantalla"), tr("Affichage sur la vidéo", "Shown over the video", "العرض فوق الفيديو", "Mostrado sobre el vídeo"), logoNames[logoMode]) {
+                      prefs.edit().putInt("logo_mode", (logoMode + 1) % 3).apply()
+                      updateLogoBadge(all.firstOrNull { it.url == currentUrl })
+                  }
+                  row(tr("Position du logo", "Logo position", "موضع الشعار", "Posición del logo"), "", posNames[logoPos]) {
+                      prefs.edit().putInt("logo_pos", (logoPos + 1) % 4).apply()
+                      updateLogoBadge(all.firstOrNull { it.url == currentUrl })
+                  }
+                  tog(
+                      tr("Logos gratuits automatiques", "Automatic free logos", "شعارات مجانية تلقائية", "Logos gratuitos automáticos"),
+                      tr("Essai pour les chaînes sans logo (selon disponibilité)", "Best effort for channels without a logo", "محاولة للقنوات بدون شعار", "Intento para canales sin logo"),
+                      prefs.getBoolean("logo_auto", false)
+                  ) {
+                      prefs.edit().putBoolean("logo_auto", !prefs.getBoolean("logo_auto", false)).apply()
+                      modeKey = -1
+                      applyListMode()
+                  }
+                  row(tr("Vider le cache des logos", "Clear the logo cache", "مسح ذاكرة الشعارات", "Vaciar la caché de logos"), "", arrow) {
+                      logos.evictAll()
+                      failed.clear()
+                      modeKey = -1
+                      applyListMode()
+                      toast(tr("Cache vidé", "Cache cleared", "تم المسح", "Caché vaciada"))
+                  }
 
                   sec(tr("Affichage", "Display", "العرض", "Pantalla"))
                   row(tr("Langue", "Language", "اللغة", "Idioma"), "", arrow) { languageDialog() }
@@ -5010,7 +5391,7 @@ jobs:
                   }
                   row(
                       tr("À propos de Player Lamine S Bouzareah", "About Player Lamine S Bouzareah", "حول Player Lamine S Bouzareah", "Acerca de Player Lamine S Bouzareah"),
-                      tr("Version 7.0.1", "Version 7.0.1", "الإصدار 7.0.1", "Versión 7.0.1"),
+                      tr("Version 7.1.0", "Version 7.1.0", "الإصدار 7.1.0", "Versión 7.1.0"),
                       arrow
                   ) { aboutDialog() }
               }
@@ -5021,10 +5402,10 @@ jobs:
                   )
                       .setMessage(
                           tr(
-                              "Player Lamine S Bouzareah\nVersion 7.0.1\n\nTV en direct, films et séries (HLS, DASH, TS) avec Xtream, M3U, guide TV, enregistrement (PVR), portail web et retour au direct.\n\nMobile, Android TV et Fire TV.",
-                              "Player Lamine S Bouzareah\nVersion 7.0.1\n\nLive TV, movies and series (HLS, DASH, TS) with Xtream, M3U, TV guide, recording (PVR), web portal and Go to Live.\n\nMobile, Android TV and Fire TV.",
-                              "Player Lamine S Bouzareah\nالإصدار 7.0.1\n\nتلفزيون مباشر وأفلام ومسلسلات (HLS وDASH وTS) مع Xtream وM3U ودليل البرامج والتسجيل وبوابة الويب والعودة للبث المباشر.\n\nللهاتف وAndroid TV وFire TV.",
-                              "Player Lamine S Bouzareah\nVersión 7.0.1\n\nTV en vivo, películas y series (HLS, DASH, TS) con Xtream, M3U, guía TV, grabación (PVR), portal web e Ir al directo.\n\nMóvil, Android TV y Fire TV."
+                              "Player Lamine S Bouzareah\nVersion 7.1.0\n\nTV en direct, films et séries (HLS, DASH, TS) avec Xtream, M3U, guide TV, enregistrement (PVR), portail web et retour au direct.\n\nMobile, Android TV et Fire TV.",
+                              "Player Lamine S Bouzareah\nVersion 7.1.0\n\nLive TV, movies and series (HLS, DASH, TS) with Xtream, M3U, TV guide, recording (PVR), web portal and Go to Live.\n\nMobile, Android TV and Fire TV.",
+                              "Player Lamine S Bouzareah\nالإصدار 7.1.0\n\nتلفزيون مباشر وأفلام ومسلسلات (HLS وDASH وTS) مع Xtream وM3U ودليل البرامج والتسجيل وبوابة الويب والعودة للبث المباشر.\n\nللهاتف وAndroid TV وFire TV.",
+                              "Player Lamine S Bouzareah\nVersión 7.1.0\n\nTV en vivo, películas y series (HLS, DASH, TS) con Xtream, M3U, guía TV, grabación (PVR), portal web e Ir al directo.\n\nMóvil, Android TV y Fire TV."
                           )
                       )
                       .setPositiveButton("OK", null)
@@ -5458,6 +5839,373 @@ jobs:
 
               private fun toggleRecordStartOnly() {
                   if (!recorder.active) toggleRecord()
+              }
+
+              // ---------- v7.1 : OSD facon TiviMate, logos ----------
+
+              private val osdFmt = SimpleDateFormat("EEE d MMM  HH:mm", Locale.getDefault())
+              private var sleepEnd = 0L
+
+              private fun buildOsd() {
+                  osdGroup = TextView(this)
+                  osdGroup.textSize = ts(18f)
+                  osdGroup.setTextColor(Color.parseColor("#E6FFFFFF"))
+                  osdGroup.setShadowLayer(6f, 0f, 2f, Color.BLACK)
+                  osdGroup.visibility = View.GONE
+                  val g1 = FrameLayout.LayoutParams(-2, -2)
+                  g1.gravity = Gravity.TOP or Gravity.START
+                  g1.setMargins(dp(24), dp(16), 0, 0)
+                  playerFrame.addView(osdGroup, g1)
+
+                  osdClock = TextView(this)
+                  osdClock.textSize = ts(18f)
+                  osdClock.setTextColor(Color.parseColor("#E6FFFFFF"))
+                  osdClock.setShadowLayer(6f, 0f, 2f, Color.BLACK)
+                  osdClock.visibility = View.GONE
+                  val g2 = FrameLayout.LayoutParams(-2, -2)
+                  g2.gravity = Gravity.TOP or Gravity.END
+                  g2.setMargins(0, dp(16), dp(24), 0)
+                  playerFrame.addView(osdClock, g2)
+
+                  optionsBar = HorizontalScrollView(this)
+                  optionsBar.isHorizontalScrollBarEnabled = false
+                  optionsBar.background = GradientDrawable(
+                      GradientDrawable.Orientation.BOTTOM_TOP,
+                      intArrayOf(Color.parseColor("#F2000000"), Color.TRANSPARENT)
+                  )
+                  optionsBar.setPadding(dp(16), dp(40), dp(16), dp(16))
+                  optRow = LinearLayout(this)
+                  optRow.orientation = LinearLayout.HORIZONTAL
+                  optionsBar.addView(optRow)
+                  optionsBar.visibility = View.GONE
+                  val ob = FrameLayout.LayoutParams(-1, -2)
+                  ob.gravity = Gravity.BOTTOM
+                  playerFrame.addView(optionsBar, ob)
+              }
+
+              private fun hideOsd() {
+                  banner.visibility = View.GONE
+                  tilesScroll.visibility = View.GONE
+                  controls.visibility = View.GONE
+                  optionsBar.visibility = View.GONE
+                  osdGroup.visibility = View.GONE
+                  osdClock.visibility = View.GONE
+                  controlsVisible = false
+                  quickOpen = false
+                  if (!panelOpen && !settingsOpen) root.requestFocus()
+              }
+
+              private fun updateOsdTop() {
+                  val c = all.firstOrNull { it.url == currentUrl }
+                  osdGroup.text = if (isVod) vodTitle else (c?.group ?: "")
+                  osdClock.text = osdFmt.format(Date())
+                  osdGroup.visibility = if (osdGroup.text.isEmpty()) View.GONE else View.VISIBLE
+                  osdClock.visibility = View.VISIBLE
+              }
+
+              private fun updateBadges() {
+                  badgeBox.removeAllViews()
+                  val exo = player ?: return
+                  val labels = ArrayList<String>()
+                  val vf = exo.videoFormat
+                  if (vf != null && vf.height > 0) {
+                      val h = vf.height
+                      labels.add(if (h >= 2160) "4K" else if (h >= 1080) "FHD" else if (h >= 720) "HD" else "SD")
+                  }
+                  if (vf != null && vf.frameRate > 0f) labels.add(Math.round(vf.frameRate).toString() + " FPS")
+                  val af = exo.audioFormat
+                  if (af != null && af.channelCount > 0) labels.add(audioName(af.channelCount))
+                  for (l in labels) {
+                      val t = TextView(this)
+                      t.text = l
+                      t.textSize = ts(11f)
+                      t.typeface = Typeface.DEFAULT_BOLD
+                      t.setTextColor(Color.WHITE)
+                      t.setPadding(dp(7), dp(2), dp(7), dp(2))
+                      t.background = rounded(Color.parseColor("#55FFFFFF"), 6)
+                      val lp = LinearLayout.LayoutParams(-2, -2)
+                      lp.leftMargin = dp(8)
+                      badgeBox.addView(t, lp)
+                  }
+              }
+
+              private fun audioName(channels: Int): String = when (channels) {
+                  1 -> "MONO"
+                  2 -> tr("STÉRÉO", "STEREO", "ستيريو", "ESTÉREO")
+                  6 -> "5.1"
+                  8 -> "7.1"
+                  else -> "AUDIO"
+              }
+
+              private fun resLabel(): String {
+                  val vf = player?.videoFormat
+                  return if (vf != null && vf.width > 0 && vf.height > 0) {
+                      vf.width.toString() + " × " + vf.height.toString()
+                  } else {
+                      tr("Qualité", "Quality", "الجودة", "Calidad")
+                  }
+              }
+
+              private fun audioLabel(): String {
+                  val af = player?.audioFormat
+                  return if (af != null && af.channelCount > 0) audioName(af.channelCount) else "Audio"
+              }
+
+              private fun ccLabel(): String {
+                  val exo = player ?: return "Off"
+                  for (g in exo.currentTracks.groups) {
+                      if (g.type != C.TRACK_TYPE_TEXT) continue
+                      for (i in 0 until g.length) {
+                          if (g.isTrackSelected(i)) {
+                              val lang = g.getTrackFormat(i).language
+                              return if (!lang.isNullOrBlank() && lang != "und") lang.uppercase() else "CC"
+                          }
+                      }
+                  }
+                  return "Off"
+              }
+
+              private fun sleepLabel(): String {
+                  val left = sleepEnd - System.currentTimeMillis()
+                  return if (left > 0L) ((left / 60000L) + 1L).toString() + " min" else "Off"
+              }
+
+              // ----- tuiles -----
+
+              private fun osdTileBg(focused: Boolean, bare: Boolean): GradientDrawable {
+                  val g = GradientDrawable()
+                  g.cornerRadius = dp(14).toFloat()
+                  if (focused) {
+                      g.setColor(ACCENT)
+                  } else if (bare) {
+                      g.setColor(Color.TRANSPARENT)
+                  } else {
+                      g.setColor(Color.parseColor("#44FFFFFF"))
+                  }
+                  return g
+              }
+
+              private fun osdTile(icon: Int, label: String, bare: Boolean, action: () -> Unit): LinearLayout {
+                  val t = LinearLayout(this)
+                  t.orientation = LinearLayout.VERTICAL
+                  t.gravity = Gravity.CENTER
+                  t.setPadding(dp(6), dp(8), dp(6), dp(8))
+                  t.isFocusable = true
+                  t.isClickable = true
+                  t.background = osdTileBg(false, bare)
+                  t.setOnFocusChangeListener { v, has -> v.background = osdTileBg(has, bare) }
+                  if (icon != 0) {
+                      val iv = ImageView(this)
+                      iv.setImageResource(icon)
+                      t.addView(iv, LinearLayout.LayoutParams(dp(if (tv) 36 else 28), dp(if (tv) 36 else 28)))
+                  }
+                  val tx = TextView(this)
+                  tx.text = label
+                  tx.textSize = ts(12f)
+                  tx.setTextColor(Color.WHITE)
+                  tx.gravity = Gravity.CENTER
+                  tx.maxLines = 2
+                  tx.ellipsize = TextUtils.TruncateAt.END
+                  val tlp = LinearLayout.LayoutParams(-2, -2)
+                  tlp.topMargin = dp(4)
+                  t.addView(tx, tlp)
+                  t.setOnClickListener {
+                      ui.removeCallbacks(hideBanner)
+                      ui.postDelayed(hideBanner, 9000L)
+                      action()
+                  }
+                  return t
+              }
+
+              private fun chTile(ch: Channel): LinearLayout {
+                  val t = osdTile(0, "", false) {
+                      play(ch)
+                      hideOsd()
+                  }
+                  t.removeAllViews()
+                  val iv = ImageView(this)
+                  iv.scaleType = ImageView.ScaleType.FIT_CENTER
+                  t.addView(iv, LinearLayout.LayoutParams(dp(if (tv) 90 else 70), dp(if (tv) 50 else 38)))
+                  val tx = TextView(this)
+                  val now = Epg.now(ch.tvgId)
+                  val logo = logoFor(ch)
+                  tx.text = if (logo.isBlank()) ch.name else if (now != null) now.title else tr("Pas d'information", "No information", "لا توجد معلومات", "Sin información")
+                  tx.textSize = ts(11f)
+                  tx.setTextColor(Color.WHITE)
+                  tx.gravity = Gravity.CENTER
+                  tx.maxLines = 2
+                  tx.ellipsize = TextUtils.TruncateAt.END
+                  t.addView(tx, LinearLayout.LayoutParams(-2, -2))
+                  loadLogo(logo, iv, null, 160)
+                  return t
+              }
+
+              private fun populateTiles() {
+                  tilesRow.removeAllViews()
+                  fun addT(v: View) {
+                      val lp = LinearLayout.LayoutParams(dp(if (tv) 150 else 112), dp(if (tv) 112 else 88))
+                      lp.setMargins(dp(4), dp(4), dp(4), dp(4))
+                      tilesRow.addView(v, lp)
+                  }
+                  addT(osdTile(R.drawable.osd_guide, tr("Guide TV", "TV Guide", "دليل التلفاز", "Guía TV"), false) {
+                      val c = all.firstOrNull { it.url == currentUrl }
+                      if (c != null && !isVod) guideDialog(c)
+                      else toast(tr("Pas de guide", "No guide", "لا يوجد دليل", "Sin guía"))
+                  })
+                  addT(osdTile(R.drawable.osd_history, tr("Historique", "History", "السجل", "Historial"), false) {
+                      if (section != 0) setSection(0)
+                      filter = F_RECENT
+                      refresh(true)
+                      openPanel()
+                  })
+                  var n = 0
+                  for (u in recent) {
+                      if (n >= 12) break
+                      val ch = all.firstOrNull { it.url == u }
+                      if (ch == null || ch.url == currentUrl) continue
+                      addT(chTile(ch))
+                      n++
+                  }
+              }
+
+              private fun populateOptions() {
+                  optRow.removeAllViews()
+                  fun add(icon: Int, label: String, refreshAfter: Boolean, action: () -> Unit) {
+                      val lp = LinearLayout.LayoutParams(dp(if (tv) 132 else 98), -2)
+                      lp.setMargins(dp(3), 0, dp(3), 0)
+                      var tile: LinearLayout? = null
+                      tile = osdTile(icon, label, true) {
+                          val idx = optRow.indexOfChild(tile)
+                          action()
+                          if (refreshAfter) {
+                              populateOptions()
+                              optRow.getChildAt(idx)?.requestFocus()
+                          }
+                      }
+                      optRow.addView(tile, lp)
+                  }
+                  val c = all.firstOrNull { it.url == currentUrl }
+                  if (isVod) {
+                      add(0, "−10 s", false) { seekBy(-10000L) }
+                      val paused = player?.playWhenReady == false
+                      add(if (paused) R.drawable.ic_play else R.drawable.ic_pause, tr("Lecture / Pause", "Play / Pause", "تشغيل / إيقاف", "Reproducir / Pausa"), true) { playPause() }
+                      add(0, "+10 s", false) { seekBy(10000L) }
+                  }
+                  add(R.drawable.osd_search, tr("Rechercher", "Search", "بحث", "Buscar"), false) { goSearch() }
+                  add(R.drawable.osd_list, tr("Liste des Chaînes", "Channel list", "قائمة القنوات", "Lista de canales"), false) { openPanel() }
+                  add(R.drawable.osd_dvr, tr("Enregistrements", "Recordings", "التسجيلات", "Grabaciones"), false) { recordingsDialog() }
+                  if (!isVod) {
+                      add(
+                          R.drawable.osd_rec,
+                          if (recorder.active) tr("Arrêter REC", "Stop REC", "إيقاف التسجيل", "Detener REC") else tr("Enregistrer", "Record", "تسجيل", "Grabar"),
+                          true
+                      ) { toggleRecord() }
+                  }
+                  if (!tv) add(R.drawable.osd_pip, tr("Image dans l'image", "Picture in picture", "صورة داخل صورة", "Imagen en imagen"), false) { enterPip() }
+                  add(R.drawable.osd_video, resLabel(), false) { videoDialog() }
+                  add(R.drawable.osd_audio, audioLabel(), false) { trackDialog(C.TRACK_TYPE_AUDIO) }
+                  add(R.drawable.osd_cc, ccLabel(), false) { trackDialog(C.TRACK_TYPE_TEXT) }
+                  add(R.drawable.osd_aspect, resizeName(resizeIndex), true) { cycleResize() }
+                  add(R.drawable.osd_timer, sleepLabel(), false) { sleepDialog() }
+                  if (!isVod) {
+                      add(
+                          R.drawable.osd_star,
+                          if (c != null && c.fav) tr("Retirer des Favoris", "Remove from Favorites", "إزالة من المفضلة", "Quitar de Favoritos")
+                          else tr("Ajouter aux Favoris", "Add to Favorites", "إضافة للمفضلة", "Añadir a Favoritos"),
+                          true
+                      ) { toggleFavCurrent() }
+                      if (c != null) {
+                          add(R.drawable.osd_options, tr("Options de Chaîne", "Channel options", "خيارات القناة", "Opciones del canal"), false) { channelMenu(c) }
+                      }
+                  }
+                  add(R.drawable.osd_settings, tr("Paramètres", "Settings", "الإعدادات", "Ajustes"), false) { menuDialog() }
+              }
+
+              // ----- logos -----
+
+              private fun logoScale(): Float = when (prefs.getInt("logo_size", 1)) {
+                  0 -> 0.75f
+                  2 -> 1.4f
+                  else -> 1f
+              }
+
+              private fun logoListSize(): Int = when (prefs.getInt("logo_size", 1)) {
+                  0 -> 40
+                  2 -> 64
+                  else -> 50
+              }
+
+              private fun autoLogoUrl(c: Channel): String {
+                  var n = java.text.Normalizer.normalize(c.name, java.text.Normalizer.Form.NFD)
+                  n = n.replace(Regex("\\p{M}+"), "").lowercase()
+                  n = n.replace(Regex("\\[[^\\]]*\\]|\\([^)]*\\)"), " ")
+                  n = n.replace(Regex("\\b(fhd|uhd|hd|sd|4k|hevc|raw|vip)\\b"), " ")
+                  n = n.replace(Regex("^[^a-z0-9]*[a-z]{2}\\s*[:|\\-]+\\s*"), " ")
+                  n = n.trim().replace(Regex("[^a-z0-9]+"), "-").trim('-')
+                  if (n.length < 2) return ""
+                  val hay = (c.name + " " + c.group).lowercase()
+                  var folder = "france"
+                  var cc = "fr"
+                  if (hay.contains("uk") || hay.contains("united kingdom")) {
+                      folder = "united-kingdom"
+                      cc = "uk"
+                  } else if (hay.contains("germany") || hay.contains("de|")) {
+                      folder = "germany"
+                      cc = "de"
+                  } else if (hay.contains("spain") || hay.contains("es|")) {
+                      folder = "spain"
+                      cc = "es"
+                  } else if (hay.contains("italy") || hay.contains("it|")) {
+                      folder = "italy"
+                      cc = "it"
+                  } else if (hay.contains("belgi") || hay.contains("be|")) {
+                      folder = "belgium"
+                      cc = "be"
+                  }
+                  return "https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/" + folder + "/" + n + "-" + cc + ".png"
+              }
+
+              private fun logoFor(c: Channel): String {
+                  if (c.logo.isNotBlank()) return c.logo
+                  if (!prefs.getBoolean("logo_auto", false)) return ""
+                  return autoLogoUrl(c)
+              }
+
+              private fun placeLogoBadge() {
+                  val lp = logoBadge.layoutParams as FrameLayout.LayoutParams
+                  when (prefs.getInt("logo_pos", 0).coerceIn(0, 3)) {
+                      0 -> {
+                          lp.gravity = Gravity.TOP or Gravity.START
+                          lp.setMargins(dp(24), dp(52), 0, 0)
+                      }
+                      1 -> {
+                          lp.gravity = Gravity.TOP or Gravity.END
+                          lp.setMargins(0, dp(84), dp(24), 0)
+                      }
+                      2 -> {
+                          lp.gravity = Gravity.BOTTOM or Gravity.START
+                          lp.setMargins(dp(24), 0, 0, dp(28))
+                      }
+                      else -> {
+                          lp.gravity = Gravity.BOTTOM or Gravity.END
+                          lp.setMargins(0, 0, dp(24), dp(84))
+                      }
+                  }
+                  logoBadge.layoutParams = lp
+              }
+
+              private fun logoDialog(ch: Channel) {
+                  val u = field(tr("Lien du logo (png / jpg)", "Logo link (png / jpg)", "رابط الشعار (png / jpg)", "Enlace del logo (png / jpg)"), ch.logo)
+                  dialog().setTitle(tr("Changer le logo", "Change the logo", "تغيير الشعار", "Cambiar el logo")).setView(form(u))
+                      .setPositiveButton("OK") { _, _ ->
+                          ch.logo = u.text.toString().trim()
+                          failed.remove(ch.logo)
+                          save()
+                          modeKey = -1
+                          applyListMode()
+                      }
+                      .setNegativeButton(tr("Annuler", "Cancel", "إلغاء", "Cancelar"), null)
+                      .show()
               }
           }
           EOF

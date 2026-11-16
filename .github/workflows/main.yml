@@ -75,8 +75,8 @@ jobs:
                   applicationId = "com.example.tvplayer"
                   minSdk = 21
                   targetSdk = 34
-                  versionCode = 9
-                  versionName = "7.1.0"
+                  versionCode = 10
+                  versionName = "7.2.0"
               }
 
               signingConfigs {
@@ -1600,6 +1600,7 @@ jobs:
               private lateinit var bannerClock: TextView
               private lateinit var bannerInfo: TextView
               private lateinit var bannerTime: TextView
+              private lateinit var listHeader: TextView
               private lateinit var bannerLeft: TextView
               private lateinit var bannerTimeline: ProgressBar
               private lateinit var badgeBox: LinearLayout
@@ -2259,7 +2260,19 @@ jobs:
                   emptyText.setPadding(dp(32), dp(32), dp(32), dp(32))
                   emptyText.visibility = View.GONE
                   listFrame.addView(emptyText, FrameLayout.LayoutParams(-1, -1))
-                  body.addView(listFrame, LinearLayout.LayoutParams(0, -1, 1f))
+                  val listCol = LinearLayout(this)
+                  listCol.orientation = LinearLayout.VERTICAL
+                  listHeader = TextView(this)
+                  listHeader.textSize = ts(20f)
+                  listHeader.typeface = Typeface.DEFAULT_BOLD
+                  listHeader.setTextColor(Color.WHITE)
+                  listHeader.isSingleLine = true
+                  listHeader.ellipsize = TextUtils.TruncateAt.END
+                  listHeader.setPadding(dp(18), dp(12), dp(12), dp(10))
+                  listHeader.setBackgroundColor(Color.parseColor("#26FFFFFF"))
+                  listCol.addView(listHeader, LinearLayout.LayoutParams(-1, -2))
+                  listCol.addView(listFrame, LinearLayout.LayoutParams(-1, 0, 1f))
+                  body.addView(listCol, LinearLayout.LayoutParams(0, -1, 1f))
                   panel.addView(body, LinearLayout.LayoutParams(-1, 0, 1f))
 
                   details = LinearLayout(this)
@@ -2485,31 +2498,30 @@ jobs:
                   override fun onBindViewHolder(h: RowHolder, position: Int) {
                       val ch = shown[position]
                       val active = ch.url == currentUrl
-                      h.card.background = rowBg(active, h.itemView.hasFocus())
-                      h.num.text = (numbers[ch.url] ?: 0).toString()
-                      h.name.text = ch.name
-                      h.name.setTextColor(if (active) ACCENT else Color.WHITE)
-                      h.letter.text = ch.name.trim().take(1).uppercase()
+                      h.card.background = listRowBg(active, h.itemView.hasFocus())
+                      val n = numbers[ch.url] ?: 0
+                      h.name.text = n.toString() + "  " + ch.name
+                      h.name.setTextColor(Color.WHITE)
+                      h.letter.text = "TV"
                       val now = Epg.now(ch.tvgId)
                       if (now != null) {
                           h.prog.text = fmtTime(now.start) + "  " + now.title
-                          h.prog.visibility = View.VISIBLE
                           h.bar.progress = progressOf(now)
-                          h.bar.visibility = View.VISIBLE
                       } else {
-                          h.prog.text = ch.group
-                          h.prog.visibility = if (ch.group.isBlank()) View.GONE else View.VISIBLE
-                          h.bar.visibility = View.GONE
+                          h.prog.text = tr("Pas d'information", "No information", "لا توجد معلومات", "Sin información")
+                          h.bar.progress = 0
                       }
-                      h.star.text = if (ch.fav) "★" else "☆"
-                      h.star.setTextColor(if (ch.fav) Color.parseColor("#FFC107") else SUB)
+                      h.prog.visibility = View.VISIBLE
+                      h.bar.visibility = View.VISIBLE
+                      h.star.text = if (active) "▶" else if (ch.fav) "★" else ""
+                      h.star.setTextColor(if (active) ACCENT else Color.parseColor("#FFC107"))
                       h.star.setOnClickListener {
                           ch.fav = !ch.fav
                           save()
                           refresh(false)
                       }
                       h.itemView.setOnFocusChangeListener { _, has ->
-                          h.card.background = rowBg(ch.url == currentUrl, has)
+                          h.card.background = listRowBg(ch.url == currentUrl, has)
                           if (has) showDetails(ch)
                       }
                       h.itemView.setOnClickListener {
@@ -2555,28 +2567,24 @@ jobs:
               private fun newRow(): RowHolder {
                   val outer = FrameLayout(this)
                   outer.layoutParams = RecyclerView.LayoutParams(-1, -2)
-                  outer.setPadding(0, dp(3), 0, dp(3))
+                  outer.setPadding(dp(6), dp(2), dp(6), dp(2))
                   outer.isFocusable = true
 
                   val card = LinearLayout(this)
                   card.orientation = LinearLayout.HORIZONTAL
                   card.gravity = Gravity.CENTER_VERTICAL
-                  card.setPadding(dp(8), dp(10), dp(4), dp(10))
-                  card.background = rowBg(false, false)
+                  card.setPadding(dp(12), dp(10), dp(10), dp(10))
+                  card.background = listRowBg(false, false)
 
                   val num = TextView(this)
-                  num.textSize = ts(12f)
-                  num.gravity = Gravity.CENTER
-                  num.setTextColor(SUB)
-                  card.addView(num, LinearLayout.LayoutParams(dp(34), -2))
 
                   val logoBox = FrameLayout(this)
-                  logoBox.background = rounded(Color.parseColor("#262B36"), 10)
+                  logoBox.background = rounded(Color.parseColor("#66808080"), 8)
                   val letter = TextView(this)
                   letter.gravity = Gravity.CENTER
-                  letter.textSize = ts(18f)
+                  letter.textSize = ts(16f)
                   letter.typeface = Typeface.DEFAULT_BOLD
-                  letter.setTextColor(ACCENT)
+                  letter.setTextColor(Color.parseColor("#CCFFFFFF"))
                   logoBox.addView(letter, FrameLayout.LayoutParams(-1, -1))
                   val logo = ImageView(this)
                   logo.scaleType = ImageView.ScaleType.FIT_CENTER
@@ -2588,27 +2596,28 @@ jobs:
 
                   val texts = LinearLayout(this)
                   texts.orientation = LinearLayout.VERTICAL
-                  texts.setPadding(dp(12), 0, dp(8), 0)
+                  texts.setPadding(dp(14), 0, dp(8), 0)
                   val name = TextView(this)
-                  name.textSize = ts(16f)
+                  name.textSize = ts(17f)
+                  name.typeface = Typeface.DEFAULT_BOLD
                   name.isSingleLine = true
                   name.ellipsize = TextUtils.TruncateAt.END
                   val prog = TextView(this)
-                  prog.textSize = ts(12f)
-                  prog.setTextColor(SUB)
+                  prog.textSize = ts(15f)
+                  prog.setTextColor(Color.parseColor("#D0D5DD"))
                   prog.isSingleLine = true
                   prog.ellipsize = TextUtils.TruncateAt.END
-                  val bar = thinBar()
+                  val bar = lineBar()
                   texts.addView(name)
                   texts.addView(prog)
-                  val blp = LinearLayout.LayoutParams(-1, dp(3))
-                  blp.topMargin = dp(4)
+                  val blp = LinearLayout.LayoutParams(-1, dp(2))
+                  blp.topMargin = dp(6)
                   texts.addView(bar, blp)
                   card.addView(texts, LinearLayout.LayoutParams(0, -2, 1f))
 
                   val star = TextView(this)
-                  star.textSize = ts(22f)
-                  star.setPadding(dp(10), dp(6), dp(10), dp(6))
+                  star.textSize = ts(18f)
+                  star.setPadding(dp(6), dp(6), dp(6), dp(6))
                   star.isClickable = true
                   card.addView(star, LinearLayout.LayoutParams(-2, -2))
 
@@ -2911,6 +2920,7 @@ jobs:
                   }
                   shown = if (q.isEmpty()) base.toList() else base.filter { it.name.lowercase().contains(q) }
                   adapter.notifyDataSetChanged()
+                  listHeader.text = groupLabel(filter)
                   emptyText.text = tr(
                       "Aucune chaîne\n\nTouchez ⚙ pour ajouter une chaîne, un compte Xtream ou une playlist",
                       "No channels\n\nTap ⚙ to add a channel, an Xtream account or a playlist",
@@ -2933,6 +2943,7 @@ jobs:
                   val base = vods.filter { it.kind == kind && (vfilter.isEmpty() || it.group == vfilter) }
                   shownVod = if (q.isEmpty()) base else base.filter { it.name.lowercase().contains(q) }
                   vodAdapter.notifyDataSetChanged()
+                  listHeader.text = if (vfilter.isEmpty()) tr("Tous", "All", "الكل", "Todos") else vfilter
                   emptyText.text = if (!vodLoaded) {
                       tr("Chargement…", "Loading…", "جارٍ التحميل…", "Cargando…")
                   } else {
@@ -2956,20 +2967,17 @@ jobs:
 
               private fun groupRow(label: String, count: Int, value: String): TextView {
                   val t = TextView(this)
-                  t.text = label + "  " + count
-                  t.textSize = ts(14f)
-                  t.setTextColor(Color.WHITE)
+                  t.text = label
+                  t.textSize = ts(18f)
+                  t.setTextColor(Color.parseColor("#E8EBF0"))
                   t.isSingleLine = true
                   t.ellipsize = TextUtils.TruncateAt.END
-                  t.setPadding(dp(12), dp(10), dp(8), dp(10))
+                  t.setPadding(dp(16), dp(11), dp(10), dp(11))
                   t.isFocusable = true
                   t.isClickable = true
-                  t.background = rounded(if (isSelectedGroup(value)) CARD_ACTIVE else Color.TRANSPARENT, 10)
+                  t.background = groupBg(isSelectedGroup(value), false)
                   t.setOnFocusChangeListener { v, has ->
-                      v.background = rounded(
-                          if (has) ACCENT else if (isSelectedGroup(value)) CARD_ACTIVE else Color.TRANSPARENT,
-                          10
-                      )
+                      v.background = groupBg(isSelectedGroup(value), has)
                   }
                   return t
               }
@@ -3431,7 +3439,8 @@ jobs:
               private fun computePosterW(): Int {
                   val m = resources.displayMetrics
                   val land = m.widthPixels > m.heightPixels
-                  val listW = if (land) minOf(dp(580), m.widthPixels * 86 / 100) - dp(170) else m.widthPixels
+                  val pw0 = minOf(dp(680), m.widthPixels * 66 / 100)
+                  val listW = if (land) pw0 - pw0 * 42 / 100 else m.widthPixels
                   return ((listW - dp(28)) / 3) - dp(8)
               }
 
@@ -3452,7 +3461,7 @@ jobs:
               private fun updateDetailsVisibility() {
                   val m = resources.displayMetrics
                   val land = m.widthPixels > m.heightPixels
-                  details.visibility = if (section == 0 && land && m.heightPixels >= dp(420)) View.VISIBLE else View.GONE
+                  details.visibility = View.GONE
               }
 
               private fun applyLayout() {
@@ -3469,9 +3478,11 @@ jobs:
                       quickScroll.visibility = View.GONE
                   } else if (land) {
                       pl = FrameLayout.LayoutParams(-1, -1)
-                      ql = FrameLayout.LayoutParams(minOf(dp(580), m.widthPixels * 86 / 100), -1)
+                      val pw = minOf(dp(680), m.widthPixels * 66 / 100)
+                      ql = FrameLayout.LayoutParams(pw, -1)
                       ql.gravity = Gravity.START
-                      panel.setBackgroundColor(Color.parseColor("#F00E1117"))
+                      groupScroll.layoutParams = LinearLayout.LayoutParams(pw * 42 / 100, -1)
+                      panel.setBackgroundColor(Color.parseColor("#B8000000"))
                       panel.visibility = if (panelOpen) View.VISIBLE else View.GONE
                       quickScroll.visibility = if (quickOpen) View.VISIBLE else View.GONE
                       groupScroll.visibility = View.VISIBLE
@@ -5391,7 +5402,7 @@ jobs:
                   }
                   row(
                       tr("À propos de Player Lamine S Bouzareah", "About Player Lamine S Bouzareah", "حول Player Lamine S Bouzareah", "Acerca de Player Lamine S Bouzareah"),
-                      tr("Version 7.1.0", "Version 7.1.0", "الإصدار 7.1.0", "Versión 7.1.0"),
+                      tr("Version 7.2.0", "Version 7.2.0", "الإصدار 7.2.0", "Versión 7.2.0"),
                       arrow
                   ) { aboutDialog() }
               }
@@ -5402,10 +5413,10 @@ jobs:
                   )
                       .setMessage(
                           tr(
-                              "Player Lamine S Bouzareah\nVersion 7.1.0\n\nTV en direct, films et séries (HLS, DASH, TS) avec Xtream, M3U, guide TV, enregistrement (PVR), portail web et retour au direct.\n\nMobile, Android TV et Fire TV.",
-                              "Player Lamine S Bouzareah\nVersion 7.1.0\n\nLive TV, movies and series (HLS, DASH, TS) with Xtream, M3U, TV guide, recording (PVR), web portal and Go to Live.\n\nMobile, Android TV and Fire TV.",
-                              "Player Lamine S Bouzareah\nالإصدار 7.1.0\n\nتلفزيون مباشر وأفلام ومسلسلات (HLS وDASH وTS) مع Xtream وM3U ودليل البرامج والتسجيل وبوابة الويب والعودة للبث المباشر.\n\nللهاتف وAndroid TV وFire TV.",
-                              "Player Lamine S Bouzareah\nVersión 7.1.0\n\nTV en vivo, películas y series (HLS, DASH, TS) con Xtream, M3U, guía TV, grabación (PVR), portal web e Ir al directo.\n\nMóvil, Android TV y Fire TV."
+                              "Player Lamine S Bouzareah\nVersion 7.2.0\n\nTV en direct, films et séries (HLS, DASH, TS) avec Xtream, M3U, guide TV, enregistrement (PVR), portail web et retour au direct.\n\nMobile, Android TV et Fire TV.",
+                              "Player Lamine S Bouzareah\nVersion 7.2.0\n\nLive TV, movies and series (HLS, DASH, TS) with Xtream, M3U, TV guide, recording (PVR), web portal and Go to Live.\n\nMobile, Android TV and Fire TV.",
+                              "Player Lamine S Bouzareah\nالإصدار 7.2.0\n\nتلفزيون مباشر وأفلام ومسلسلات (HLS وDASH وTS) مع Xtream وM3U ودليل البرامج والتسجيل وبوابة الويب والعودة للبث المباشر.\n\nللهاتف وAndroid TV وFire TV.",
+                              "Player Lamine S Bouzareah\nVersión 7.2.0\n\nTV en vivo, películas y series (HLS, DASH, TS) con Xtream, M3U, guía TV, grabación (PVR), portal web e Ir al directo.\n\nMóvil, Android TV y Fire TV."
                           )
                       )
                       .setPositiveButton("OK", null)
@@ -6206,6 +6217,38 @@ jobs:
                       }
                       .setNegativeButton(tr("Annuler", "Cancel", "إلغاء", "Cancelar"), null)
                       .show()
+              }
+
+              // ----- liste facon TiviMate -----
+
+              private fun groupBg(selected: Boolean, focused: Boolean): GradientDrawable {
+                  val g = GradientDrawable()
+                  g.cornerRadius = dp(8).toFloat()
+                  g.setColor(
+                      if (focused) Color.parseColor("#80FFFFFF")
+                      else if (selected) Color.parseColor("#33FFFFFF")
+                      else Color.TRANSPARENT
+                  )
+                  return g
+              }
+
+              private fun listRowBg(active: Boolean, focused: Boolean): GradientDrawable {
+                  val g = GradientDrawable()
+                  g.cornerRadius = dp(10).toFloat()
+                  g.setColor(
+                      if (focused) Color.parseColor("#4DFFFFFF")
+                      else if (active) Color.parseColor("#1AFFFFFF")
+                      else Color.TRANSPARENT
+                  )
+                  return g
+              }
+
+              private fun lineBar(): ProgressBar {
+                  val b = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal)
+                  b.max = 100
+                  b.progressTintList = ColorStateList.valueOf(Color.WHITE)
+                  b.progressBackgroundTintList = ColorStateList.valueOf(Color.parseColor("#55FFFFFF"))
+                  return b
               }
           }
           EOF

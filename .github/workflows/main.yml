@@ -75,8 +75,8 @@ jobs:
                   applicationId = "com.example.tvplayer"
                   minSdk = 21
                   targetSdk = 34
-                  versionCode = 11
-                  versionName = "7.3.0"
+                  versionCode = 10
+                  versionName = "7.2.0"
               }
 
               signingConfigs {
@@ -1550,18 +1550,6 @@ jobs:
               val sub: TextView
           ) : RecyclerView.ViewHolder(v)
 
-          class GRow(v: View) : RecyclerView.ViewHolder(v)
-
-          class GParts(
-              val num: TextView,
-              val letter: TextView,
-              val logo: ImageView,
-              val name: TextView,
-              val mark: TextView
-          )
-
-          class GCell(val ch: Channel, val p: Programme?)
-
           class MainActivity : Activity() {
 
               private val BG = Color.parseColor("#0E1117")
@@ -1922,7 +1910,6 @@ jobs:
                   if (tv) requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
 
                   hiddenSet = loadHidden()
-                  blockedSet = loadBlocked()
                   load()
                   currentUrl = prefs.getString("last", "") ?: ""
                   liveUrl = currentUrl
@@ -2162,10 +2149,6 @@ jobs:
                   playerFrame.addView(banner, bnl)
 
                   playerFrame.setOnTouchListener { _, ev ->
-                      if (guideOpen) {
-                          if (ev.actionMasked == MotionEvent.ACTION_UP) closeGuide()
-                          return@setOnTouchListener true
-                      }
                       when (ev.actionMasked) {
                           MotionEvent.ACTION_DOWN -> {
                               downX = ev.x
@@ -2935,8 +2918,7 @@ jobs:
                       F_RECENT -> recent.mapNotNull { u -> all.firstOrNull { it.url == u } }
                       else -> all.filter { it.group == filter }
                   }
-                  val base2 = if (blockedSet.isEmpty()) base else base.filter { !blockedSet.contains(it.url) }
-                  shown = if (q.isEmpty()) base2.toList() else base2.filter { it.name.lowercase().contains(q) }
+                  shown = if (q.isEmpty()) base.toList() else base.filter { it.name.lowercase().contains(q) }
                   adapter.notifyDataSetChanged()
                   listHeader.text = groupLabel(filter)
                   emptyText.text = tr(
@@ -3354,7 +3336,7 @@ jobs:
               }
 
               private fun showBanner(ch: Channel?, controlsOn: Boolean) {
-                  if (inPip || guideOpen) return
+                  if (inPip) return
                   if (quickOpen) closeQuick()
                   bannerClock.text = fmtTime(System.currentTimeMillis())
                   bannerInfo.text = infoLine()
@@ -3483,7 +3465,6 @@ jobs:
               }
 
               private fun applyLayout() {
-                  if (guideOpen) return
                   val m = resources.displayMetrics
                   val land = m.widthPixels > m.heightPixels
                   val pl: FrameLayout.LayoutParams
@@ -3554,7 +3535,6 @@ jobs:
 
               override fun onConfigurationChanged(newConfig: Configuration) {
                   super.onConfigurationChanged(newConfig)
-                  if (guideOpen) closeGuide()
                   if (!isLandscape()) forcedLandscape = false
                   applyLayout()
               }
@@ -3663,7 +3643,6 @@ jobs:
               override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration) {
                   super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
                   inPip = isInPictureInPictureMode
-                  if (guideOpen) closeGuide()
                   if (inPip) {
                       panelOpen = false
                       quickOpen = false
@@ -3679,10 +3658,6 @@ jobs:
               }
 
               override fun onBackPressed() {
-                  if (guideOpen && !settingsOpen) {
-                      closeGuide()
-                      return
-                  }
                   if (settingsOpen) {
                       closeSettings()
                       return
@@ -3748,18 +3723,6 @@ jobs:
               }
 
               override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-                  if (guideOpen && !settingsOpen) {
-                      if (keyCode == KeyEvent.KEYCODE_MENU) {
-                          val tg = currentFocus?.tag
-                          if (tg is GCell) guideMenu(tg.ch, tg.p) else guideSearchDialog()
-                          return true
-                      }
-                      if (keyCode == KeyEvent.KEYCODE_GUIDE) {
-                          closeGuide()
-                          return true
-                      }
-                      return super.onKeyDown(keyCode, event)
-                  }
                   if (settingsOpen) {
                       if (keyCode == KeyEvent.KEYCODE_MENU) {
                           closeSettings()
@@ -3805,7 +3768,7 @@ jobs:
                           return true
                       }
                       KeyEvent.KEYCODE_GUIDE -> {
-                          openGuide()
+                          if (panelOpen) closePanel() else openPanel()
                           return true
                       }
                       KeyEvent.KEYCODE_PROG_RED -> {
@@ -3929,7 +3892,7 @@ jobs:
               }
 
               override fun onKeyLongPress(keyCode: Int, event: KeyEvent?): Boolean {
-                  if (isCenter(keyCode) && isLandscape() && !inPip && !panelOpen && !quickOpen && !isVod && !settingsOpen && !guideOpen) {
+                  if (isCenter(keyCode) && isLandscape() && !inPip && !panelOpen && !quickOpen && !isVod && !settingsOpen) {
                       toggleFavCurrent()
                       return true
                   }
@@ -3937,7 +3900,7 @@ jobs:
               }
 
               override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
-                  if (isCenter(keyCode) && isLandscape() && !inPip && !panelOpen && !quickOpen && !settingsOpen && !guideOpen &&
+                  if (isCenter(keyCode) && isLandscape() && !inPip && !panelOpen && !quickOpen && !settingsOpen &&
                       event != null && event.isTracking && !event.isCanceled
                   ) {
                       okAction()
@@ -5006,7 +4969,6 @@ jobs:
 
               private fun buildExtras() {
                   buildOsd()
-                  buildGuide()
                   recBadge = TextView(this)
                   recBadge.textSize = ts(13f)
                   recBadge.setTextColor(Color.WHITE)
@@ -5104,7 +5066,7 @@ jobs:
 
               private fun updateGoLive() {
                   val p = player
-                  if (p == null || isVod || inPip || settingsOpen || p.mediaItemCount == 0 || p.playbackState == Player.STATE_IDLE || guideOpen) {
+                  if (p == null || isVod || inPip || settingsOpen || p.mediaItemCount == 0 || p.playbackState == Player.STATE_IDLE) {
                       if (goLive.visibility != View.GONE) goLive.visibility = View.GONE
                       return
                   }
@@ -5421,7 +5383,6 @@ jobs:
                   row(tr("Gérer les groupes (masquer)", "Manage groups (hide)", "إدارة المجموعات (إخفاء)", "Gestionar grupos (ocultar)"), "", hiddenSet.size.toString()) { groupsDialog() }
 
                   sec(tr("Données", "Data", "البيانات", "Datos"))
-                  row(tr("Débloquer les chaînes bloquées", "Unblock blocked channels", "إلغاء حظر القنوات", "Desbloquear canales"), blockedSet.size.toString(), arrow) { unblockAll() }
                   row(tr("Trier A → Z", "Sort A → Z", "ترتيب أبجدي", "Ordenar A → Z"), "", arrow) {
                       all.sortBy { it.name.lowercase() }
                       save()
@@ -5441,7 +5402,7 @@ jobs:
                   }
                   row(
                       tr("À propos de Player Lamine S Bouzareah", "About Player Lamine S Bouzareah", "حول Player Lamine S Bouzareah", "Acerca de Player Lamine S Bouzareah"),
-                      tr("Version 7.3.0", "Version 7.3.0", "الإصدار 7.3.0", "Versión 7.3.0"),
+                      tr("Version 7.2.0", "Version 7.2.0", "الإصدار 7.2.0", "Versión 7.2.0"),
                       arrow
                   ) { aboutDialog() }
               }
@@ -5452,10 +5413,10 @@ jobs:
                   )
                       .setMessage(
                           tr(
-                              "Player Lamine S Bouzareah\nVersion 7.3.0\n\nTV en direct, films et séries (HLS, DASH, TS) avec Xtream, M3U, guide TV, enregistrement (PVR), portail web et retour au direct.\n\nMobile, Android TV et Fire TV.",
-                              "Player Lamine S Bouzareah\nVersion 7.3.0\n\nLive TV, movies and series (HLS, DASH, TS) with Xtream, M3U, TV guide, recording (PVR), web portal and Go to Live.\n\nMobile, Android TV and Fire TV.",
-                              "Player Lamine S Bouzareah\nالإصدار 7.3.0\n\nتلفزيون مباشر وأفلام ومسلسلات (HLS وDASH وTS) مع Xtream وM3U ودليل البرامج والتسجيل وبوابة الويب والعودة للبث المباشر.\n\nللهاتف وAndroid TV وFire TV.",
-                              "Player Lamine S Bouzareah\nVersión 7.3.0\n\nTV en vivo, películas y series (HLS, DASH, TS) con Xtream, M3U, guía TV, grabación (PVR), portal web e Ir al directo.\n\nMóvil, Android TV y Fire TV."
+                              "Player Lamine S Bouzareah\nVersion 7.2.0\n\nTV en direct, films et séries (HLS, DASH, TS) avec Xtream, M3U, guide TV, enregistrement (PVR), portail web et retour au direct.\n\nMobile, Android TV et Fire TV.",
+                              "Player Lamine S Bouzareah\nVersion 7.2.0\n\nLive TV, movies and series (HLS, DASH, TS) with Xtream, M3U, TV guide, recording (PVR), web portal and Go to Live.\n\nMobile, Android TV and Fire TV.",
+                              "Player Lamine S Bouzareah\nالإصدار 7.2.0\n\nتلفزيون مباشر وأفلام ومسلسلات (HLS وDASH وTS) مع Xtream وM3U ودليل البرامج والتسجيل وبوابة الويب والعودة للبث المباشر.\n\nللهاتف وAndroid TV وFire TV.",
+                              "Player Lamine S Bouzareah\nVersión 7.2.0\n\nTV en vivo, películas y series (HLS, DASH, TS) con Xtream, M3U, guía TV, grabación (PVR), portal web e Ir al directo.\n\nMóvil, Android TV y Fire TV."
                           )
                       )
                       .setPositiveButton("OK", null)
@@ -6097,7 +6058,11 @@ jobs:
                       lp.setMargins(dp(4), dp(4), dp(4), dp(4))
                       tilesRow.addView(v, lp)
                   }
-                  addT(osdTile(R.drawable.osd_guide, tr("Guide TV", "TV Guide", "دليل التلفاز", "Guía TV"), false) { openGuide() })
+                  addT(osdTile(R.drawable.osd_guide, tr("Guide TV", "TV Guide", "دليل التلفاز", "Guía TV"), false) {
+                      val c = all.firstOrNull { it.url == currentUrl }
+                      if (c != null && !isVod) guideDialog(c)
+                      else toast(tr("Pas de guide", "No guide", "لا يوجد دليل", "Sin guía"))
+                  })
                   addT(osdTile(R.drawable.osd_history, tr("Historique", "History", "السجل", "Historial"), false) {
                       if (section != 0) setSection(0)
                       filter = F_RECENT
@@ -6284,635 +6249,6 @@ jobs:
                   b.progressTintList = ColorStateList.valueOf(Color.WHITE)
                   b.progressBackgroundTintList = ColorStateList.valueOf(Color.parseColor("#55FFFFFF"))
                   return b
-              }
-
-              // ---------- v7.3 : Guide TV (grille EPG) ----------
-
-              private lateinit var guidePane: FrameLayout
-              private lateinit var gRail: LinearLayout
-              private lateinit var gGroupsScroll: ScrollView
-              private lateinit var gGroupsCol: LinearLayout
-              private lateinit var gInfoBox: LinearLayout
-              private lateinit var gInfoTitle: TextView
-              private lateinit var gInfoTime: TextView
-              private lateinit var gInfoBar: ProgressBar
-              private lateinit var gInfoLeft: TextView
-              private lateinit var gInfoDesc: TextView
-              private lateinit var gDateText: TextView
-              private lateinit var gChanRv: RecyclerView
-              private lateinit var gGridRv: RecyclerView
-              private lateinit var gHsv: HorizontalScrollView
-              private lateinit var gHeader: FrameLayout
-              private lateinit var gNowLine: View
-              private lateinit var gWrap: FrameLayout
-              private lateinit var gContent: LinearLayout
-              private var guideOpen = false
-              private var gFilter = ""
-              private var gQuery = ""
-              private var gList = listOf<Channel>()
-              private var gStart = 0L
-              private var gPxMin = 0
-              private var gTotalW = 0
-              private var gRowH = 0
-              private var blockedSet = HashSet<String>()
-              private val gGroupViews = HashMap<String, TextView>()
-              private val gDateFmt = SimpleDateFormat("EEE, d MMM, HH:mm", Locale.getDefault())
-
-              private fun loadBlocked(): HashSet<String> {
-                  val s = prefs.getString("blocked", "") ?: ""
-                  return HashSet(s.lines().filter { it.isNotBlank() })
-              }
-
-              private fun saveBlocked() {
-                  prefs.edit().putString("blocked", blockedSet.joinToString("\n")).apply()
-              }
-
-              private fun unblockAll() {
-                  blockedSet = HashSet()
-                  saveBlocked()
-                  refresh(true)
-                  if (guideOpen) gRefresh()
-                  toast(tr("Chaînes débloquées", "Channels unblocked", "تم إلغاء الحظر", "Canales desbloqueados"))
-              }
-
-              private fun blockChannel(ch: Channel) {
-                  blockedSet.add(ch.url)
-                  saveBlocked()
-                  refresh(true)
-                  if (guideOpen) gRefresh()
-                  toast(tr("Chaîne bloquée", "Channel blocked", "تم حظر القناة", "Canal bloqueado"))
-              }
-
-              private fun buildGuide() {
-                  guidePane = FrameLayout(this)
-                  guidePane.setBackgroundColor(Color.parseColor("#0B0E13"))
-                  guidePane.isClickable = true
-                  guidePane.visibility = View.GONE
-
-                  gRail = LinearLayout(this)
-                  gRail.orientation = LinearLayout.VERTICAL
-                  gRail.gravity = Gravity.CENTER_HORIZONTAL
-                  gRail.setBackgroundColor(Color.parseColor("#080A0E"))
-                  gRail.setPadding(0, dp(16), 0, dp(16))
-                  fun railBtn(icon: Int, action: () -> Unit) {
-                      val iv = ImageView(this)
-                      iv.setImageResource(icon)
-                      iv.setPadding(dp(10), dp(10), dp(10), dp(10))
-                      iv.isFocusable = true
-                      iv.isClickable = true
-                      iv.background = osdTileBg(false, true)
-                      iv.setOnFocusChangeListener { v, has -> v.background = osdTileBg(has, true) }
-                      iv.setOnClickListener { action() }
-                      val lp = LinearLayout.LayoutParams(dp(44), dp(44))
-                      lp.setMargins(0, dp(6), 0, dp(6))
-                      gRail.addView(iv, lp)
-                  }
-                  railBtn(R.drawable.osd_search) { guideSearchDialog() }
-                  railBtn(R.drawable.osd_options) { closeGuide() }
-                  railBtn(R.drawable.osd_dvr) { recordingsDialog() }
-                  railBtn(R.drawable.osd_star) {
-                      gFilter = F_FAV
-                      gRefresh()
-                  }
-                  railBtn(R.drawable.osd_settings) { openSettings() }
-                  guidePane.addView(gRail, FrameLayout.LayoutParams(dp(56), -1))
-
-                  gGroupsScroll = ScrollView(this)
-                  gGroupsScroll.isVerticalScrollBarEnabled = false
-                  gGroupsScroll.setBackgroundColor(Color.parseColor("#0F1319"))
-                  gGroupsCol = LinearLayout(this)
-                  gGroupsCol.orientation = LinearLayout.VERTICAL
-                  gGroupsCol.setPadding(dp(8), dp(16), dp(8), dp(16))
-                  gGroupsScroll.addView(gGroupsCol)
-                  guidePane.addView(gGroupsScroll, FrameLayout.LayoutParams(dp(200), -1))
-
-                  gInfoBox = LinearLayout(this)
-                  gInfoBox.orientation = LinearLayout.VERTICAL
-                  gInfoTitle = TextView(this)
-                  gInfoTitle.textSize = ts(20f)
-                  gInfoTitle.typeface = Typeface.DEFAULT_BOLD
-                  gInfoTitle.setTextColor(Color.WHITE)
-                  gInfoTitle.isSingleLine = true
-                  gInfoTitle.ellipsize = TextUtils.TruncateAt.END
-                  val timeRow = LinearLayout(this)
-                  timeRow.orientation = LinearLayout.HORIZONTAL
-                  timeRow.gravity = Gravity.CENTER_VERTICAL
-                  gInfoTime = TextView(this)
-                  gInfoTime.textSize = ts(13f)
-                  gInfoTime.setTextColor(Color.parseColor("#C8CFDB"))
-                  gInfoBar = lineBar()
-                  gInfoLeft = TextView(this)
-                  gInfoLeft.textSize = ts(13f)
-                  gInfoLeft.setTextColor(Color.parseColor("#C8CFDB"))
-                  timeRow.addView(gInfoTime)
-                  val bl = LinearLayout.LayoutParams(dp(70), dp(3))
-                  bl.setMargins(dp(10), 0, dp(10), 0)
-                  timeRow.addView(gInfoBar, bl)
-                  timeRow.addView(gInfoLeft)
-                  gInfoDesc = TextView(this)
-                  gInfoDesc.textSize = ts(13f)
-                  gInfoDesc.setTextColor(SUB)
-                  gInfoDesc.maxLines = 4
-                  gInfoDesc.ellipsize = TextUtils.TruncateAt.END
-                  gInfoBox.addView(gInfoTitle)
-                  gInfoBox.addView(timeRow)
-                  val dl = LinearLayout.LayoutParams(-1, -2)
-                  dl.topMargin = dp(6)
-                  gInfoBox.addView(gInfoDesc, dl)
-                  guidePane.addView(gInfoBox, FrameLayout.LayoutParams(dp(300), -2))
-
-                  gDateText = TextView(this)
-                  gDateText.textSize = ts(12f)
-                  gDateText.setTextColor(ACCENT)
-                  gDateText.gravity = Gravity.CENTER_VERTICAL
-                  gDateText.setPadding(dp(12), 0, 0, 0)
-                  guidePane.addView(gDateText, FrameLayout.LayoutParams(dp(180), dp(30)))
-
-                  gChanRv = RecyclerView(this)
-                  gChanRv.layoutManager = LinearLayoutManager(this)
-                  gChanRv.itemAnimator = null
-                  gChanRv.isFocusable = false
-                  gChanRv.setOnTouchListener { _, _ -> true }
-                  gChanRv.adapter = GChanAdapter()
-                  gChanRv.setBackgroundColor(Color.parseColor("#0F1319"))
-                  guidePane.addView(gChanRv, FrameLayout.LayoutParams(dp(180), dp(200)))
-
-                  gGridRv = RecyclerView(this)
-                  gGridRv.layoutManager = LinearLayoutManager(this)
-                  gGridRv.itemAnimator = null
-                  gGridRv.adapter = GGridAdapter()
-                  gGridRv.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                      override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
-                          if (dy != 0) gChanRv.scrollBy(0, dy)
-                      }
-                  })
-                  gHeader = FrameLayout(this)
-                  gNowLine = View(this)
-                  gNowLine.setBackgroundColor(ACCENT)
-                  gContent = LinearLayout(this)
-                  gContent.orientation = LinearLayout.VERTICAL
-                  gContent.addView(gHeader, LinearLayout.LayoutParams(dp(100), dp(30)))
-                  gContent.addView(gGridRv, LinearLayout.LayoutParams(-1, 0, 1f))
-                  gWrap = FrameLayout(this)
-                  gWrap.addView(gContent, FrameLayout.LayoutParams(-1, -1))
-                  gWrap.addView(gNowLine, FrameLayout.LayoutParams(dp(2), -1))
-                  gHsv = HorizontalScrollView(this)
-                  gHsv.isHorizontalScrollBarEnabled = false
-                  gHsv.addView(gWrap, FrameLayout.LayoutParams(dp(100), -1))
-                  guidePane.addView(gHsv, FrameLayout.LayoutParams(dp(300), dp(300)))
-
-                  root.addView(guidePane, 0, FrameLayout.LayoutParams(-1, -1))
-              }
-
-              private fun gp(w: Int, h: Int, l: Int, t: Int): FrameLayout.LayoutParams {
-                  val p = FrameLayout.LayoutParams(w, h)
-                  p.gravity = Gravity.TOP or Gravity.START
-                  p.setMargins(l, t, 0, 0)
-                  return p
-              }
-
-              private fun layoutGuide(sw: Int, sh: Int) {
-                  val railW = dp(56)
-                  val groupsW = minOf(dp(230), sw * 22 / 100)
-                  val x0 = railW + groupsW
-                  val prevH = minOf(dp(176), sh * 36 / 100)
-                  val prevW = prevH * 16 / 9
-                  val topH = prevH + dp(28)
-                  val hdrH = dp(30)
-                  val chanW = minOf(dp(200), (sw - x0) * 28 / 100)
-                  gRowH = dp(if (tv) 54 else 46)
-                  gPxMin = dp(if (tv) 5 else 4)
-                  gTotalW = 24 * 60 * gPxMin
-                  gRail.layoutParams = gp(railW, sh, 0, 0)
-                  gGroupsScroll.layoutParams = gp(groupsW, sh, railW, 0)
-                  val infoLeft = x0 + dp(12) + prevW + dp(18)
-                  gInfoBox.layoutParams = gp(maxOf(sw - infoLeft - dp(16), dp(120)), prevH, infoLeft, dp(14))
-                  gDateText.layoutParams = gp(chanW, hdrH, x0, topH)
-                  gChanRv.layoutParams = gp(chanW, sh - topH - hdrH, x0, topH + hdrH)
-                  gHsv.layoutParams = gp(sw - x0 - chanW, sh - topH, x0 + chanW, topH)
-                  gWrap.layoutParams = FrameLayout.LayoutParams(gTotalW, -1)
-                  gContent.layoutParams = FrameLayout.LayoutParams(-1, -1)
-                  gHeader.layoutParams = LinearLayout.LayoutParams(gTotalW, hdrH)
-                  val pf = FrameLayout.LayoutParams(prevW, prevH)
-                  pf.gravity = Gravity.TOP or Gravity.START
-                  pf.setMargins(x0 + dp(12), dp(14), 0, 0)
-                  playerFrame.layoutParams = pf
-              }
-
-              private fun gBuildHeader() {
-                  gHeader.removeAllViews()
-                  val end = gStart + 24L * 3600000L
-                  var t = gStart
-                  while (t < end) {
-                      val tx = TextView(this)
-                      tx.text = fmtTime(t)
-                      tx.textSize = ts(12f)
-                      tx.setTextColor(Color.parseColor("#C8CFDB"))
-                      tx.gravity = Gravity.CENTER_VERTICAL
-                      val p = FrameLayout.LayoutParams(-2, -1)
-                      p.leftMargin = ((t - gStart) / 60000L).toInt() * gPxMin + dp(6)
-                      gHeader.addView(tx, p)
-                      t += 1800000L
-                  }
-              }
-
-              private fun openGuide() {
-                  if (guideOpen || inPip) return
-                  if (!isLandscape() && !tv) {
-                      toast(tr("Tournez l'écran en mode paysage", "Rotate the screen to landscape", "أدر الشاشة للوضع الأفقي", "Gira la pantalla en horizontal"))
-                      return
-                  }
-                  hideOsd()
-                  if (panelOpen) closePanel()
-                  if (settingsOpen) closeSettings()
-                  guideOpen = true
-                  val m = resources.displayMetrics
-                  layoutGuide(m.widthPixels, m.heightPixels)
-                  val now = System.currentTimeMillis()
-                  gStart = (now / 1800000L) * 1800000L - 1800000L
-                  gDateText.text = gDateFmt.format(Date(now))
-                  gBuildHeader()
-                  val nl = FrameLayout.LayoutParams(dp(2), -1)
-                  nl.leftMargin = ((now - gStart) / 60000L).toInt() * gPxMin
-                  gNowLine.layoutParams = nl
-                  guidePane.visibility = View.VISIBLE
-                  gRefresh()
-                  gHsv.scrollTo(0, 0)
-                  val idx = gList.indexOfFirst { it.url == currentUrl }.coerceAtLeast(0)
-                  gGridRv.scrollToPosition(idx)
-                  gChanRv.scrollToPosition(idx)
-                  gGridRv.postDelayed({ gFocusRow(idx) }, 200)
-              }
-
-              private fun gFocusRow(idx: Int) {
-                  val vh = gGridRv.findViewHolderForAdapterPosition(idx)
-                  val row = vh?.itemView as? ViewGroup
-                  if (row == null) return
-                  val now = System.currentTimeMillis()
-                  var target: View? = null
-                  for (i in 0 until row.childCount) {
-                      val c = row.getChildAt(i)
-                      val t = c.tag
-                      if (t is GCell) {
-                          val p = t.p
-                          if (p != null && p.start <= now && now < p.stop) {
-                              target = c
-                              break
-                          }
-                      }
-                  }
-                  if (target == null && row.childCount > 0) target = row.getChildAt(0)
-                  target?.requestFocus()
-              }
-
-              private fun closeGuide() {
-                  if (!guideOpen) return
-                  guideOpen = false
-                  guidePane.visibility = View.GONE
-                  applyLayout()
-                  root.requestFocus()
-              }
-
-              private fun gLabel(v: String): String = when (v) {
-                  "" -> tr("Toutes les chaînes", "All channels", "كل القنوات", "Todos los canales")
-                  F_FAV -> tr("Favoris", "Favorites", "المفضلة", "Favoritos")
-                  F_RECENT -> tr("Récents", "Recent", "الأخيرة", "Recientes")
-                  else -> v
-              }
-
-              private fun gRefresh() {
-                  val q = gQuery.trim().lowercase()
-                  val base: List<Channel> = when (gFilter) {
-                      "" -> all.filter { !hiddenSet.contains(it.group) }
-                      F_FAV -> all.filter { it.fav }
-                      F_RECENT -> recent.mapNotNull { u -> all.firstOrNull { it.url == u } }
-                      else -> all.filter { it.group == gFilter }
-                  }
-                  gList = base.filter { !blockedSet.contains(it.url) && (q.isEmpty() || it.name.lowercase().contains(q)) }
-                  gChanRv.adapter?.notifyDataSetChanged()
-                  gGridRv.adapter?.notifyDataSetChanged()
-                  gRebuildGroups()
-              }
-
-              private fun gRebuildGroups() {
-                  gGroupsCol.removeAllViews()
-                  gGroupViews.clear()
-                  for (g in groupList()) {
-                      val t = TextView(this)
-                      t.text = gLabel(g)
-                      t.textSize = ts(16f)
-                      t.setTextColor(Color.parseColor("#E8EBF0"))
-                      t.isSingleLine = true
-                      t.ellipsize = TextUtils.TruncateAt.END
-                      t.setPadding(dp(14), dp(10), dp(8), dp(10))
-                      t.isFocusable = true
-                      t.isClickable = true
-                      t.background = groupBg(gFilter == g, false)
-                      t.setOnFocusChangeListener { v, has -> v.background = groupBg(gFilter == g, has) }
-                      t.setOnClickListener {
-                          gFilter = g
-                          gRefresh()
-                          gGroupViews[g]?.requestFocus()
-                      }
-                      val lp = LinearLayout.LayoutParams(-1, -2)
-                      lp.setMargins(0, dp(2), 0, dp(2))
-                      gGroupsCol.addView(t, lp)
-                      gGroupViews[g] = t
-                  }
-              }
-
-              private fun showGuideInfo(ch: Channel, p: Programme?) {
-                  if (p == null) {
-                      gInfoTitle.text = ch.name
-                      gInfoTime.text = ""
-                      gInfoBar.visibility = View.GONE
-                      gInfoLeft.text = ""
-                      gInfoDesc.text = tr("Pas d'information", "No information", "لا توجد معلومات", "Sin información")
-                      return
-                  }
-                  gInfoTitle.text = p.title
-                  gInfoTime.text = fmtTime(p.start) + " – " + fmtTime(p.stop)
-                  val now = System.currentTimeMillis()
-                  if (now >= p.start && now < p.stop) {
-                      gInfoBar.progress = progressOf(p)
-                      gInfoBar.visibility = View.VISIBLE
-                      gInfoLeft.text = (((p.stop - now) / 60000L) + 1L).toString() + " min"
-                  } else {
-                      gInfoBar.visibility = View.GONE
-                      gInfoLeft.text = ((p.stop - p.start) / 60000L).toString() + " min"
-                  }
-                  gInfoDesc.text = p.desc
-              }
-
-              private fun gCellBg(live: Boolean, focused: Boolean): GradientDrawable {
-                  val g = GradientDrawable()
-                  g.cornerRadius = dp(4).toFloat()
-                  g.setColor(
-                      if (focused) Color.parseColor("#E6E8EC")
-                      else if (live) Color.parseColor("#33FFFFFF")
-                      else Color.parseColor("#1AFFFFFF")
-                  )
-                  return g
-              }
-
-              private fun gMakeCell(ch: Channel, p: Programme?, start: Long, stop: Long, label: String): TextView {
-                  val l = maxOf(start, gStart)
-                  val r = minOf(stop, gStart + 24L * 3600000L)
-                  val x = ((l - gStart) / 60000L).toInt() * gPxMin
-                  val w = maxOf(((r - l) / 60000L).toInt() * gPxMin - dp(3), dp(24))
-                  val t = TextView(this)
-                  t.text = label
-                  t.textSize = ts(13f)
-                  t.setTextColor(Color.WHITE)
-                  t.isSingleLine = true
-                  t.ellipsize = TextUtils.TruncateAt.END
-                  t.gravity = Gravity.CENTER_VERTICAL
-                  t.setPadding(dp(10), 0, dp(6), 0)
-                  val now = System.currentTimeMillis()
-                  val live = p != null && p.start <= now && now < p.stop
-                  t.background = gCellBg(live, false)
-                  t.tag = GCell(ch, p)
-                  t.isFocusable = true
-                  t.isClickable = true
-                  t.setOnFocusChangeListener { v, has ->
-                      v.background = gCellBg(live, has)
-                      (v as TextView).setTextColor(if (has) Color.parseColor("#101418") else Color.WHITE)
-                      if (has) showGuideInfo(ch, p)
-                  }
-                  t.setOnClickListener { gCellClick(ch) }
-                  t.setOnLongClickListener {
-                      guideMenu(ch, p)
-                      true
-                  }
-                  val lp = FrameLayout.LayoutParams(w, gRowH - dp(4))
-                  lp.leftMargin = x + dp(1)
-                  lp.topMargin = dp(2)
-                  t.layoutParams = lp
-                  return t
-              }
-
-              private fun gCellClick(ch: Channel) {
-                  if (ch.url != currentUrl) {
-                      play(ch)
-                      gChanRv.adapter?.notifyDataSetChanged()
-                  } else {
-                      closeGuide()
-                  }
-              }
-
-              inner class GChanAdapter : RecyclerView.Adapter<GRow>() {
-                  override fun getItemCount(): Int = gList.size
-
-                  override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GRow {
-                      val row = LinearLayout(this@MainActivity)
-                      row.orientation = LinearLayout.HORIZONTAL
-                      row.gravity = Gravity.CENTER_VERTICAL
-                      row.layoutParams = RecyclerView.LayoutParams(-1, gRowH)
-                      row.setPadding(dp(8), 0, dp(6), 0)
-                      val num = TextView(this@MainActivity)
-                      num.textSize = ts(12f)
-                      num.setTextColor(SUB)
-                      num.gravity = Gravity.CENTER
-                      row.addView(num, LinearLayout.LayoutParams(dp(28), -2))
-                      val box = FrameLayout(this@MainActivity)
-                      box.background = rounded(Color.parseColor("#66808080"), 6)
-                      val letter = TextView(this@MainActivity)
-                      letter.gravity = Gravity.CENTER
-                      letter.textSize = ts(12f)
-                      letter.typeface = Typeface.DEFAULT_BOLD
-                      letter.setTextColor(Color.parseColor("#CCFFFFFF"))
-                      box.addView(letter, FrameLayout.LayoutParams(-1, -1))
-                      val logo = ImageView(this@MainActivity)
-                      logo.scaleType = ImageView.ScaleType.FIT_CENTER
-                      logo.setPadding(dp(3), dp(3), dp(3), dp(3))
-                      box.addView(logo, FrameLayout.LayoutParams(-1, -1))
-                      val bl = LinearLayout.LayoutParams(dp(34), dp(26))
-                      bl.setMargins(dp(4), 0, dp(8), 0)
-                      row.addView(box, bl)
-                      val name = TextView(this@MainActivity)
-                      name.textSize = ts(14f)
-                      name.setTextColor(Color.WHITE)
-                      name.typeface = Typeface.DEFAULT_BOLD
-                      name.isSingleLine = true
-                      name.ellipsize = TextUtils.TruncateAt.END
-                      row.addView(name, LinearLayout.LayoutParams(0, -2, 1f))
-                      val mark = TextView(this@MainActivity)
-                      mark.textSize = ts(14f)
-                      mark.setTextColor(ACCENT)
-                      row.addView(mark, LinearLayout.LayoutParams(-2, -2))
-                      row.tag = GParts(num, letter, logo, name, mark)
-                      return GRow(row)
-                  }
-
-                  override fun onBindViewHolder(h: GRow, position: Int) {
-                      val ch = gList[position]
-                      val parts = h.itemView.tag as GParts
-                      parts.num.text = (numbers[ch.url] ?: 0).toString()
-                      parts.name.text = ch.name
-                      parts.letter.text = "TV"
-                      parts.mark.text = if (ch.url == currentUrl) "▶" else ""
-                      if (prefs.getBoolean("logo_list", true)) loadLogo(logoFor(ch), parts.logo, parts.letter, 100)
-                  }
-              }
-
-              inner class GGridAdapter : RecyclerView.Adapter<GRow>() {
-                  override fun getItemCount(): Int = gList.size
-
-                  override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GRow {
-                      val f = FrameLayout(this@MainActivity)
-                      f.layoutParams = RecyclerView.LayoutParams(gTotalW, gRowH)
-                      return GRow(f)
-                  }
-
-                  override fun onBindViewHolder(h: GRow, position: Int) {
-                      val row = h.itemView as FrameLayout
-                      row.removeAllViews()
-                      val ch = gList[position]
-                      val end = gStart + 24L * 3600000L
-                      var added = 0
-                      if (ch.tvgId.isNotBlank()) {
-                          val progs = Epg.data[ch.tvgId.lowercase()]
-                          if (progs != null) {
-                              for (p in progs) {
-                                  if (p.stop <= gStart || p.start >= end) continue
-                                  row.addView(gMakeCell(ch, p, p.start, p.stop, p.title))
-                                  added++
-                              }
-                          }
-                      }
-                      if (added == 0) {
-                          val none = tr("Pas d'information", "No information", "لا توجد معلومات", "Sin información")
-                          var t = gStart
-                          while (t < end) {
-                              row.addView(gMakeCell(ch, null, t, t + 7200000L, none))
-                              t += 7200000L
-                          }
-                      }
-                  }
-              }
-
-              // ----- menu contextuel d'un programme -----
-
-              private fun guideMenu(ch: Channel, p: Programme?) {
-                  val box = LinearLayout(this)
-                  box.orientation = LinearLayout.VERTICAL
-                  box.setPadding(dp(8), dp(8), dp(8), dp(8))
-                  val scroll = ScrollView(this)
-                  scroll.addView(box)
-                  val dlg = dialog().setView(scroll).create()
-                  fun head(t: String) {
-                      val h = TextView(this)
-                      h.text = t
-                      h.textSize = ts(13f)
-                      h.typeface = Typeface.DEFAULT_BOLD
-                      h.setTextColor(ACCENT)
-                      h.setPadding(dp(12), dp(12), dp(12), dp(4))
-                      box.addView(h)
-                  }
-                  fun item(t: String, a: () -> Unit) {
-                      val v = qrow(t) {
-                          dlg.dismiss()
-                          a()
-                      }
-                      val lp = LinearLayout.LayoutParams(-1, -2)
-                      lp.setMargins(0, dp(2), 0, dp(2))
-                      box.addView(v, lp)
-                  }
-                  item(tr("Rechercher", "Search", "بحث", "Buscar")) { guideSearchDialog() }
-                  item(tr("Paramètres", "Settings", "الإعدادات", "Ajustes")) { openSettings() }
-                  head(tr("Programme", "Program", "البرنامج", "Programa"))
-                  item(tr("Ouvrir dans un lecteur externe", "Open in external player", "فتح في مشغّل خارجي", "Abrir en reproductor externo")) { openExternal(ch) }
-                  item(tr("Enregistrer", "Record", "تسجيل", "Grabar")) { guideRecord(ch, p) }
-                  item(tr("Enregistrement personnalisé", "Custom recording", "تسجيل مخصص", "Grabación personalizada")) { scheduleDialogFor(ch, p) }
-                  if (p != null) {
-                      item(tr("Description du programme", "Program description", "وصف البرنامج", "Descripción del programa")) {
-                          dialog().setTitle(p.title)
-                              .setMessage(fmtTime(p.start) + " – " + fmtTime(p.stop) + "\n\n" + p.desc)
-                              .setPositiveButton("OK", null)
-                              .show()
-                      }
-                  }
-                  head(tr("Chaîne ", "Channel ", "القناة ", "Canal ") + (numbers[ch.url] ?: 0))
-                  item(
-                      if (ch.fav) tr("Retirer des favoris", "Remove from favorites", "إزالة من المفضلة", "Quitar de favoritos")
-                      else tr("Ajouter aux favoris", "Add to favorites", "إضافة للمفضلة", "Añadir a favoritos")
-                  ) {
-                      ch.fav = !ch.fav
-                      save()
-                      refresh(false)
-                      if (gFilter == F_FAV) gRefresh()
-                  }
-                  item(tr("Associer un guide (EPG)", "Assign EPG", "ربط دليل البرامج", "Asignar EPG")) { assignEpgDialog(ch) }
-                  item(tr("Bloquer la chaîne", "Block channel", "حظر القناة", "Bloquear canal")) { blockChannel(ch) }
-                  dlg.show()
-              }
-
-              private fun guideSearchDialog() {
-                  val u = field(tr("Rechercher une chaîne", "Search a channel", "ابحث عن قناة", "Buscar un canal"), gQuery)
-                  dialog().setTitle(tr("Rechercher", "Search", "بحث", "Buscar")).setView(form(u))
-                      .setPositiveButton("OK") { _, _ ->
-                          gQuery = u.text.toString()
-                          gRefresh()
-                      }
-                      .setNegativeButton(tr("Annuler", "Cancel", "إلغاء", "Cancelar"), null)
-                      .show()
-              }
-
-              private fun openExternal(ch: Channel) {
-                  try {
-                      val i = Intent(Intent.ACTION_VIEW)
-                      i.setDataAndType(Uri.parse(ch.url), "video/*")
-                      startActivity(i)
-                  } catch (e: Exception) {
-                      toast(tr("Aucun lecteur externe trouvé", "No external player found", "لم يتم العثور على مشغّل خارجي", "No se encontró reproductor externo"))
-                  }
-              }
-
-              private fun guideRecord(ch: Channel, p: Programme?) {
-                  if (p == null) {
-                      startRecording(ch.name, ch.url, Long.MAX_VALUE)
-                      return
-                  }
-                  val now = System.currentTimeMillis()
-                  if (p.stop <= now) {
-                      toast(tr("Ce programme est terminé", "This program has ended", "انتهى هذا البرنامج", "Este programa ha terminado"))
-                  } else if (p.start <= now) {
-                      startRecording(ch.name, ch.url, p.stop - now)
-                  } else {
-                      val l = loadSched()
-                      l.add(Sched(p.start, ((p.stop - p.start) / 60000L).toInt() + 1, ch.url, ch.name))
-                      saveSched(l)
-                      toast(tr("Enregistrement planifié : ", "Recording scheduled: ", "تم جدولة التسجيل: ", "Grabación programada: ") + ch.name + " " + fmtTime(p.start))
-                  }
-              }
-
-              private fun scheduleDialogFor(ch: Channel, p: Programme?) {
-                  val n = field(tr("Chaîne (nom ou numéro)", "Channel (name or number)", "القناة (اسم أو رقم)", "Canal (nombre o número)"), ch.name)
-                  val t = field("HH:mm", if (p != null) fmtTime(p.start) else fmtTime(System.currentTimeMillis() + 5 * 60000L))
-                  val d = field(
-                      tr("Durée (minutes)", "Length (minutes)", "المدة (دقائق)", "Duración (minutos)"),
-                      if (p != null) ((p.stop - p.start) / 60000L).toString() else "60"
-                  )
-                  d.inputType = InputType.TYPE_CLASS_NUMBER
-                  dialog().setTitle(tr("Enregistrement personnalisé", "Custom recording", "تسجيل مخصص", "Grabación personalizada"))
-                      .setView(form(n, t, d))
-                      .setPositiveButton(tr("Planifier", "Schedule", "جدولة", "Programar")) { _, _ ->
-                          toast(addSchedule(n.text.toString(), t.text.toString(), d.text.toString().trim().toIntOrNull() ?: 0))
-                      }
-                      .setNegativeButton(tr("Annuler", "Cancel", "إلغاء", "Cancelar"), null)
-                      .show()
-              }
-
-              private fun assignEpgDialog(ch: Channel) {
-                  val u = field("tvg-id", ch.tvgId)
-                  dialog().setTitle(tr("Associer un guide (EPG)", "Assign EPG", "ربط دليل البرامج", "Asignar EPG")).setView(form(u))
-                      .setPositiveButton("OK") { _, _ ->
-                          ch.tvgId = u.text.toString().trim()
-                          save()
-                          fetchEpg(true)
-                      }
-                      .setNegativeButton(tr("Annuler", "Cancel", "إلغاء", "Cancelar"), null)
-                      .show()
               }
           }
           EOF

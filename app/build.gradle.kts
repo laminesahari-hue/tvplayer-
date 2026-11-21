@@ -15,25 +15,15 @@ android {
         versionName = "7.4.0"
     }
 
-    signingConfigs {
-        create("fixed") {
-            storeFile = file("tv.keystore")
-            storePassword = "tvplayer"
-            keyAlias = "tv"
-            keyPassword = "tvplayer"
-        }
-    }
-
     buildTypes {
-        getByName("debug") {
-            signingConfig = signingConfigs.getByName("fixed")
-        }
+        getByName("debug")
     }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
     kotlinOptions {
         jvmTarget = "17"
     }

@@ -1,0 +1,4861 @@
+package com.example.tvplayer
+
+import android.app.Activity
+import android.app.AlertDialog
+import android.app.PictureInPictureParams
+import android.app.UiModeManager
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
+import android.content.SharedPreferences
+import android.content.pm.ActivityInfo
+import android.content.res.ColorStateList
+import android.content.res.Configuration
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
+import android.net.Uri
+import android.os.Build
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.text.Editable
+import android.text.InputType
+import android.text.TextUtils
+import android.text.TextWatcher
+import android.util.JsonReader
+import android.util.JsonToken
+import android.util.LruCache
+import android.util.Rational
+import android.view.Gravity
+import android.view.KeyEvent
+import android.view.MotionEvent
+import android.view.View
+import android.view.ViewGroup
+import android.view.WindowManager
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
+import android.widget.ArrayAdapter
+import android.widget.EditText
+import android.widget.FrameLayout
+import android.widget.HorizontalScrollView
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ListView
+import android.widget.ProgressBar
+import android.widget.ScrollView
+import android.widget.TextView
+import android.widget.Toast
+import androidx.media3.common.AudioAttributes
+import androidx.media3.common.C
+import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
+import androidx.media3.common.TrackSelectionOverride
+import androidx.media3.common.Tracks
+import androidx.media3.common.VideoSize
+import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.exoplayer.DefaultLoadControl
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.ui.AspectRatioFrameLayout
+import androidx.media3.ui.PlayerView
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import java.io.BufferedReader
+import java.io.File
+import java.io.InputStreamReader
+import java.net.HttpURLConnection
+import java.net.URL
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.concurrent.Executors
+import kotlin.math.abs
+import org.json.JSONArray
+import org.json.JSONObject
+import com.example.tvplayer.core.design.Design
+import com.example.tvplayer.core.design.Palette
+import com.example.tvplayer.data.defaultChannels
+import com.example.tvplayer.data.epgPresets
+import com.example.tvplayer.data.model.Account
+import com.example.tvplayer.data.model.Channel
+import com.example.tvplayer.data.model.Episode
+import com.example.tvplayer.data.model.Playlist
+import com.example.tvplayer.data.model.Vod
+import com.example.tvplayer.data.source.Epg
+import com.example.tvplayer.data.source.Programme
+import com.example.tvplayer.data.source.parseM3u
+import com.example.tvplayer.portal.PortalServer
+import com.example.tvplayer.portal.portalLocalIps
+import com.example.tvplayer.pvr.RecorderHolder
+import com.example.tvplayer.pvr.Sched
+
+class RowHolder(
+    v: View,
+    val card: LinearLayout,
+    val num: TextView,
+    val letter: TextView,
+    val logo: ImageView,
+    val name: TextView,
+    val prog: TextView,
+    val bar: ProgressBar,
+    val star: TextView
+) : RecyclerView.ViewHolder(v)
+
+class VodHolder(
+    v: View,
+    val card: LinearLayout,
+    val img: ImageView,
+    val letter: TextView,
+    val title: TextView,
+    val sub: TextView
+) : RecyclerView.ViewHolder(v)
+
+class MainActivity : Activity() {
+
+    private var pal: Palette = Design.dark
+    private val BG: Int get() = pal.bg
+    private val CARD: Int get() = pal.surface
+    private val CARD_FOCUS: Int get() = pal.surfaceFocus
+    private val CARD_ACTIVE: Int get() = pal.surfaceActive
+    private val TXT: Int get() = pal.text
+    private val SUB: Int get() = pal.textSub
+    private var ACCENT = Color.parseColor("#4F8CFF")
+    private val F_FAV = "~fav"
+    private val F_RECENT = "~recent"
+
+    private val accentColors = arrayOf("#4F8CFF", "#22C55E", "#F59E0B", "#A855F7", "#EF4444", "#06B6D4")
+
+    private val resizeModes = intArrayOf(
+        AspectRatioFrameLayout.RESIZE_MODE_FIT,
+        AspectRatioFrameLayout.RESIZE_MODE_FILL,
+        AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+    )
+
+    private val ui = Handler(Looper.getMainLooper())
+    private val pool = Executors.newFixedThreadPool(4)
+    private val logos = object : LruCache<String, Bitmap>(24 * 1024 * 1024) {
+        override fun sizeOf(key: String, value: Bitmap): Int = value.byteCount
+    }
+    private val failed = HashSet<String>()
+    private val timeFmt = SimpleDateFormat("HH:mm", Locale.getDefault())
+    private val dayFmt = SimpleDateFormat("EEE HH:mm", Locale.getDefault())
+
+    private val tv: Boolean by lazy { detectTv() }
+
+    private var langIdx = 1
+    private var player: ExoPlayer? = null
+    private lateinit var prefs: SharedPreferences
+    private lateinit var root: FrameLayout
+    private lateinit var playerFrame: FrameLayout
+    private lateinit var playerView: PlayerView
+    private lateinit var overlay: TextView
+    private lateinit var numberBadge: TextView
+    private lateinit var logoBadge: ImageView
+    private lateinit var centerIcon: ImageView
+    private lateinit var banner: LinearLayout
+    private lateinit var bannerLogo: ImageView
+    private lateinit var bannerLetter: TextView
+    private lateinit var bannerTitle: TextView
+    private lateinit var bannerNow: TextView
+    private lateinit var bannerBar: ProgressBar
+    private lateinit var bannerNext: TextView
+    private lateinit var bannerClock: TextView
+    private lateinit var bannerInfo: TextView
+    private lateinit var bannerTime: TextView
+    private lateinit var listHeader: TextView
+    private lateinit var bannerLeft: TextView
+    private lateinit var bannerTimeline: ProgressBar
+    private lateinit var badgeBox: LinearLayout
+    private lateinit var osdGroup: TextView
+    private lateinit var osdClock: TextView
+    private lateinit var tilesScroll: HorizontalScrollView
+    private lateinit var tilesRow: LinearLayout
+    private lateinit var optionsBar: HorizontalScrollView
+    private lateinit var optRow: LinearLayout
+    private lateinit var controls: HorizontalScrollView
+    private lateinit var playBtn: TextView
+    private lateinit var listBtn: TextView
+    private lateinit var seekBack: TextView
+    private lateinit var seekFwd: TextView
+    private lateinit var panel: LinearLayout
+    private lateinit var tabs: LinearLayout
+    private lateinit var search: EditText
+    private lateinit var chipsScroll: HorizontalScrollView
+    private lateinit var chips: LinearLayout
+    private lateinit var groupScroll: ScrollView
+    private lateinit var groupCol: LinearLayout
+    private lateinit var recycler: RecyclerView
+    private lateinit var emptyText: TextView
+    private lateinit var details: LinearLayout
+    private lateinit var detTitle: TextView
+    private lateinit var detTime: TextView
+    private lateinit var detDesc: TextView
+    private lateinit var quickScroll: ScrollView
+    private lateinit var quickList: LinearLayout
+    private lateinit var adapter: ChannelAdapter
+    private lateinit var vodAdapter: VodAdapter
+
+    private var all = mutableListOf<Channel>()
+    private var shown = listOf<Channel>()
+    private var numbers = HashMap<String, Int>()
+    private var recent = mutableListOf<String>()
+    private var hiddenSet = HashSet<String>()
+    private val groupViews = HashMap<String, TextView>()
+
+    private var vods = mutableListOf<Vod>()
+    private var shownVod = listOf<Vod>()
+    private var vodLoaded = false
+    private var section = 0
+    private var vfilter = ""
+    private var posterW = 0
+    private var modeKey = -1
+    private var isVod = false
+    private var vodTitle = ""
+    private var liveUrl = ""
+
+    private var filter = ""
+    private var currentUrl = ""
+    private var previousUrl = ""
+    private var panelOpen = false
+    private var quickOpen = false
+    private var forcedLandscape = false
+    private var inPip = false
+    private var resizeIndex = 0
+    private var retries = 0
+    private var digits = ""
+    private var controlsVisible = false
+    private var resumeOnStart = false
+    private var muted = false
+    private var videoAuto = true
+    private var maxHeight = 0
+    private var videoInfo = ""
+    private var downX = 0f
+    private var downY = 0f
+    private var lastTapTime = 0L
+    private var lastBack = 0L
+
+    private val hideBanner = Runnable { hideOsd() }
+    private val hideOverlay = Runnable { overlay.visibility = View.GONE }
+    private val hideBadge = Runnable { numberBadge.visibility = View.GONE }
+    private val hideLogo = Runnable { logoBadge.visibility = View.GONE }
+    private val tapRunnable = Runnable { onSingleTap() }
+    private val sleepRunnable = Runnable {
+        player?.pause()
+        toast(tr("Minuteur : lecture arrêtée", "Timer: playback stopped", "المؤقت: تم إيقاف التشغيل", "Temporizador: reproducción detenida"))
+    }
+    private val digitRunnable = Runnable {
+        val n = digits.toIntOrNull()
+        digits = ""
+        if (n != null) {
+            val c = all.getOrNull(n - 1)
+            if (c != null) {
+                play(c)
+            } else {
+                showOverlay(tr("Chaîne introuvable", "Channel not found", "القناة غير موجودة", "Canal no encontrado"))
+            }
+        }
+    }
+    private val ticker = object : Runnable {
+        override fun run() {
+            if (!panelOpen && !recycler.isComputingLayout) {
+                if (section == 0) adapter.notifyDataSetChanged()
+            }
+            if (banner.visibility == View.VISIBLE && !isVod) showBanner(null, controlsVisible)
+            ui.postDelayed(this, 60000)
+        }
+    }
+    private val vodTicker = object : Runnable {
+        override fun run() {
+            if (isVod && player != null) {
+                if (banner.visibility == View.VISIBLE) updateVodProgress()
+                ui.postDelayed(this, 1000)
+            }
+        }
+    }
+
+    // ---------- plateforme ----------
+
+    private fun detectTv(): Boolean {
+        val pm = packageManager
+        if (pm.hasSystemFeature("android.software.leanback")) return true
+        if (pm.hasSystemFeature("amazon.hardware.fire_tv")) return true
+        return try {
+            val um = getSystemService(Context.UI_MODE_SERVICE) as UiModeManager
+            um.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    private fun ts(v: Float): Float = if (tv) v * 1.25f else v
+
+    private fun ph(base: Int): Int = if (tv) base + 10 else base
+
+    // ---------- langue ----------
+
+    override fun attachBaseContext(base: Context) {
+        val code = base.getSharedPreferences("tvplayer", MODE_PRIVATE).getString("lang", "auto") ?: "auto"
+        if (code == "auto") {
+            super.attachBaseContext(base)
+        } else {
+            val loc = Locale(code)
+            Locale.setDefault(loc)
+            val cfg = Configuration(base.resources.configuration)
+            cfg.setLocale(loc)
+            cfg.setLayoutDirection(loc)
+            super.attachBaseContext(base.createConfigurationContext(cfg))
+        }
+    }
+
+    private fun computeLang() {
+        val code = prefs.getString("lang", "auto") ?: "auto"
+        val c = if (code == "auto") Locale.getDefault().language else code
+        langIdx = when (c) {
+            "fr" -> 0
+            "ar" -> 2
+            "es" -> 3
+            else -> 1
+        }
+    }
+
+    private fun langCode(): String = when (langIdx) {
+        0 -> "fr"
+        2 -> "ar"
+        3 -> "es"
+        else -> "en"
+    }
+
+    private fun tr(fr: String, en: String, ar: String, es: String): String = when (langIdx) {
+        0 -> fr
+        2 -> ar
+        3 -> es
+        else -> en
+    }
+
+    private fun isRtl(): Boolean = langIdx == 2
+
+    // ---------- utilitaires ----------
+
+    private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
+
+    private fun toast(s: String) = Toast.makeText(this, s, Toast.LENGTH_SHORT).show()
+
+    private fun isLandscape(): Boolean {
+        val m = resources.displayMetrics
+        return m.widthPixels > m.heightPixels
+    }
+
+    private fun rounded(color: Int, r: Int): GradientDrawable {
+        val g = GradientDrawable()
+        g.setColor(color)
+        g.cornerRadius = dp(r).toFloat()
+        return g
+    }
+
+    private fun rowBg(active: Boolean, focused: Boolean): GradientDrawable {
+        val g = GradientDrawable()
+        g.cornerRadius = dp(12).toFloat()
+        if (focused) {
+            g.setColor(CARD_FOCUS)
+            g.setStroke(dp(2), ACCENT)
+        } else if (active) {
+            g.setColor(CARD_ACTIVE)
+            g.setStroke(dp(1), ACCENT)
+        } else {
+            g.setColor(CARD)
+        }
+        return g
+    }
+
+    private fun fmtTime(ms: Long): String = timeFmt.format(Date(ms))
+
+    private fun fmtDur(ms: Long): String {
+        val s = ms / 1000
+        val h = s / 3600
+        val m = (s % 3600) / 60
+        val sec = s % 60
+        return if (h > 0) {
+            String.format(Locale.US, "%d:%02d:%02d", h, m, sec)
+        } else {
+            String.format(Locale.US, "%d:%02d", m, sec)
+        }
+    }
+
+    private fun progressOf(p: Programme): Int {
+        val total = p.stop - p.start
+        if (total <= 0) return 0
+        val v = ((System.currentTimeMillis() - p.start) * 100) / total
+        return v.toInt().coerceIn(0, 100)
+    }
+
+    private fun thinBar(): ProgressBar {
+        val b = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal)
+        b.max = 100
+        b.progressTintList = ColorStateList.valueOf(ACCENT)
+        b.progressBackgroundTintList = ColorStateList.valueOf(Color.parseColor("#44FFFFFF"))
+        return b
+    }
+
+    private fun pill(label: String, selected: Boolean): TextView {
+        val t = TextView(this)
+        t.text = label
+        t.textSize = ts(14f)
+        t.setTextColor(TXT)
+        t.gravity = Gravity.CENTER
+        t.setPadding(dp(14), 0, dp(14), 0)
+        t.isClickable = true
+        t.isFocusable = true
+        t.background = rounded(if (selected) ACCENT else CARD, 20)
+        t.setOnFocusChangeListener { v, has ->
+            v.background = rounded(if (has || selected) ACCENT else CARD, 20)
+        }
+        return t
+    }
+
+    private fun dialog() = AlertDialog.Builder(
+        this,
+        if (pal === Design.light) AlertDialog.THEME_DEVICE_DEFAULT_LIGHT else AlertDialog.THEME_DEVICE_DEFAULT_DARK
+    )
+
+    private fun field(hint: String, value: String = ""): EditText {
+        val e = EditText(this)
+        e.hint = hint
+        e.setText(value)
+        e.isSingleLine = true
+        return e
+    }
+
+    private fun form(vararg views: View): LinearLayout {
+        val box = LinearLayout(this)
+        box.orientation = LinearLayout.VERTICAL
+        box.setPadding(dp(20), dp(8), dp(20), 0)
+        for (v in views) box.addView(v)
+        return box
+    }
+
+    private fun confirm(title: String, action: () -> Unit) {
+        dialog().setTitle(title)
+            .setPositiveButton(tr("Oui", "Yes", "نعم", "Sí")) { _, _ -> action() }
+            .setNegativeButton(tr("Annuler", "Cancel", "إلغاء", "Cancelar"), null)
+            .show()
+    }
+
+    private fun hideKeyboard() {
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(search.windowToken, 0)
+    }
+
+    private fun js(o: JSONObject, k: String): String = if (o.isNull(k)) "" else o.optString(k, "").trim()
+
+    private fun userAgent(): String {
+        val u = prefs.getString("ua", "") ?: ""
+        return if (u.isBlank()) "Mozilla/5.0 (Linux; Android) TVPlayer/6.0" else u
+    }
+
+    private fun httpGet(link: String, readTimeout: Int = 60000): String {
+        val c = URL(link).openConnection() as HttpURLConnection
+        c.connectTimeout = 15000
+        c.readTimeout = readTimeout
+        c.instanceFollowRedirects = true
+        c.setRequestProperty("User-Agent", userAgent())
+        return c.inputStream.bufferedReader().use { it.readText() }
+    }
+
+    // ---------- creation ----------
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        prefs = getSharedPreferences("tvplayer", MODE_PRIVATE)
+        computeLang()
+        val night = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        pal = Design.palette(prefs.getInt("theme", 1), night)
+        val ai = prefs.getInt("accent", 0).coerceIn(0, accentColors.size - 1)
+        ACCENT = Color.parseColor(accentColors[ai])
+        window.statusBarColor = BG
+        window.navigationBarColor = BG
+        if (tv) requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+
+        hiddenSet = loadHidden()
+        load()
+        currentUrl = prefs.getString("last", "") ?: ""
+        liveUrl = currentUrl
+        previousUrl = prefs.getString("prev", "") ?: ""
+        recent = (prefs.getString("recent", "") ?: "").lines().filter { it.isNotBlank() }.toMutableList()
+        resizeIndex = prefs.getInt("resize", 0).coerceIn(0, 2)
+        maxHeight = prefs.getInt("maxh", 0)
+
+        root = FrameLayout(this)
+        root.setBackgroundColor(BG)
+        root.isFocusable = true
+        root.isFocusableInTouchMode = true
+
+        buildPlayerArea()
+        buildPanel()
+        buildQuickPanel()
+        root.addView(playerFrame)
+        root.addView(panel)
+        root.addView(quickScroll, FrameLayout.LayoutParams(dp(320), -1))
+        buildExtras()
+        setContentView(root)
+
+        initPlayer()
+        updatePlayButton()
+        applyLayout()
+        refresh(true)
+        root.requestFocus()
+
+        val start = all.firstOrNull { it.url == currentUrl } ?: all.firstOrNull()
+        if (start != null && prefs.getBoolean("autoplay", true)) play(start)
+        fetchEpg(false)
+        autoConnect()
+        startExtras()
+        ui.postDelayed(ticker, 60000)
+    }
+
+    private fun ctl(label: String, action: () -> Unit): TextView {
+        val b = pill(label, false)
+        b.setOnClickListener {
+            action()
+            if (controlsVisible && banner.visibility == View.VISIBLE) {
+                ui.removeCallbacks(hideBanner)
+                ui.postDelayed(hideBanner, 6000)
+            }
+        }
+        return b
+    }
+
+    private fun buildPlayerArea() {
+        playerFrame = FrameLayout(this)
+        playerFrame.setBackgroundColor(Color.BLACK)
+
+        playerView = PlayerView(this)
+        playerView.useController = false
+        playerView.setShowBuffering(PlayerView.SHOW_BUFFERING_WHEN_PLAYING)
+        playerFrame.addView(playerView, FrameLayout.LayoutParams(-1, -1))
+
+        overlay = TextView(this)
+        overlay.setTextColor(Color.WHITE)
+        overlay.textSize = ts(14f)
+        overlay.setPadding(dp(12), dp(6), dp(12), dp(6))
+        overlay.background = rounded(Color.parseColor("#99000000"), 8)
+        overlay.visibility = View.GONE
+        val olp = FrameLayout.LayoutParams(-2, -2)
+        olp.gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
+        olp.setMargins(dp(10), dp(10), dp(10), 0)
+        playerFrame.addView(overlay, olp)
+
+        numberBadge = TextView(this)
+        numberBadge.textSize = ts(30f)
+        numberBadge.typeface = Typeface.DEFAULT_BOLD
+        numberBadge.setTextColor(Color.WHITE)
+        numberBadge.setShadowLayer(6f, 0f, 2f, Color.BLACK)
+        numberBadge.visibility = View.GONE
+        val nlp = FrameLayout.LayoutParams(-2, -2)
+        nlp.gravity = Gravity.TOP or Gravity.END
+        nlp.setMargins(dp(16), dp(46), dp(24), 0)
+        playerFrame.addView(numberBadge, nlp)
+
+        logoBadge = ImageView(this)
+        logoBadge.scaleType = ImageView.ScaleType.FIT_CENTER
+        logoBadge.adjustViewBounds = true
+        logoBadge.setPadding(dp(8), dp(6), dp(8), dp(6))
+        logoBadge.background = rounded(Color.parseColor("#80000000"), 10)
+        logoBadge.maxHeight = dp(56)
+        logoBadge.maxWidth = dp(168)
+        logoBadge.visibility = View.GONE
+        val llp = FrameLayout.LayoutParams(-2, -2)
+        llp.gravity = Gravity.TOP or Gravity.START
+        llp.setMargins(dp(12), dp(12), 0, 0)
+        playerFrame.addView(logoBadge, llp)
+
+        centerIcon = ImageView(this)
+        centerIcon.setImageResource(R.drawable.ic_play_circle)
+        centerIcon.visibility = View.GONE
+        val clp = FrameLayout.LayoutParams(dp(72), dp(72))
+        clp.gravity = Gravity.CENTER
+        playerFrame.addView(centerIcon, clp)
+
+        banner = LinearLayout(this)
+        banner.orientation = LinearLayout.VERTICAL
+        banner.setPadding(dp(20), dp(40), dp(20), dp(10))
+        banner.background = GradientDrawable(
+            GradientDrawable.Orientation.BOTTOM_TOP,
+            intArrayOf(Color.parseColor("#F2000000"), Color.TRANSPARENT)
+        )
+        banner.visibility = View.GONE
+
+        val infoRow = LinearLayout(this)
+        infoRow.orientation = LinearLayout.HORIZONTAL
+        infoRow.gravity = Gravity.CENTER_VERTICAL
+
+        val logoBox = FrameLayout(this)
+        bannerLetter = TextView(this)
+        bannerLetter.gravity = Gravity.CENTER
+        bannerLetter.textSize = ts(22f)
+        bannerLetter.typeface = Typeface.DEFAULT_BOLD
+        bannerLetter.setTextColor(Color.WHITE)
+        logoBox.addView(bannerLetter, FrameLayout.LayoutParams(-1, -1))
+        bannerLogo = ImageView(this)
+        bannerLogo.scaleType = ImageView.ScaleType.FIT_CENTER
+        logoBox.addView(bannerLogo, FrameLayout.LayoutParams(-1, -1))
+        infoRow.addView(logoBox, LinearLayout.LayoutParams(dp(if (tv) 116 else 84), dp(if (tv) 76 else 56)))
+
+        val col = LinearLayout(this)
+        col.orientation = LinearLayout.VERTICAL
+        col.setPadding(dp(16), 0, dp(12), 0)
+
+        bannerNow = TextView(this)
+        bannerNow.textSize = ts(20f)
+        bannerNow.typeface = Typeface.DEFAULT_BOLD
+        bannerNow.setTextColor(Color.WHITE)
+        bannerNow.isSingleLine = true
+        bannerNow.ellipsize = TextUtils.TruncateAt.END
+
+        val timeRow = LinearLayout(this)
+        timeRow.orientation = LinearLayout.HORIZONTAL
+        timeRow.gravity = Gravity.CENTER_VERTICAL
+        bannerTime = TextView(this)
+        bannerTime.textSize = ts(13f)
+        bannerTime.setTextColor(Color.WHITE)
+        bannerBar = thinBar()
+        bannerLeft = TextView(this)
+        bannerLeft.textSize = ts(13f)
+        bannerLeft.setTextColor(Color.WHITE)
+        timeRow.addView(bannerTime)
+        val mbl = LinearLayout.LayoutParams(dp(110), dp(3))
+        mbl.setMargins(dp(10), 0, dp(10), 0)
+        timeRow.addView(bannerBar, mbl)
+        timeRow.addView(bannerLeft)
+
+        val chanRow = LinearLayout(this)
+        chanRow.orientation = LinearLayout.HORIZONTAL
+        chanRow.gravity = Gravity.CENTER_VERTICAL
+        bannerTitle = TextView(this)
+        bannerTitle.textSize = ts(15f)
+        bannerTitle.typeface = Typeface.DEFAULT_BOLD
+        bannerTitle.setTextColor(Color.WHITE)
+        bannerTitle.isSingleLine = true
+        bannerTitle.ellipsize = TextUtils.TruncateAt.END
+        badgeBox = LinearLayout(this)
+        badgeBox.orientation = LinearLayout.HORIZONTAL
+        chanRow.addView(bannerTitle)
+        chanRow.addView(badgeBox, LinearLayout.LayoutParams(-2, -2))
+
+        bannerNext = TextView(this)
+        bannerNext.textSize = ts(13f)
+        bannerNext.setTextColor(Color.parseColor("#C8CFDB"))
+        bannerNext.isSingleLine = true
+        bannerNext.ellipsize = TextUtils.TruncateAt.END
+
+        col.addView(bannerNow)
+        col.addView(timeRow)
+        col.addView(chanRow)
+        col.addView(bannerNext)
+        infoRow.addView(col, LinearLayout.LayoutParams(0, -2, 1f))
+
+        val right = LinearLayout(this)
+        right.orientation = LinearLayout.VERTICAL
+        right.gravity = Gravity.END
+        bannerClock = TextView(this)
+        bannerInfo = TextView(this)
+        bannerInfo.textSize = ts(12f)
+        bannerInfo.setTextColor(SUB)
+        right.addView(bannerInfo)
+        infoRow.addView(right, LinearLayout.LayoutParams(-2, -2))
+        banner.addView(infoRow, LinearLayout.LayoutParams(-1, -2))
+
+        bannerTimeline = thinBar()
+        val tll = LinearLayout.LayoutParams(-1, dp(3))
+        tll.topMargin = dp(10)
+        tll.bottomMargin = dp(8)
+        banner.addView(bannerTimeline, tll)
+
+        tilesScroll = HorizontalScrollView(this)
+        tilesScroll.isHorizontalScrollBarEnabled = false
+        tilesRow = LinearLayout(this)
+        tilesRow.orientation = LinearLayout.HORIZONTAL
+        tilesScroll.addView(tilesRow)
+        tilesScroll.visibility = View.GONE
+        banner.addView(tilesScroll, LinearLayout.LayoutParams(-1, -2))
+
+        controls = HorizontalScrollView(this)
+        controls.isHorizontalScrollBarEnabled = false
+        val bar = LinearLayout(this)
+        bar.orientation = LinearLayout.HORIZONTAL
+        bar.setPadding(0, dp(10), 0, 0)
+        fun add(v: TextView) {
+            val lp = LinearLayout.LayoutParams(-2, dp(ph(44)))
+            lp.setMargins(dp(4), 0, dp(4), 0)
+            bar.addView(v, lp)
+        }
+        add(ctl(tr("◀ Préc.", "◀ Prev", "◀ السابقة", "◀ Ant.")) { step(-1) })
+        seekBack = ctl("−10 s") { seekBy(-10000L) }
+        seekBack.visibility = View.GONE
+        add(seekBack)
+        playBtn = ctl(tr("Pause", "Pause", "إيقاف", "Pausa")) { playPause() }
+        add(playBtn)
+        seekFwd = ctl("+10 s") { seekBy(10000L) }
+        seekFwd.visibility = View.GONE
+        add(seekFwd)
+        add(ctl(tr("Suiv. ▶", "Next ▶", "التالية ▶", "Sig. ▶")) { step(1) })
+        add(ctl(tr("↺ Dernière", "↺ Last", "↺ الأخيرة", "↺ Última")) { lastChannel() })
+        add(ctl(tr("Format", "Aspect", "النسبة", "Formato")) { cycleResize() })
+        add(ctl(tr("⛶ Écran", "⛶ Screen", "⛶ ملء الشاشة", "⛶ Pantalla")) { toggleFullscreen() })
+        listBtn = ctl(tr("☰ Chaînes", "☰ Browse", "☰ التصفح", "☰ Explorar")) { openPanel() }
+        add(listBtn)
+        add(ctl("⋮ " + tr("Options", "Options", "خيارات", "Opciones")) { openQuick() })
+        if (!tv) add(ctl("PiP") { enterPip() })
+        add(ctl("⚙") { menuDialog() })
+        controls.addView(bar)
+        controls.visibility = View.GONE
+        banner.addView(controls, LinearLayout.LayoutParams(-1, -2))
+
+        val bnl = FrameLayout.LayoutParams(-1, -2)
+        bnl.gravity = Gravity.BOTTOM
+        playerFrame.addView(banner, bnl)
+
+        playerFrame.setOnTouchListener { _, ev ->
+            when (ev.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    downX = ev.x
+                    downY = ev.y
+                }
+                MotionEvent.ACTION_UP -> {
+                    val dx = ev.x - downX
+                    val dy = ev.y - downY
+                    if (abs(dy) > dp(70) && abs(dy) > abs(dx) * 1.5f) {
+                        if (!isVod) {
+                            if (dy < 0) step(1) else step(-1)
+                        }
+                    } else if (abs(dx) > dp(90) && abs(dx) > abs(dy) * 1.5f) {
+                        if (isLandscape()) {
+                            val toStart = if (isRtl()) dx < 0 else dx > 0
+                            if (toStart) {
+                                if (quickOpen) closeQuick() else openPanel()
+                            } else {
+                                if (panelOpen) closePanel() else openQuick()
+                            }
+                        }
+                    } else if (abs(dx) < dp(14) && abs(dy) < dp(14)) {
+                        val t = ev.eventTime
+                        if (t - lastTapTime < 300) {
+                            lastTapTime = 0L
+                            ui.removeCallbacks(tapRunnable)
+                            playPause()
+                        } else {
+                            lastTapTime = t
+                            ui.postDelayed(tapRunnable, 300)
+                        }
+                    }
+                }
+            }
+            true
+        }
+    }
+
+    private fun buildPanel() {
+        panel = LinearLayout(this)
+        panel.orientation = LinearLayout.VERTICAL
+        panel.isClickable = true
+
+        tabs = LinearLayout(this)
+        tabs.orientation = LinearLayout.HORIZONTAL
+        tabs.setPadding(dp(10), dp(10), dp(10), dp(2))
+        panel.addView(tabs, LinearLayout.LayoutParams(-1, -2))
+
+        val top = LinearLayout(this)
+        top.orientation = LinearLayout.HORIZONTAL
+        top.gravity = Gravity.CENTER_VERTICAL
+        top.setPadding(dp(12), dp(6), dp(12), dp(6))
+
+        search = EditText(this)
+        search.setTextColor(listTxt())
+        search.setHintTextColor(SUB)
+        search.textSize = ts(15f)
+        search.isSingleLine = true
+        search.imeOptions = EditorInfo.IME_ACTION_DONE
+        search.setPadding(dp(16), 0, dp(16), 0)
+        search.background = rounded(CARD, 22)
+        search.setOnEditorActionListener { _, _, _ ->
+            hideKeyboard()
+            true
+        }
+        top.addView(search, LinearLayout.LayoutParams(0, dp(ph(44)), 1f))
+
+        val settings = pill("⚙", false)
+        settings.setOnClickListener { menuDialog() }
+        val slp = LinearLayout.LayoutParams(dp(ph(44)), dp(ph(44)))
+        slp.setMargins(dp(8), 0, dp(8), 0)
+        top.addView(settings, slp)
+        panel.addView(top, LinearLayout.LayoutParams(-1, -2))
+
+        chipsScroll = HorizontalScrollView(this)
+        chipsScroll.isHorizontalScrollBarEnabled = false
+        chips = LinearLayout(this)
+        chips.orientation = LinearLayout.HORIZONTAL
+        chips.setPadding(dp(10), dp(2), dp(10), dp(8))
+        chipsScroll.addView(chips)
+        panel.addView(chipsScroll, LinearLayout.LayoutParams(-1, -2))
+
+        val body = LinearLayout(this)
+        body.orientation = LinearLayout.HORIZONTAL
+
+        groupScroll = ScrollView(this)
+        groupScroll.isVerticalScrollBarEnabled = false
+        groupCol = LinearLayout(this)
+        groupCol.orientation = LinearLayout.VERTICAL
+        groupCol.setPadding(dp(8), dp(4), dp(4), dp(12))
+        groupScroll.addView(groupCol)
+        body.addView(groupScroll, LinearLayout.LayoutParams(dp(170), -1))
+
+        val listFrame = FrameLayout(this)
+        recycler = RecyclerView(this)
+        recycler.layoutManager = LinearLayoutManager(this)
+        recycler.itemAnimator = null
+        recycler.clipToPadding = false
+        recycler.setPadding(dp(10), 0, dp(10), dp(12))
+        adapter = ChannelAdapter()
+        vodAdapter = VodAdapter()
+        recycler.adapter = adapter
+        listFrame.addView(recycler, FrameLayout.LayoutParams(-1, -1))
+
+        emptyText = TextView(this)
+        emptyText.setTextColor(SUB)
+        emptyText.gravity = Gravity.CENTER
+        emptyText.textSize = ts(14f)
+        emptyText.setPadding(dp(32), dp(32), dp(32), dp(32))
+        emptyText.visibility = View.GONE
+        listFrame.addView(emptyText, FrameLayout.LayoutParams(-1, -1))
+        val listCol = LinearLayout(this)
+        listCol.orientation = LinearLayout.VERTICAL
+        listHeader = TextView(this)
+        listHeader.textSize = ts(20f)
+        listHeader.typeface = Typeface.DEFAULT_BOLD
+        listHeader.setTextColor(listTxt())
+        listHeader.isSingleLine = true
+        listHeader.ellipsize = TextUtils.TruncateAt.END
+        listHeader.setPadding(dp(18), dp(12), dp(12), dp(10))
+        listHeader.setBackgroundColor(Color.parseColor("#26FFFFFF"))
+        listCol.addView(listHeader, LinearLayout.LayoutParams(-1, -2))
+        listCol.addView(listFrame, LinearLayout.LayoutParams(-1, 0, 1f))
+        body.addView(listCol, LinearLayout.LayoutParams(0, -1, 1f))
+        panel.addView(body, LinearLayout.LayoutParams(-1, 0, 1f))
+
+        details = LinearLayout(this)
+        details.orientation = LinearLayout.VERTICAL
+        details.setPadding(dp(14), dp(10), dp(14), dp(10))
+        details.background = rounded(Color.parseColor("#1F2430"), 12)
+        detTitle = TextView(this)
+        detTitle.textSize = ts(15f)
+        detTitle.typeface = Typeface.DEFAULT_BOLD
+        detTitle.setTextColor(Color.WHITE)
+        detTitle.isSingleLine = true
+        detTitle.ellipsize = TextUtils.TruncateAt.END
+        detTime = TextView(this)
+        detTime.textSize = ts(13f)
+        detTime.setTextColor(ACCENT)
+        detTime.isSingleLine = true
+        detTime.ellipsize = TextUtils.TruncateAt.END
+        detDesc = TextView(this)
+        detDesc.textSize = ts(12f)
+        detDesc.setTextColor(SUB)
+        detDesc.maxLines = 3
+        detDesc.ellipsize = TextUtils.TruncateAt.END
+        details.addView(detTitle)
+        details.addView(detTime)
+        details.addView(detDesc)
+        val dlp = LinearLayout.LayoutParams(-1, -2)
+        dlp.setMargins(dp(10), dp(4), dp(10), dp(10))
+        panel.addView(details, dlp)
+
+        search.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, st: Int, c: Int, a: Int) {}
+            override fun onTextChanged(s: CharSequence?, st: Int, b: Int, c: Int) {}
+            override fun afterTextChanged(s: Editable?) { refresh(false) }
+        })
+        updateTabs()
+    }
+
+    private fun updateTabs() {
+        tabs.removeAllViews()
+        val labels = arrayOf(
+            tr("TV", "Live TV", "البث المباشر", "TV en vivo"),
+            tr("Films", "Movies", "أفلام", "Películas"),
+            tr("Séries", "Series", "مسلسلات", "Series")
+        )
+        for (i in 0 until 3) {
+            val p = pill(labels[i], section == i)
+            p.setOnClickListener { setSection(i) }
+            val lp = LinearLayout.LayoutParams(0, dp(ph(44)), 1f)
+            lp.setMargins(dp(3), 0, dp(3), 0)
+            tabs.addView(p, lp)
+        }
+    }
+
+    private fun buildQuickPanel() {
+        quickList = LinearLayout(this)
+        quickList.orientation = LinearLayout.VERTICAL
+        quickList.setPadding(dp(10), dp(12), dp(10), dp(12))
+        quickScroll = ScrollView(this)
+        quickScroll.addView(quickList)
+        quickScroll.isClickable = true
+        quickScroll.isVerticalScrollBarEnabled = false
+        quickScroll.setBackgroundColor(Color.parseColor("#F20E1117"))
+        quickScroll.visibility = View.GONE
+    }
+
+    private fun initPlayer() {
+        val http = DefaultHttpDataSource.Factory()
+            .setAllowCrossProtocolRedirects(true)
+            .setConnectTimeoutMs(10000)
+            .setReadTimeoutMs(15000)
+            .setUserAgent(userAgent())
+        val bufLevel = prefs.getInt("buffer", 1)
+        val tsLevel = prefs.getInt("timeshift", 1).coerceIn(0, 2)
+        val minBuf = when (bufLevel) {
+            0 -> 8000
+            2 -> 30000
+            else -> 15000
+        }
+        val playBuf = when (bufLevel) {
+            0 -> 1000
+            2 -> 2500
+            else -> 1500
+        }
+        val rebufBuf = when (bufLevel) {
+            0 -> 2000
+            2 -> 5000
+            else -> 3000
+        }
+        val baseMax = when (bufLevel) {
+            0 -> 30000
+            2 -> 90000
+            else -> 50000
+        }
+        val tsMax = when (tsLevel) {
+            1 -> 120000
+            2 -> 300000
+            else -> 0
+        }
+        val lc = DefaultLoadControl.Builder()
+            .setBufferDurationsMs(minBuf, maxOf(baseMax, tsMax), playBuf, rebufBuf)
+            .setBackBuffer(if (tsLevel > 0) 60000 else 0, true)
+            .build()
+        val exo = ExoPlayer.Builder(this)
+            .setMediaSourceFactory(DefaultMediaSourceFactory(this).setDataSourceFactory(http))
+            .setLoadControl(lc)
+            .setAudioAttributes(AudioAttributes.DEFAULT, true)
+            .setHandleAudioBecomingNoisy(true)
+            .build()
+        player = exo
+        playerView.player = exo
+        playerView.setResizeMode(resizeModes[resizeIndex])
+        exo.volume = if (muted) 0f else 1f
+        applyQuality(exo)
+        exo.addListener(object : Player.Listener {
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                if (playbackState == Player.STATE_READY) retries = 0
+            }
+
+            override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+                if (!playWhenReady && !isVod) behindLive = true
+                updatePlayButton()
+                updateGoLive()
+            }
+
+            override fun onTracksChanged(tracks: Tracks) {
+                updateBadges()
+            }
+
+            override fun onVideoSizeChanged(videoSize: VideoSize) {
+                val h = videoSize.height
+                videoInfo = if (h > 0) {
+                    videoSize.width.toString() + "×" + h.toString() +
+                        (if (h >= 2160) " 4K" else if (h >= 1080) " FHD" else if (h >= 720) " HD" else " SD")
+                } else {
+                    ""
+                }
+                if (banner.visibility == View.VISIBLE) bannerInfo.text = infoLine()
+            }
+
+            override fun onPlayerError(error: PlaybackException) {
+                val p = player ?: return
+                if (error.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW) {
+                    p.seekToDefaultPosition()
+                    p.prepare()
+                    return
+                }
+                if (retries < 5) {
+                    retries++
+                    showOverlay(
+                        tr("Reconnexion…", "Reconnecting…", "إعادة الاتصال…", "Reconectando…") +
+                            " (" + retries + "/5)"
+                    )
+                    ui.postDelayed({ player?.prepare() }, 2000L * retries)
+                } else {
+                    showOverlay(
+                        tr("⚠ Lecture impossible", "⚠ Cannot play", "⚠ تعذر التشغيل", "⚠ No se puede reproducir")
+                    )
+                }
+            }
+        })
+    }
+
+    private fun rebuildPlayer() {
+        player?.release()
+        player = null
+        initPlayer()
+        updatePlayButton()
+        if (isVod) return
+        val c = all.firstOrNull { it.url == currentUrl }
+        if (c != null) play(c)
+    }
+
+    private fun updatePlayButton() {
+        val pw = player?.playWhenReady ?: true
+        playBtn.text = if (pw) tr("Pause", "Pause", "إيقاف", "Pausa") else tr("Lecture", "Play", "تشغيل", "Reproducir")
+        val d = getDrawable(if (pw) R.drawable.ic_pause else R.drawable.ic_play)
+        playBtn.setCompoundDrawablesWithIntrinsicBounds(d, null, null, null)
+        playBtn.compoundDrawablePadding = dp(6)
+        centerIcon.visibility = if (pw || inPip) View.GONE else View.VISIBLE
+    }
+
+    private fun infoLine(): String {
+        var s = videoInfo
+        if (videoAuto) {
+            s += (if (s.isEmpty()) "" else "  •  ") + "Auto" + (if (maxHeight > 0) " ≤" + maxHeight + "p" else "")
+        }
+        if (!isVod) {
+            val p = player
+            if (p != null && p.isCurrentMediaItemLive) {
+                val off = p.currentLiveOffset
+                if (off != C.TIME_UNSET) {
+                    s += "  •  " + (if (off <= 4000L) "LIVE" else "−" + (off / 1000) + " s")
+                }
+            }
+        }
+        if (muted) s += "  " + tr("Muet", "Muted", "صامت", "Silencio")
+        return s
+    }
+
+    private fun applyQuality(exo: ExoPlayer) {
+        val b = exo.trackSelectionParameters.buildUpon().clearOverridesOfType(C.TRACK_TYPE_VIDEO)
+        if (maxHeight > 0) {
+            b.setMaxVideoSize(Int.MAX_VALUE, maxHeight)
+        } else {
+            b.setMaxVideoSize(Int.MAX_VALUE, Int.MAX_VALUE)
+        }
+        exo.trackSelectionParameters = b.build()
+    }
+
+    // ---------- listes ----------
+
+    inner class ChannelAdapter : RecyclerView.Adapter<RowHolder>() {
+        init {
+            setHasStableIds(true)
+        }
+
+        override fun getItemCount(): Int = shown.size
+
+        override fun getItemId(position: Int): Long = shown[position].url.hashCode().toLong()
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RowHolder = newRow()
+
+        override fun onBindViewHolder(h: RowHolder, position: Int) {
+            val ch = shown[position]
+            val active = ch.url == currentUrl
+            h.card.background = listRowBg(active, h.itemView.hasFocus())
+            val n = numbers[ch.url] ?: 0
+            h.name.text = n.toString() + "  " + ch.name
+            h.name.setTextColor(listTxt())
+            h.logo.contentDescription = ch.name
+            h.letter.text = "TV"
+            val now = Epg.now(ch.tvgId)
+            if (now != null) {
+                h.prog.text = fmtTime(now.start) + "  " + now.title
+                h.bar.progress = progressOf(now)
+            } else {
+                h.prog.text = tr("Pas d'information", "No information", "لا توجد معلومات", "Sin información")
+                h.bar.progress = 0
+            }
+            h.prog.visibility = View.VISIBLE
+            h.bar.visibility = View.VISIBLE
+            h.star.text = if (active) "▶" else if (ch.fav) "★" else ""
+            h.star.setTextColor(if (active) ACCENT else Color.parseColor("#FFC107"))
+            h.star.setOnClickListener {
+                ch.fav = !ch.fav
+                save()
+                refresh(false)
+            }
+            h.itemView.setOnFocusChangeListener { _, has ->
+                h.card.background = listRowBg(ch.url == currentUrl, has)
+                if (has) showDetails(ch)
+            }
+            h.itemView.setOnClickListener {
+                play(ch)
+                if (isLandscape()) closePanel()
+            }
+            h.itemView.setOnLongClickListener {
+                channelMenu(ch)
+                true
+            }
+            if (prefs.getBoolean("logo_list", true)) loadLogo(logoFor(ch), h.logo, h.letter, 120)
+        }
+    }
+
+    inner class VodAdapter : RecyclerView.Adapter<VodHolder>() {
+        init {
+            setHasStableIds(true)
+        }
+
+        override fun getItemCount(): Int = shownVod.size
+
+        override fun getItemId(position: Int): Long {
+            val v = shownVod[position]
+            return (v.src + "|" + v.kind + "|" + v.id).hashCode().toLong()
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VodHolder = newPoster()
+
+        override fun onBindViewHolder(h: VodHolder, position: Int) {
+            val v = shownVod[position]
+            h.card.background = rowBg(false, h.itemView.hasFocus())
+            h.title.text = v.name
+            h.sub.text = if (v.rating.isBlank() || v.rating == "0") v.group else "★ " + v.rating
+            h.letter.text = v.name.trim().take(1).uppercase()
+            h.itemView.setOnFocusChangeListener { _, has ->
+                h.card.background = rowBg(false, has)
+            }
+            h.itemView.setOnClickListener { openVod(v) }
+            loadLogo(v.poster, h.img, h.letter, 300)
+        }
+    }
+
+    private fun newRow(): RowHolder {
+        val outer = FrameLayout(this)
+        outer.layoutParams = RecyclerView.LayoutParams(-1, -2)
+        outer.setPadding(dp(6), dp(2), dp(6), dp(2))
+        outer.isFocusable = true
+
+        val card = LinearLayout(this)
+        card.orientation = LinearLayout.HORIZONTAL
+        card.gravity = Gravity.CENTER_VERTICAL
+        card.setPadding(dp(12), dp(10), dp(10), dp(10))
+        card.background = listRowBg(false, false)
+
+        val num = TextView(this)
+
+        val logoBox = FrameLayout(this)
+        logoBox.background = rounded(Color.parseColor("#66808080"), 8)
+        val letter = TextView(this)
+        letter.gravity = Gravity.CENTER
+        letter.textSize = ts(16f)
+        letter.typeface = Typeface.DEFAULT_BOLD
+        letter.setTextColor(Color.parseColor("#CCFFFFFF"))
+        logoBox.addView(letter, FrameLayout.LayoutParams(-1, -1))
+        val logo = ImageView(this)
+        logo.scaleType = ImageView.ScaleType.FIT_CENTER
+        logo.setPadding(dp(4), dp(4), dp(4), dp(4))
+        logoBox.addView(logo, FrameLayout.LayoutParams(-1, -1))
+        val lsz = logoListSize()
+        card.addView(logoBox, LinearLayout.LayoutParams(dp(lsz), dp(lsz)))
+        if (!prefs.getBoolean("logo_list", true)) logoBox.visibility = View.GONE
+
+        val texts = LinearLayout(this)
+        texts.orientation = LinearLayout.VERTICAL
+        texts.setPadding(dp(14), 0, dp(8), 0)
+        val name = TextView(this)
+        name.textSize = ts(17f)
+        name.typeface = Typeface.DEFAULT_BOLD
+        name.isSingleLine = true
+        name.ellipsize = TextUtils.TruncateAt.END
+        val prog = TextView(this)
+        prog.textSize = ts(15f)
+        prog.setTextColor(listSub())
+        prog.isSingleLine = true
+        prog.ellipsize = TextUtils.TruncateAt.END
+        val bar = lineBar()
+        texts.addView(name)
+        texts.addView(prog)
+        val blp = LinearLayout.LayoutParams(-1, dp(2))
+        blp.topMargin = dp(6)
+        texts.addView(bar, blp)
+        card.addView(texts, LinearLayout.LayoutParams(0, -2, 1f))
+
+        val star = TextView(this)
+        star.textSize = ts(18f)
+        star.setPadding(dp(6), dp(6), dp(6), dp(6))
+        star.isClickable = true
+        card.addView(star, LinearLayout.LayoutParams(-2, -2))
+
+        outer.addView(card, FrameLayout.LayoutParams(-1, -2))
+        return RowHolder(outer, card, num, letter, logo, name, prog, bar, star)
+    }
+
+    private fun newPoster(): VodHolder {
+        val pw = if (posterW > 0) posterW else dp(110)
+        val outer = FrameLayout(this)
+        outer.layoutParams = RecyclerView.LayoutParams(-1, -2)
+        outer.setPadding(dp(4), dp(4), dp(4), dp(4))
+        outer.isFocusable = true
+
+        val card = LinearLayout(this)
+        card.orientation = LinearLayout.VERTICAL
+        card.setPadding(dp(4), dp(4), dp(4), dp(6))
+        card.background = rowBg(false, false)
+
+        val box = FrameLayout(this)
+        box.background = rounded(Color.parseColor("#262B36"), 8)
+        val letter = TextView(this)
+        letter.gravity = Gravity.CENTER
+        letter.textSize = ts(26f)
+        letter.typeface = Typeface.DEFAULT_BOLD
+        letter.setTextColor(ACCENT)
+        box.addView(letter, FrameLayout.LayoutParams(-1, -1))
+        val img = ImageView(this)
+        img.scaleType = ImageView.ScaleType.CENTER_CROP
+        box.addView(img, FrameLayout.LayoutParams(-1, -1))
+        card.addView(box, LinearLayout.LayoutParams(-1, pw * 3 / 2))
+
+        val title = TextView(this)
+        title.textSize = ts(12f)
+        title.setTextColor(listTxt())
+        title.maxLines = 2
+        title.ellipsize = TextUtils.TruncateAt.END
+        title.setPadding(dp(2), dp(4), dp(2), 0)
+        val sub = TextView(this)
+        sub.textSize = ts(11f)
+        sub.setTextColor(SUB)
+        sub.isSingleLine = true
+        sub.ellipsize = TextUtils.TruncateAt.END
+        sub.setPadding(dp(2), 0, dp(2), 0)
+        card.addView(title)
+        card.addView(sub)
+
+        outer.addView(card, FrameLayout.LayoutParams(-1, -2))
+        return VodHolder(outer, card, img, letter, title, sub)
+    }
+
+    private fun loadLogo(url: String, iv: ImageView, letter: TextView?, maxPx: Int, onDone: ((Boolean) -> Unit)? = null) {
+        val key = url + "@" + maxPx
+        iv.setImageDrawable(null)
+        iv.tag = key
+        letter?.visibility = View.VISIBLE
+        if (url.isBlank() || failed.contains(url)) {
+            onDone?.invoke(false)
+            return
+        }
+        val cached = logos.get(key)
+        if (cached != null) {
+            iv.setImageBitmap(cached)
+            letter?.visibility = View.GONE
+            onDone?.invoke(true)
+            return
+        }
+        pool.execute {
+            try {
+                val c = URL(url).openConnection() as HttpURLConnection
+                c.connectTimeout = 8000
+                c.readTimeout = 8000
+                val bmp = c.inputStream.use { BitmapFactory.decodeStream(it) } ?: throw Exception("bad image")
+                val ratio = maxPx.toFloat() / maxOf(bmp.width, bmp.height)
+                val scaled = if (ratio < 1f) {
+                    Bitmap.createScaledBitmap(
+                        bmp,
+                        (bmp.width * ratio).toInt().coerceAtLeast(1),
+                        (bmp.height * ratio).toInt().coerceAtLeast(1),
+                        true
+                    )
+                } else {
+                    bmp
+                }
+                runOnUiThread {
+                    logos.put(key, scaled)
+                    if (iv.tag == key) {
+                        iv.setImageBitmap(scaled)
+                        letter?.visibility = View.GONE
+                        onDone?.invoke(true)
+                    }
+                }
+            } catch (e: Throwable) {
+                runOnUiThread {
+                    failed.add(url)
+                    if (iv.tag == key) onDone?.invoke(false)
+                }
+            }
+        }
+    }
+
+    // ---------- donnees ----------
+
+    private fun channelsFile(): File = File(filesDir, "channels_v5.json")
+
+    private fun vodFile(): File = File(filesDir, "vod_v6.json")
+
+    private fun load() {
+        var out: MutableList<Channel>? = null
+        try {
+            val f = channelsFile()
+            if (f.exists()) {
+                val arr = JSONArray(f.readText())
+                val list = ArrayList<Channel>(arr.length())
+                for (i in 0 until arr.length()) {
+                    val o = arr.getJSONObject(i)
+                    list.add(
+                        Channel(
+                            o.getString("n"),
+                            o.getString("u"),
+                            o.optString("g", ""),
+                            o.optString("l", ""),
+                            o.optBoolean("f", false),
+                            o.optString("i", ""),
+                            o.optString("s", "")
+                        )
+                    )
+                }
+                out = list
+            }
+        } catch (e: Exception) {
+            out = null
+        }
+        val base = out ?: defaultChannels.map { it.copy() }.toMutableList()
+        all = base.distinctBy { it.url }.toMutableList()
+    }
+
+    private fun save() {
+        try {
+            val arr = JSONArray()
+            for (c in all) {
+                arr.put(
+                    JSONObject()
+                        .put("n", c.name)
+                        .put("u", c.url)
+                        .put("g", c.group)
+                        .put("l", c.logo)
+                        .put("f", c.fav)
+                        .put("i", c.tvgId)
+                        .put("s", c.src)
+                )
+            }
+            channelsFile().writeText(arr.toString())
+        } catch (e: Exception) {
+        }
+    }
+
+    private fun loadVodFile(): MutableList<Vod> {
+        val out = ArrayList<Vod>()
+        try {
+            val f = vodFile()
+            if (f.exists()) {
+                val arr = JSONArray(f.readText())
+                for (i in 0 until arr.length()) {
+                    val o = arr.getJSONObject(i)
+                    out.add(
+                        Vod(
+                            o.getString("i"),
+                            o.getString("n"),
+                            o.optString("p", ""),
+                            o.optString("g", ""),
+                            o.optInt("k", 1),
+                            o.optString("e", "mp4"),
+                            o.optString("s", ""),
+                            o.optString("r", "")
+                        )
+                    )
+                }
+            }
+        } catch (e: Throwable) {
+        }
+        return out
+    }
+
+    private fun saveVodFile(list: List<Vod>) {
+        try {
+            val arr = JSONArray()
+            for (v in list) {
+                arr.put(
+                    JSONObject()
+                        .put("i", v.id)
+                        .put("n", v.name)
+                        .put("p", v.poster)
+                        .put("g", v.group)
+                        .put("k", v.kind)
+                        .put("e", v.ext)
+                        .put("s", v.src)
+                        .put("r", v.rating)
+                )
+            }
+            vodFile().writeText(arr.toString())
+        } catch (e: Throwable) {
+        }
+    }
+
+    @Synchronized
+    private fun vodLoadOnce() {
+        if (!vodLoaded) {
+            vods = loadVodFile()
+            vodLoaded = true
+        }
+    }
+
+    private fun ensureVod() {
+        if (vodLoaded) return
+        pool.execute {
+            vodLoadOnce()
+            runOnUiThread {
+                if (section != 0) refresh(true)
+            }
+        }
+    }
+
+    private fun loadHidden(): HashSet<String> {
+        val s = prefs.getString("hidden", "") ?: ""
+        return HashSet(s.lines().filter { it.isNotBlank() })
+    }
+
+    private fun playlists(): MutableList<String> {
+        val s = prefs.getString("playlists", "") ?: ""
+        return s.lines().filter { it.isNotBlank() }.toMutableList()
+    }
+
+    private fun savePlaylists(l: List<String>) {
+        prefs.edit().putString("playlists", l.joinToString("\n")).apply()
+    }
+
+    private fun accounts(): MutableList<Account> {
+        val out = mutableListOf<Account>()
+        try {
+            val arr = JSONArray(prefs.getString("accounts", "[]") ?: "[]")
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                out.add(Account(o.optString("n", ""), o.getString("s"), o.getString("u"), o.getString("p")))
+            }
+        } catch (e: Exception) {
+        }
+        return out
+    }
+
+    private fun saveAccounts(l: List<Account>) {
+        val arr = JSONArray()
+        for (a in l) {
+            arr.put(JSONObject().put("n", a.name).put("s", a.server).put("u", a.user).put("p", a.pass))
+        }
+        prefs.edit().putString("accounts", arr.toString()).apply()
+    }
+
+    private fun accountFor(key: String): Account? = accounts().firstOrNull { it.key() == key }
+
+    private fun groupLabel(f: String): String = when (f) {
+        "" -> tr("Tous", "All", "الكل", "Todos")
+        F_FAV -> tr("★ Favoris", "★ Favorites", "★ المفضلة", "★ Favoritos")
+        F_RECENT -> tr("Récents", "Recent", "الأخيرة", "Recientes")
+        else -> f
+    }
+
+    private fun groupList(): List<String> {
+        val groups = all.map { it.group }.filter { it.isNotBlank() && !hiddenSet.contains(it) }.distinct().sorted()
+        return listOf("", F_FAV, F_RECENT) + groups
+    }
+
+    private fun changeGroup(delta: Int) {
+        if (section != 0) return
+        val l = groupList()
+        var i = l.indexOf(filter)
+        if (i < 0) i = 0
+        filter = l[(i + delta + l.size) % l.size]
+        refresh(true)
+        showOverlay(groupLabel(filter))
+    }
+
+    private fun renumber() {
+        numbers = HashMap()
+        for ((i, c) in all.withIndex()) numbers[c.url] = i + 1
+    }
+
+    private fun refresh(rebuild: Boolean) {
+        renumber()
+        if (section != 0) {
+            refreshVod(rebuild)
+            return
+        }
+        val q = search.text.toString().trim().lowercase()
+        val base: List<Channel> = when (filter) {
+            "" -> if (hiddenSet.isEmpty()) all else all.filter { !hiddenSet.contains(it.group) }
+            F_FAV -> all.filter { it.fav }
+            F_RECENT -> recent.mapNotNull { u -> all.firstOrNull { it.url == u } }
+            else -> all.filter { it.group == filter }
+        }
+        shown = if (q.isEmpty()) base.toList() else base.filter { it.name.lowercase().contains(q) }
+        adapter.notifyDataSetChanged()
+        listHeader.text = groupLabel(filter)
+        emptyText.text = tr(
+            "Aucune chaîne\n\nTouchez ⚙ pour ajouter une chaîne, un compte Xtream ou une playlist",
+            "No channels\n\nTap ⚙ to add a channel, an Xtream account or a playlist",
+            "لا توجد قنوات\n\nاضغط ⚙ لإضافة قناة أو حساب Xtream أو قائمة تشغيل",
+            "Sin canales\n\nToca ⚙ para añadir un canal, una cuenta Xtream o una lista"
+        )
+        emptyText.visibility = if (shown.isEmpty()) View.VISIBLE else View.GONE
+        search.hint = tr(
+            "Rechercher parmi " + all.size + " chaînes",
+            "Search " + all.size + " channels",
+            "ابحث في " + all.size + " قناة",
+            "Buscar entre " + all.size + " canales"
+        )
+        if (rebuild) rebuildGroups()
+    }
+
+    private fun refreshVod(rebuild: Boolean) {
+        val kind = section
+        val q = search.text.toString().trim().lowercase()
+        val base = vods.filter { it.kind == kind && (vfilter.isEmpty() || it.group == vfilter) }
+        shownVod = if (q.isEmpty()) base else base.filter { it.name.lowercase().contains(q) }
+        vodAdapter.notifyDataSetChanged()
+        listHeader.text = if (vfilter.isEmpty()) tr("Tous", "All", "الكل", "Todos") else vfilter
+        emptyText.text = if (!vodLoaded) {
+            tr("Chargement…", "Loading…", "جارٍ التحميل…", "Cargando…")
+        } else {
+            tr(
+                "Aucun contenu\n\nAjoutez un compte Xtream (⚙ → Xtream) pour charger films et séries",
+                "Nothing here\n\nAdd an Xtream account (⚙ → Xtream) to load movies and series",
+                "لا يوجد محتوى\n\nأضف حساب Xtream (⚙ ← Xtream) لتحميل الأفلام والمسلسلات",
+                "Sin contenido\n\nAñade una cuenta Xtream (⚙ → Xtream) para cargar películas y series"
+            )
+        }
+        emptyText.visibility = if (shownVod.isEmpty()) View.VISIBLE else View.GONE
+        search.hint = if (kind == 1) {
+            tr("Rechercher un film", "Search movies", "ابحث عن فيلم", "Buscar una película")
+        } else {
+            tr("Rechercher une série", "Search series", "ابحث عن مسلسل", "Buscar una serie")
+        }
+        if (rebuild) rebuildGroups()
+    }
+
+    private fun isSelectedGroup(value: String): Boolean = if (section == 0) filter == value else vfilter == value
+
+    private fun groupRow(label: String, count: Int, value: String): TextView {
+        val t = TextView(this)
+        t.text = label
+        t.textSize = ts(18f)
+        t.setTextColor(Color.parseColor("#E8EBF0"))
+        t.isSingleLine = true
+        t.ellipsize = TextUtils.TruncateAt.END
+        t.setPadding(dp(16), dp(11), dp(10), dp(11))
+        t.isFocusable = true
+        t.isClickable = true
+        t.background = groupBg(isSelectedGroup(value), false)
+        t.setOnFocusChangeListener { v, has ->
+            v.background = groupBg(isSelectedGroup(value), has)
+        }
+        return t
+    }
+
+    private fun pickGroup(value: String) {
+        if (section == 0) {
+            filter = value
+        } else {
+            vfilter = value
+        }
+        refresh(true)
+        groupViews[value]?.requestFocus()
+    }
+
+    private fun rebuildGroups() {
+        chips.removeAllViews()
+        groupCol.removeAllViews()
+        groupViews.clear()
+        val items = ArrayList<Triple<String, String, Int>>()
+        if (section == 0) {
+            val counts = HashMap<String, Int>()
+            for (c in all) {
+                if (c.group.isNotBlank()) counts[c.group] = (counts[c.group] ?: 0) + 1
+            }
+            for (g in groupList()) {
+                val n = when (g) {
+                    "" -> if (hiddenSet.isEmpty()) all.size else all.count { !hiddenSet.contains(it.group) }
+                    F_FAV -> all.count { it.fav }
+                    F_RECENT -> recent.size
+                    else -> counts[g] ?: 0
+                }
+                items.add(Triple(g, groupLabel(g), n))
+            }
+        } else {
+            val counts = HashMap<String, Int>()
+            var total = 0
+            for (v in vods) {
+                if (v.kind == section) {
+                    total++
+                    if (v.group.isNotBlank()) counts[v.group] = (counts[v.group] ?: 0) + 1
+                }
+            }
+            items.add(Triple("", tr("Tous", "All", "الكل", "Todos"), total))
+            for (g in counts.keys.sorted()) items.add(Triple(g, g, counts[g] ?: 0))
+        }
+        for (item in items) {
+            val value = item.first
+            val chip = pill(item.second, isSelectedGroup(value))
+            chip.setOnClickListener { pickGroup(value) }
+            val lp = LinearLayout.LayoutParams(-2, dp(ph(44)))
+            lp.setMargins(dp(4), 0, dp(4), 0)
+            chips.addView(chip, lp)
+
+            val row = groupRow(item.second, item.third, value)
+            row.setOnClickListener { pickGroup(value) }
+            val lp2 = LinearLayout.LayoutParams(-1, -2)
+            lp2.setMargins(0, dp(2), 0, dp(2))
+            groupCol.addView(row, lp2)
+            groupViews[value] = row
+        }
+    }
+
+    private fun setSection(s: Int) {
+        if (section == s) return
+        section = s
+        vfilter = ""
+        search.setText("")
+        updateTabs()
+        applyListMode()
+        updateDetailsVisibility()
+        if (s != 0) ensureVod()
+        refresh(true)
+    }
+
+    private fun showDetails(ch: Channel) {
+        val n = numbers[ch.url]
+        detTitle.text = (if (n != null) n.toString() + "  " else "") + ch.name
+        val now = Epg.now(ch.tvgId)
+        if (now != null) {
+            detTime.text = fmtTime(now.start) + " – " + fmtTime(now.stop) + "  " + now.title
+            detDesc.text = now.desc
+        } else {
+            detTime.text = ch.group
+            detDesc.text = ""
+        }
+    }
+
+    // ---------- lecture ----------
+
+    private fun play(ch: Channel) {
+        val exo = player ?: return
+        if (ch.url != currentUrl && !isVod) previousUrl = currentUrl
+        isVod = false
+        behindLive = false
+        vodTitle = ""
+        seekBack.visibility = View.GONE
+        seekFwd.visibility = View.GONE
+        ui.removeCallbacks(vodTicker)
+        currentUrl = ch.url
+        liveUrl = ch.url
+        retries = 0
+        recent.remove(ch.url)
+        recent.add(0, ch.url)
+        while (recent.size > 30) recent.removeAt(recent.size - 1)
+        prefs.edit()
+            .putString("last", currentUrl)
+            .putString("prev", previousUrl)
+            .putString("recent", recent.joinToString("\n"))
+            .apply()
+        if (!videoAuto) {
+            videoAuto = true
+            applyQuality(exo)
+        }
+        exo.setMediaItem(MediaItem.fromUri(ch.url))
+        exo.prepare()
+        exo.playWhenReady = true
+        updatePlayButton()
+        val n = numbers[ch.url]
+        if (n != null) {
+            numberBadge.text = n.toString()
+            numberBadge.visibility = View.VISIBLE
+            ui.removeCallbacks(hideBadge)
+            ui.postDelayed(hideBadge, 3000)
+        }
+        showBanner(ch, false)
+        if (section == 0) adapter.notifyDataSetChanged()
+    }
+
+    private fun playVod(title: String, url: String) {
+        val exo = player ?: return
+        if (!isVod) liveUrl = currentUrl
+        isVod = true
+        vodTitle = title
+        currentUrl = url
+        retries = 0
+        if (!videoAuto) {
+            videoAuto = true
+            applyQuality(exo)
+        }
+        exo.setMediaItem(MediaItem.fromUri(url))
+        exo.prepare()
+        exo.playWhenReady = true
+        updatePlayButton()
+        numberBadge.visibility = View.GONE
+        logoBadge.visibility = View.GONE
+        seekBack.visibility = View.VISIBLE
+        seekFwd.visibility = View.VISIBLE
+        showBanner(null, false)
+        ui.removeCallbacks(vodTicker)
+        ui.postDelayed(vodTicker, 1000)
+    }
+
+    private fun stopVod() {
+        isVod = false
+        vodTitle = ""
+        seekBack.visibility = View.GONE
+        seekFwd.visibility = View.GONE
+        ui.removeCallbacks(vodTicker)
+        val c = all.firstOrNull { it.url == liveUrl }
+        if (c != null) {
+            play(c)
+        } else {
+            player?.stop()
+        }
+    }
+
+    private fun openVod(v: Vod) {
+        if (v.kind == 1) {
+            val a = accountFor(v.src)
+            if (a == null) {
+                toast(tr("Compte introuvable", "Account not found", "الحساب غير موجود", "Cuenta no encontrada"))
+                return
+            }
+            val url = a.server + "/movie/" + Uri.encode(a.user) + "/" + Uri.encode(a.pass) + "/" + v.id + "." + v.ext
+            playVod(v.name, url)
+            if (isLandscape()) closePanel()
+        } else {
+            seriesDialog(v)
+        }
+    }
+
+    private fun parseEpisodes(o: JSONObject): List<Episode> {
+        val out = ArrayList<Episode>()
+        val e = o.opt("episodes")
+        fun addArr(arr: JSONArray, defSeason: Int) {
+            for (i in 0 until arr.length()) {
+                val x = arr.optJSONObject(i) ?: continue
+                val info = x.optJSONObject("info")
+                val season = x.optString("season", "").toIntOrNull() ?: defSeason
+                val num = js(x, "episode_num").toIntOrNull() ?: (i + 1)
+                val title = js(x, "title").ifEmpty { "Episode " + num }
+                val ext = js(x, "container_extension").ifEmpty { "mp4" }
+                val plot = if (info != null) js(info, "plot") else ""
+                out.add(Episode(js(x, "id"), title, season, num, ext, plot))
+            }
+        }
+        if (e is JSONObject) {
+            val keys = e.keys()
+            while (keys.hasNext()) {
+                val k = keys.next()
+                val arr = e.optJSONArray(k) ?: continue
+                addArr(arr, k.toIntOrNull() ?: 0)
+            }
+        } else if (e is JSONArray) {
+            for (i in 0 until e.length()) {
+                val arr = e.optJSONArray(i)
+                if (arr != null) addArr(arr, i + 1)
+            }
+        }
+        out.sortWith(compareBy({ it.season }, { it.num }))
+        return out
+    }
+
+    private fun seriesDialog(v: Vod) {
+        val a = accountFor(v.src)
+        if (a == null) {
+            toast(tr("Compte introuvable", "Account not found", "الحساب غير موجود", "Cuenta no encontrada"))
+            return
+        }
+        toast(tr("Chargement…", "Loading…", "جارٍ التحميل…", "Cargando…"))
+        pool.execute {
+            try {
+                val txt = httpGet(a.server + "/player_api.php?" + xtreamAuth(a) + "&action=get_series_info&series_id=" + v.id)
+                val eps = parseEpisodes(JSONObject(txt))
+                runOnUiThread {
+                    if (eps.isEmpty()) {
+                        toast(tr("Aucun épisode", "No episodes", "لا توجد حلقات", "Sin episodios"))
+                    } else {
+                        seasonDialog(a, v, eps)
+                    }
+                }
+            } catch (e: Exception) {
+                runOnUiThread { toast(tr("Erreur : ", "Error: ", "خطأ: ", "Error: ") + e.message) }
+            }
+        }
+    }
+
+    private fun seasonDialog(a: Account, v: Vod, eps: List<Episode>) {
+        val seasons = eps.map { it.season }.distinct().sorted()
+        if (seasons.size <= 1) {
+            episodeDialog(a, v, eps)
+            return
+        }
+        val labels = seasons.map { s ->
+            tr("Saison ", "Season ", "الموسم ", "Temporada ") + s + "  (" + eps.count { it.season == s } + ")"
+        }
+        dialog().setTitle(v.name).setItems(labels.toTypedArray()) { _, i ->
+            episodeDialog(a, v, eps.filter { it.season == seasons[i] })
+        }.show()
+    }
+
+    private fun episodeDialog(a: Account, v: Vod, list: List<Episode>) {
+        val labels = list.map { e -> "E" + e.num + "   " + e.title }
+        dialog().setTitle(v.name).setItems(labels.toTypedArray()) { _, i ->
+            val e = list[i]
+            val url = a.server + "/series/" + Uri.encode(a.user) + "/" + Uri.encode(a.pass) + "/" + e.id + "." + e.ext
+            playVod(v.name + "  S" + e.season + "E" + e.num, url)
+            if (isLandscape()) closePanel()
+        }.show()
+    }
+
+    private fun step(delta: Int) {
+        if (isVod) return
+        val list = if (section == 0 && shown.isNotEmpty()) shown else all
+        if (list.isEmpty()) return
+        val idx = list.indexOfFirst { it.url == currentUrl }
+        val next = if (idx < 0) 0 else (idx + delta + list.size) % list.size
+        play(list[next])
+        if (section == 0 && list === shown) recycler.scrollToPosition(next)
+    }
+
+    private fun lastChannel() {
+        val c = all.firstOrNull { it.url == previousUrl }
+        if (c != null) {
+            play(c)
+        } else {
+            toast(tr("Pas de chaîne précédente", "No previous channel", "لا توجد قناة سابقة", "Sin canal anterior"))
+        }
+    }
+
+    private fun toggleFavCurrent() {
+        val c = all.firstOrNull { it.url == currentUrl } ?: return
+        c.fav = !c.fav
+        save()
+        refresh(false)
+        showOverlay(
+            if (c.fav) tr("★ Ajoutée aux favoris", "★ Added to favorites", "★ أضيفت للمفضلة", "★ Añadido a favoritos")
+            else tr("Retirée des favoris", "Removed from favorites", "أزيلت من المفضلة", "Quitado de favoritos")
+        )
+    }
+
+    private fun playPause() {
+        val p = player ?: return
+        if (p.playWhenReady) {
+            p.pause()
+            showOverlay(tr("Pause", "Pause", "إيقاف مؤقت", "Pausa"))
+        } else {
+            p.play()
+            showOverlay(tr("Lecture", "Play", "تشغيل", "Reproducción"))
+        }
+    }
+
+    private fun toggleMute() {
+        val p = player ?: return
+        muted = !muted
+        p.volume = if (muted) 0f else 1f
+        showOverlay(
+            if (muted) tr("Son coupé", "Muted", "تم كتم الصوت", "Silenciado")
+            else tr("Son activé", "Sound on", "تم تشغيل الصوت", "Sonido activado")
+        )
+    }
+
+    private fun seekBy(ms: Long) {
+        val p = player ?: return
+        if (!isVod) {
+            if (!p.isCurrentMediaItemSeekable) return
+            val off = p.currentLiveOffset
+            if (ms > 0L && off != C.TIME_UNSET && off <= ms + 1500L) {
+                goToLive()
+                return
+            }
+        }
+        val dur = p.duration
+        var t = p.currentPosition + ms
+        if (t < 0L) t = 0L
+        if (dur > 0L && dur != C.TIME_UNSET && t > dur - 1000L) t = dur - 1000L
+        p.seekTo(t)
+        showBanner(null, controlsVisible)
+        if (isVod) updateVodProgress()
+    }
+
+    private fun updateVodProgress() {
+        val p = player ?: return
+        val dur = p.duration
+        val pos = p.currentPosition
+        if (dur > 0L && dur != C.TIME_UNSET) {
+            val pr = ((pos * 100) / dur).toInt().coerceIn(0, 100)
+            bannerBar.visibility = View.VISIBLE
+            bannerBar.progress = pr
+            bannerTimeline.progress = pr
+            bannerTime.text = fmtDur(pos) + " / " + fmtDur(dur)
+            bannerTime.visibility = View.VISIBLE
+            bannerLeft.visibility = View.GONE
+        } else {
+            bannerBar.visibility = View.GONE
+            bannerTime.visibility = View.GONE
+            bannerLeft.visibility = View.GONE
+        }
+    }
+
+    private fun showOverlay(text: String) {
+        overlay.text = text
+        overlay.visibility = View.VISIBLE
+        ui.removeCallbacks(hideOverlay)
+        ui.postDelayed(hideOverlay, 2500)
+    }
+
+    private fun showBanner(ch: Channel?, controlsOn: Boolean) {
+        if (inPip) return
+        if (quickOpen) closeQuick()
+        bannerClock.text = fmtTime(System.currentTimeMillis())
+        bannerInfo.text = infoLine()
+        updateOsdTop()
+        updateBadges()
+        if (isVod) {
+            bannerNow.text = vodTitle
+            bannerTitle.text = ""
+            bannerLetter.text = vodTitle.trim().take(1).uppercase()
+            bannerLetter.visibility = View.VISIBLE
+            bannerLogo.setImageDrawable(null)
+            bannerNext.visibility = View.GONE
+            logoBadge.visibility = View.GONE
+            updateVodProgress()
+        } else {
+            val c = ch ?: all.firstOrNull { it.url == currentUrl }
+            if (c != null) {
+                val n = numbers[c.url]
+                bannerTitle.text = (if (n != null) n.toString() + "   " else "") + c.name
+                bannerLetter.text = c.name.trim().take(1).uppercase()
+                loadLogo(logoFor(c), bannerLogo, bannerLetter, 200)
+                updateLogoBadge(c)
+                val now = Epg.now(c.tvgId)
+                val nxt = Epg.next(c.tvgId)
+                if (now != null) {
+                    bannerNow.text = now.title
+                    bannerTime.text = fmtTime(now.start) + " – " + fmtTime(now.stop)
+                    bannerTime.visibility = View.VISIBLE
+                    val left = ((now.stop - System.currentTimeMillis()) / 60000L).toInt() + 1
+                    bannerLeft.text = (if (left < 1) 1 else left).toString() + " min"
+                    bannerLeft.visibility = View.VISIBLE
+                    bannerBar.progress = progressOf(now)
+                    bannerBar.visibility = View.VISIBLE
+                    bannerTimeline.progress = progressOf(now)
+                } else {
+                    bannerNow.text = tr("Pas d'information", "No information", "لا توجد معلومات", "Sin información")
+                    bannerTime.visibility = View.GONE
+                    bannerLeft.visibility = View.GONE
+                    bannerBar.visibility = View.GONE
+                    bannerTimeline.progress = 0
+                }
+                if (nxt != null) {
+                    bannerNext.text = fmtTime(nxt.start) + " – " + fmtTime(nxt.stop) + "   " + nxt.title
+                    bannerNext.visibility = View.VISIBLE
+                } else {
+                    bannerNext.visibility = View.GONE
+                }
+            }
+        }
+        banner.visibility = View.VISIBLE
+        controlsVisible = controlsOn
+        val wide = isLandscape() || tv
+        if (controlsOn && wide) {
+            populateTiles()
+            tilesScroll.visibility = View.VISIBLE
+            controls.visibility = View.GONE
+        } else {
+            tilesScroll.visibility = View.GONE
+            controls.visibility = if (controlsOn) View.VISIBLE else View.GONE
+        }
+        ui.removeCallbacks(hideBanner)
+        ui.postDelayed(hideBanner, if (controlsOn) 8000L else 4000L)
+        if (controlsOn && wide) {
+            tilesRow.postDelayed({ tilesRow.getChildAt(0)?.requestFocus() }, 80)
+        }
+    }
+
+    private fun onSingleTap() {
+        if (panelOpen) {
+            closePanel()
+            return
+        }
+        if (quickOpen) {
+            closeQuick()
+            return
+        }
+        if (banner.visibility == View.VISIBLE && controlsVisible) {
+            ui.removeCallbacks(hideBanner)
+            hideBanner.run()
+        } else {
+            showBanner(null, true)
+        }
+    }
+
+    private fun resizeName(i: Int): String = when (i) {
+        0 -> tr("Ajusté", "Fit", "ملائم", "Ajustado")
+        1 -> tr("Étiré", "Stretch", "ممتد", "Estirado")
+        else -> tr("Zoom", "Zoom", "تكبير", "Zoom")
+    }
+
+    private fun cycleResize() {
+        resizeIndex = (resizeIndex + 1) % resizeModes.size
+        playerView.setResizeMode(resizeModes[resizeIndex])
+        prefs.edit().putInt("resize", resizeIndex).apply()
+        showOverlay(tr("Format : ", "Aspect: ", "النسبة: ", "Formato: ") + resizeName(resizeIndex))
+    }
+
+    // ---------- affichage ----------
+
+    private fun computePosterW(): Int {
+        val m = resources.displayMetrics
+        val land = m.widthPixels > m.heightPixels
+        val pw0 = minOf(dp(680), m.widthPixels * 66 / 100)
+        val listW = if (land) pw0 - pw0 * 42 / 100 else m.widthPixels
+        return ((listW - dp(28)) / 3) - dp(8)
+    }
+
+    private fun applyListMode() {
+        posterW = computePosterW()
+        val key = section * 100000 + posterW
+        if (key == modeKey) return
+        modeKey = key
+        if (section == 0) {
+            recycler.layoutManager = LinearLayoutManager(this)
+            recycler.adapter = adapter
+        } else {
+            recycler.layoutManager = GridLayoutManager(this, 3)
+            recycler.adapter = vodAdapter
+        }
+    }
+
+    private fun updateDetailsVisibility() {
+        val m = resources.displayMetrics
+        val land = m.widthPixels > m.heightPixels
+        details.visibility = View.GONE
+    }
+
+    private fun applyLayout() {
+        val m = resources.displayMetrics
+        val land = m.widthPixels > m.heightPixels
+        val pl: FrameLayout.LayoutParams
+        val ql: FrameLayout.LayoutParams
+        val qp = FrameLayout.LayoutParams(minOf(dp(320), m.widthPixels * 70 / 100), -1)
+        qp.gravity = Gravity.END
+        if (inPip) {
+            pl = FrameLayout.LayoutParams(-1, -1)
+            ql = FrameLayout.LayoutParams(-1, -1)
+            panel.visibility = View.GONE
+            quickScroll.visibility = View.GONE
+        } else if (land) {
+            pl = FrameLayout.LayoutParams(-1, -1)
+            val pw = minOf(dp(680), m.widthPixels * 66 / 100)
+            ql = FrameLayout.LayoutParams(pw, -1)
+            ql.gravity = Gravity.START
+            groupScroll.layoutParams = LinearLayout.LayoutParams(pw * 42 / 100, -1)
+            panel.setBackgroundColor(Color.parseColor("#B8000000"))
+            panel.visibility = if (panelOpen) View.VISIBLE else View.GONE
+            quickScroll.visibility = if (quickOpen) View.VISIBLE else View.GONE
+            groupScroll.visibility = View.VISIBLE
+            chipsScroll.visibility = View.GONE
+        } else {
+            panelOpen = false
+            quickOpen = false
+            val playerH = m.widthPixels * 9 / 16
+            pl = FrameLayout.LayoutParams(-1, playerH)
+            ql = FrameLayout.LayoutParams(-1, -1)
+            ql.topMargin = playerH
+            panel.setBackgroundColor(BG)
+            panel.visibility = View.VISIBLE
+            quickScroll.visibility = View.GONE
+            groupScroll.visibility = View.GONE
+            chipsScroll.visibility = View.VISIBLE
+        }
+        panel.translationX = 0f
+        quickScroll.translationX = 0f
+        playerFrame.layoutParams = pl
+        panel.layoutParams = ql
+        quickScroll.layoutParams = qp
+        val lh = ((if (land) dp(if (tv) 72 else 56) else dp(40)) * logoScale()).toInt()
+        logoBadge.maxHeight = lh
+        logoBadge.maxWidth = lh * 3
+        if (inPip) logoBadge.visibility = View.GONE
+        listBtn.visibility = if (land) View.VISIBLE else View.GONE
+        applyListMode()
+        updateDetailsVisibility()
+        applySystemUi()
+    }
+
+    private fun applySystemUi() {
+        window.decorView.systemUiVisibility = if (isLandscape() && !inPip) {
+            View.SYSTEM_UI_FLAG_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+        } else {
+            (if (pal === Design.light && Build.VERSION.SDK_INT >= 23) View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR else View.SYSTEM_UI_FLAG_VISIBLE)
+        }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) applySystemUi()
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        if (!isLandscape()) forcedLandscape = false
+        applyLayout()
+    }
+
+    private fun hiddenShift(): Float {
+        val w = panel.layoutParams.width.toFloat()
+        return if (isRtl()) w else -w
+    }
+
+    private fun openPanel(focusRows: Boolean = true) {
+        if (!isLandscape() || inPip) return
+        if (quickOpen) closeQuick()
+        if (panelOpen) return
+        panelOpen = true
+        panel.visibility = View.VISIBLE
+        panel.translationX = hiddenShift()
+        panel.animate().translationX(0f).setDuration(180).start()
+        ui.removeCallbacks(hideBanner)
+        hideBanner.run()
+        if (focusRows) {
+            if (section == 0) {
+                val idx = shown.indexOfFirst { it.url == currentUrl }.coerceAtLeast(0)
+                recycler.scrollToPosition(idx)
+                recycler.postDelayed({
+                    recycler.findViewHolderForAdapterPosition(idx)?.itemView?.requestFocus()
+                }, 80)
+            } else {
+                recycler.postDelayed({
+                    recycler.findViewHolderForAdapterPosition(0)?.itemView?.requestFocus()
+                }, 80)
+            }
+        }
+    }
+
+    private fun closePanel() {
+        if (!panelOpen) return
+        panelOpen = false
+        hideKeyboard()
+        panel.animate().translationX(hiddenShift()).setDuration(160).withEndAction {
+            if (!panelOpen) {
+                panel.visibility = View.GONE
+                panel.translationX = 0f
+            }
+        }.start()
+        root.requestFocus()
+    }
+
+    private fun openQuick() {
+        if (inPip) return
+        if (!isLandscape() && !tv) {
+            quickDialog()
+            return
+        }
+        if (panelOpen) closePanel()
+        if (quickOpen) return
+        populateOptions()
+        quickOpen = true
+        ui.removeCallbacks(hideBanner)
+        banner.visibility = View.GONE
+        controlsVisible = false
+        tilesScroll.visibility = View.GONE
+        controls.visibility = View.GONE
+        updateOsdTop()
+        optionsBar.visibility = View.VISIBLE
+        ui.postDelayed(hideBanner, 9000L)
+        optRow.postDelayed({ optRow.getChildAt(0)?.requestFocus() }, 80)
+    }
+
+    private fun closeQuick() {
+        if (!quickOpen) return
+        hideOsd()
+    }
+
+    private fun toggleFullscreen() {
+        if (isLandscape()) {
+            forcedLandscape = false
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            ui.postDelayed({
+                requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            }, 1200)
+        } else {
+            forcedLandscape = true
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        }
+    }
+
+    private fun enterPip() {
+        if (Build.VERSION.SDK_INT >= 26) {
+            try {
+                enterPictureInPictureMode(
+                    PictureInPictureParams.Builder().setAspectRatio(Rational(16, 9)).build()
+                )
+            } catch (e: Exception) {
+                toast("PiP ✗")
+            }
+        } else {
+            toast("PiP ✗")
+        }
+    }
+
+    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        inPip = isInPictureInPictureMode
+        if (inPip) {
+            panelOpen = false
+            quickOpen = false
+            ui.removeCallbacks(hideBanner)
+            hideBanner.run()
+        }
+        applyLayout()
+    }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        if (!tv && isLandscape() && player?.isPlaying == true) enterPip()
+    }
+
+    override fun onBackPressed() {
+        if (settingsOpen) {
+            closeSettings()
+            return
+        }
+        if (quickOpen) {
+            closeQuick()
+            return
+        }
+        if (panelOpen) {
+            closePanel()
+            return
+        }
+        if (controlsVisible) {
+            ui.removeCallbacks(hideBanner)
+            hideBanner.run()
+            return
+        }
+        if (isVod) {
+            stopVod()
+            return
+        }
+        if (forcedLandscape) {
+            toggleFullscreen()
+            return
+        }
+        val now = System.currentTimeMillis()
+        if (now - lastBack < 2000) {
+            super.onBackPressed()
+        } else {
+            lastBack = now
+            toast(tr("Appuyez encore pour quitter", "Press again to exit", "اضغط مرة أخرى للخروج", "Pulsa otra vez para salir"))
+        }
+    }
+
+    // ---------- telecommande ----------
+
+    private fun isCenter(k: Int): Boolean =
+        k == KeyEvent.KEYCODE_DPAD_CENTER || k == KeyEvent.KEYCODE_ENTER || k == KeyEvent.KEYCODE_NUMPAD_ENTER
+
+    private fun okAction() {
+        if (goLive.visibility == View.VISIBLE) {
+            goToLive()
+            return
+        }
+        if (isVod) {
+            playPause()
+            showBanner(null, true)
+            return
+        }
+        when (prefs.getInt("ok_action", 1)) {
+            0 -> openPanel()
+            1 -> showBanner(null, true)
+            2 -> playPause()
+            else -> openQuick()
+        }
+    }
+
+    private fun goSearch() {
+        if (isLandscape()) openPanel(false)
+        search.requestFocus()
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.showSoftInput(search, 0)
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (settingsOpen) {
+            if (keyCode == KeyEvent.KEYCODE_MENU) {
+                closeSettings()
+                return true
+            }
+            return super.onKeyDown(keyCode, event)
+        }
+        if (keyCode >= KeyEvent.KEYCODE_0 && keyCode <= KeyEvent.KEYCODE_9 && !search.hasFocus() && !isVod) {
+            digits += (keyCode - KeyEvent.KEYCODE_0).toString()
+            if (digits.length > 4) digits = digits.takeLast(4)
+            showOverlay(tr("Chaîne ", "Channel ", "القناة ", "Canal ") + digits)
+            ui.removeCallbacks(digitRunnable)
+            ui.postDelayed(digitRunnable, 1500)
+            return true
+        }
+        when (keyCode) {
+            KeyEvent.KEYCODE_CHANNEL_UP, KeyEvent.KEYCODE_PAGE_UP, KeyEvent.KEYCODE_MEDIA_NEXT -> {
+                step(1)
+                return true
+            }
+            KeyEvent.KEYCODE_CHANNEL_DOWN, KeyEvent.KEYCODE_PAGE_DOWN, KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
+                step(-1)
+                return true
+            }
+            KeyEvent.KEYCODE_LAST_CHANNEL -> {
+                lastChannel()
+                return true
+            }
+            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PAUSE -> {
+                playPause()
+                return true
+            }
+            KeyEvent.KEYCODE_MEDIA_REWIND -> {
+                if (isVod || canSeekLive()) seekBy(-30000L) else changeGroup(-1)
+                return true
+            }
+            KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> {
+                if (isVod || canSeekLive()) seekBy(30000L) else changeGroup(1)
+                return true
+            }
+            KeyEvent.KEYCODE_INFO -> {
+                showBanner(null, true)
+                return true
+            }
+            KeyEvent.KEYCODE_GUIDE -> {
+                if (panelOpen) closePanel() else openPanel()
+                return true
+            }
+            KeyEvent.KEYCODE_PROG_RED -> {
+                toggleFavCurrent()
+                return true
+            }
+            KeyEvent.KEYCODE_PROG_GREEN -> {
+                cycleResize()
+                return true
+            }
+            KeyEvent.KEYCODE_PROG_YELLOW -> {
+                sleepDialog()
+                return true
+            }
+            KeyEvent.KEYCODE_PROG_BLUE, KeyEvent.KEYCODE_MENU -> {
+                menuDialog()
+                return true
+            }
+            KeyEvent.KEYCODE_MEDIA_RECORD -> {
+                toggleRecord()
+                return true
+            }
+            KeyEvent.KEYCODE_CAPTIONS -> {
+                trackDialog(C.TRACK_TYPE_TEXT)
+                return true
+            }
+            KeyEvent.KEYCODE_MEDIA_AUDIO_TRACK -> {
+                trackDialog(C.TRACK_TYPE_AUDIO)
+                return true
+            }
+            KeyEvent.KEYCODE_SEARCH -> {
+                goSearch()
+                return true
+            }
+            KeyEvent.KEYCODE_BOOKMARK -> {
+                if (section != 0) setSection(0)
+                filter = F_FAV
+                refresh(true)
+                openPanel()
+                return true
+            }
+        }
+        if (isLandscape() && !inPip) {
+            val startKey = if (isRtl()) KeyEvent.KEYCODE_DPAD_RIGHT else KeyEvent.KEYCODE_DPAD_LEFT
+            val endKey = if (isRtl()) KeyEvent.KEYCODE_DPAD_LEFT else KeyEvent.KEYCODE_DPAD_RIGHT
+            if (quickOpen) {
+                ui.removeCallbacks(hideBanner)
+                ui.postDelayed(hideBanner, 9000L)
+                if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+                    closeQuick()
+                    showBanner(null, true)
+                    return true
+                }
+                return super.onKeyDown(keyCode, event)
+            }
+            if (panelOpen) {
+                if (keyCode == startKey && groupCol.hasFocus()) {
+                    closePanel()
+                    return true
+                }
+                return super.onKeyDown(keyCode, event)
+            }
+            if (controlsVisible && tilesScroll.visibility == View.VISIBLE) {
+                ui.removeCallbacks(hideBanner)
+                ui.postDelayed(hideBanner, 8000L)
+                if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                    openQuick()
+                    return true
+                }
+                if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+                    hideOsd()
+                    return true
+                }
+                return super.onKeyDown(keyCode, event)
+            }
+            if (isCenter(keyCode)) {
+                if (event != null && event.repeatCount == 0) event.startTracking()
+                return true
+            }
+            if (isVod) {
+                val big = event != null && event.repeatCount > 2
+                when (keyCode) {
+                    KeyEvent.KEYCODE_DPAD_LEFT -> {
+                        seekBy(if (big) -30000L else -10000L)
+                        return true
+                    }
+                    KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                        seekBy(if (big) 30000L else 10000L)
+                        return true
+                    }
+                    KeyEvent.KEYCODE_DPAD_UP -> {
+                        showBanner(null, true)
+                        return true
+                    }
+                    KeyEvent.KEYCODE_DPAD_DOWN -> {
+                        openQuick()
+                        return true
+                    }
+                }
+            } else {
+                val inv = prefs.getBoolean("inv_updown", false)
+                if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+                    step(if (inv) 1 else -1)
+                    return true
+                }
+                if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                    step(if (inv) -1 else 1)
+                    return true
+                }
+                if (keyCode == startKey) {
+                    openPanel()
+                    return true
+                }
+                if (keyCode == endKey) {
+                    openQuick()
+                    return true
+                }
+            }
+        }
+        return super.onKeyDown(keyCode, event)
+    }
+
+    override fun onKeyLongPress(keyCode: Int, event: KeyEvent?): Boolean {
+        if (isCenter(keyCode) && isLandscape() && !inPip && !panelOpen && !quickOpen && !isVod && !settingsOpen) {
+            toggleFavCurrent()
+            return true
+        }
+        return super.onKeyLongPress(keyCode, event)
+    }
+
+    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
+        if (isCenter(keyCode) && isLandscape() && !inPip && !panelOpen && !quickOpen && !settingsOpen &&
+            event != null && event.isTracking && !event.isCanceled
+        ) {
+            okAction()
+            return true
+        }
+        return super.onKeyUp(keyCode, event)
+    }
+
+    // ---------- panneau d'options ----------
+
+    private fun qi(label: String, action: () -> Unit): Pair<String, () -> Unit> = Pair(label, action)
+
+    private fun quickItems(): List<Pair<String, () -> Unit>> {
+        val c = all.firstOrNull { it.url == currentUrl }
+        val l = ArrayList<Pair<String, () -> Unit>>()
+        l.add(qi(tr("Audio", "Audio", "الصوت", "Audio")) { trackDialog(C.TRACK_TYPE_AUDIO) })
+        l.add(qi(tr("Sous-titres", "Subtitles", "الترجمة", "Subtítulos")) { trackDialog(C.TRACK_TYPE_TEXT) })
+        l.add(
+            qi(
+                tr("Qualité vidéo : ", "Video quality: ", "جودة الفيديو: ", "Calidad de vídeo: ") +
+                    (if (videoAuto) "Auto" else tr("Fixe", "Fixed", "ثابت", "Fija"))
+            ) { videoDialog() }
+        )
+        l.add(qi(tr("Format : ", "Aspect: ", "النسبة: ", "Formato: ") + resizeName(resizeIndex)) { cycleResize() })
+        l.add(
+            qi(
+                if (muted) tr("Réactiver le son", "Unmute", "تشغيل الصوت", "Activar sonido")
+                else tr("Couper le son", "Mute", "كتم الصوت", "Silenciar")
+            ) { toggleMute() }
+        )
+        if (!isVod) {
+            l.add(
+                qi(
+                    if (c != null && c.fav) tr("Retirer des favoris", "Remove from favorites", "إزالة من المفضلة", "Quitar de favoritos")
+                    else tr("Ajouter aux favoris", "Add to favorites", "إضافة للمفضلة", "Añadir a favoritos")
+                ) { toggleFavCurrent() }
+            )
+            l.add(qi(tr("Programmes de la chaîne", "Channel schedule", "برامج القناة", "Programación del canal")) {
+                if (c != null) guideDialog(c)
+            })
+            l.add(qi(tr("Chaîne précédente", "Last channel", "القناة الأخيرة", "Último canal")) { lastChannel() })
+            l.add(qi(tr("Retour au direct", "Go to Live", "العودة للبث المباشر", "Ir al directo")) { goToLive() })
+            l.add(
+                qi(
+                    if (recorder.active) tr("Arrêter l'enregistrement", "Stop recording", "إيقاف التسجيل", "Detener grabación")
+                    else tr("Enregistrer (PVR)", "Record (PVR)", "تسجيل (PVR)", "Grabar (PVR)")
+                ) { toggleRecord() }
+            )
+        } else {
+            l.add(qi("−30 s") { seekBy(-30000L) })
+            l.add(qi("+30 s") { seekBy(30000L) })
+            l.add(qi(tr("Arrêter et revenir à la TV", "Stop and back to TV", "إيقاف والعودة للتلفاز", "Parar y volver a la TV")) { stopVod() })
+        }
+        l.add(qi(tr("Minuteur de veille", "Sleep timer", "مؤقت النوم", "Temporizador")) { sleepDialog() })
+        l.add(qi(tr("Rechercher", "Search", "بحث", "Buscar")) { globalSearchDialog() })
+        if (!tv) l.add(qi("PiP") { enterPip() })
+        l.add(qi(tr("Réglages", "Settings", "الإعدادات", "Ajustes")) { menuDialog() })
+        return l
+    }
+
+    private fun quickDialog() {
+        val items = quickItems()
+        dialog().setTitle(tr("Options", "Options", "خيارات", "Opciones"))
+            .setItems(items.map { it.first }.toTypedArray()) { _, i -> items[i].second() }
+            .show()
+    }
+
+    private fun trackDialog(type: Int) {
+        if (type == C.TRACK_TYPE_VIDEO) {
+            videoDialog()
+            return
+        }
+        val exo = player ?: return
+        val titleText = when (type) {
+            C.TRACK_TYPE_AUDIO -> tr("Audio", "Audio", "الصوت", "Audio")
+            C.TRACK_TYPE_TEXT -> tr("Sous-titres", "Subtitles", "الترجمة", "Subtítulos")
+            else -> tr("Qualité vidéo", "Video quality", "جودة الفيديو", "Calidad de vídeo")
+        }
+        val labels = ArrayList<String>()
+        val actions = ArrayList<() -> Unit>()
+        var base = 0
+        if (type == C.TRACK_TYPE_TEXT) {
+            base = 1
+            labels.add(tr("Désactivés", "Off", "إيقاف", "Desactivados"))
+            actions.add {
+                exo.trackSelectionParameters = exo.trackSelectionParameters.buildUpon()
+                    .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
+                    .build()
+            }
+        } else if (type == C.TRACK_TYPE_VIDEO) {
+            base = 1
+            labels.add(tr("Auto", "Auto", "تلقائي", "Auto"))
+            actions.add {
+                exo.trackSelectionParameters = exo.trackSelectionParameters.buildUpon()
+                    .clearOverridesOfType(C.TRACK_TYPE_VIDEO)
+                    .build()
+            }
+        }
+        for (g in exo.currentTracks.groups) {
+            if (g.type != type || !g.isSupported()) continue
+            for (i in 0 until g.length) {
+                val f = g.getTrackFormat(i)
+                val parts = ArrayList<String>()
+                if (type == C.TRACK_TYPE_VIDEO) {
+                    if (f.height > 0) parts.add(f.height.toString() + "p")
+                    if (f.bitrate > 0) parts.add((f.bitrate / 1000).toString() + " kb/s")
+                } else {
+                    val lang = f.language
+                    if (!lang.isNullOrBlank() && lang != "und") {
+                        parts.add(Locale(lang).getDisplayLanguage(Locale(langCode())))
+                    }
+                    val lb = f.label
+                    if (!lb.isNullOrBlank()) parts.add(lb)
+                    if (type == C.TRACK_TYPE_AUDIO && f.channelCount > 0) parts.add(f.channelCount.toString() + " ch")
+                }
+                if (parts.isEmpty()) parts.add("#" + (labels.size + 1))
+                labels.add((if (g.isTrackSelected(i)) "● " else "○ ") + parts.joinToString(" • "))
+                val group = g.mediaTrackGroup
+                val idx = i
+                actions.add {
+                    exo.trackSelectionParameters = exo.trackSelectionParameters.buildUpon()
+                        .setTrackTypeDisabled(type, false)
+                        .setOverrideForType(TrackSelectionOverride(group, idx))
+                        .build()
+                }
+            }
+        }
+        if (labels.size <= base) {
+            toast(tr("Aucune piste disponible", "No tracks available", "لا توجد مسارات", "Sin pistas disponibles"))
+            return
+        }
+        dialog().setTitle(titleText).setItems(labels.toTypedArray()) { _, i -> actions[i]() }.show()
+    }
+
+    private fun guideDialog(ch: Channel) {
+        val l = Epg.list(ch.tvgId).take(60)
+        if (l.isEmpty()) {
+            toast(tr("Pas de guide pour cette chaîne", "No guide for this channel", "لا يوجد دليل لهذه القناة", "Sin guía para este canal"))
+            return
+        }
+        val t = System.currentTimeMillis()
+        val labels = l.map { p ->
+            (if (p.start <= t) "▶ " else "") + dayFmt.format(Date(p.start)) + "  " + p.title
+        }
+        dialog().setTitle(ch.name).setItems(labels.toTypedArray()) { _, i ->
+            val p = l[i]
+            dialog().setTitle(p.title)
+                .setMessage(fmtTime(p.start) + " – " + fmtTime(p.stop) + "\n\n" + p.desc)
+                .setPositiveButton("OK", null)
+                .show()
+        }.show()
+    }
+
+    private fun updateLogoBadge(c: Channel?) {
+        val mode = prefs.getInt("logo_mode", 0)
+        ui.removeCallbacks(hideLogo)
+        if (mode == 2 || c == null || c.logo.isBlank() || isVod || inPip) {
+            logoBadge.visibility = View.GONE
+            return
+        }
+        loadLogo(c.logo, logoBadge, null, 240) { ok ->
+            if (ok && currentUrl == c.url && !isVod) {
+                logoBadge.visibility = View.VISIBLE
+                if (mode == 0) ui.postDelayed(hideLogo, 4000)
+            } else {
+                logoBadge.visibility = View.GONE
+            }
+        }
+    }
+
+    private fun videoDialog() {
+        val exo = player ?: return
+        val labels = ArrayList<String>()
+        val actions = ArrayList<() -> Unit>()
+        fun addAuto(label: String, h: Int) {
+            val sel = videoAuto && maxHeight == h
+            labels.add((if (sel) "● " else "○ ") + label)
+            actions.add {
+                videoAuto = true
+                maxHeight = h
+                prefs.edit().putInt("maxh", h).apply()
+                applyQuality(exo)
+                showOverlay(label)
+            }
+        }
+        addAuto(tr("Auto (recommandé)", "Auto (recommended)", "تلقائي (موصى به)", "Auto (recomendado)"), 0)
+        addAuto(tr("Auto limité à 1080p", "Auto capped at 1080p", "تلقائي حتى 1080p", "Auto limitado a 1080p"), 1080)
+        addAuto(tr("Auto limité à 720p", "Auto capped at 720p", "تلقائي حتى 720p", "Auto limitado a 720p"), 720)
+        addAuto(tr("Auto limité à 480p", "Auto capped at 480p", "تلقائي حتى 480p", "Auto limitado a 480p"), 480)
+        for (g in exo.currentTracks.groups) {
+            if (g.type != C.TRACK_TYPE_VIDEO || !g.isSupported()) continue
+            for (i in 0 until g.length) {
+                val f = g.getTrackFormat(i)
+                val parts = ArrayList<String>()
+                if (f.height > 0) parts.add(f.height.toString() + "p")
+                if (f.bitrate > 0) parts.add(String.format(Locale.US, "%.1f Mb/s", f.bitrate / 1000000.0))
+                if (parts.isEmpty()) parts.add("#" + (i + 1))
+                val sel = !videoAuto && g.isTrackSelected(i)
+                labels.add((if (sel) "● " else "○ ") + tr("Fixe : ", "Fixed: ", "ثابت: ", "Fija: ") + parts.joinToString(" • "))
+                val group = g.mediaTrackGroup
+                val idx = i
+                actions.add {
+                    videoAuto = false
+                    exo.trackSelectionParameters = exo.trackSelectionParameters.buildUpon()
+                        .setMaxVideoSize(Int.MAX_VALUE, Int.MAX_VALUE)
+                        .setOverrideForType(TrackSelectionOverride(group, idx))
+                        .build()
+                    showOverlay(parts.joinToString(" • "))
+                }
+            }
+        }
+        val box = LinearLayout(this)
+        box.orientation = LinearLayout.VERTICAL
+        box.setPadding(dp(16), dp(8), dp(16), 0)
+        val info = TextView(this)
+        info.text = tr(
+            "Mode Auto : adaptation dynamique. Le lecteur analyse en continu votre bande passante pour éviter les coupures et la mise en mémoire tampon (buffering).",
+            "Auto mode: dynamic adaptation. The player continuously analyzes your bandwidth to avoid interruptions and buffering.",
+            "الوضع التلقائي: تكيّف ديناميكي. يحلل المشغّل سرعة الإنترنت باستمرار لتجنب الانقطاع والتحميل المؤقت.",
+            "Modo Auto: adaptación dinámica. El reproductor analiza continuamente tu ancho de banda para evitar cortes y buffering."
+        )
+        info.textSize = ts(13f)
+        info.setTextColor(SUB)
+        info.setPadding(0, 0, 0, dp(8))
+        box.addView(info)
+        val lv = ListView(this)
+        lv.adapter = ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, labels)
+        box.addView(lv, LinearLayout.LayoutParams(-1, dp(if (tv) 360 else 280)))
+        val dlg = dialog()
+            .setTitle(tr("Qualité vidéo", "Video quality", "جودة الفيديو", "Calidad de vídeo"))
+            .setView(box)
+            .setNegativeButton(tr("Fermer", "Close", "إغلاق", "Cerrar"), null)
+            .create()
+        lv.setOnItemClickListener { _, _, i, _ ->
+            dlg.dismiss()
+            actions[i]()
+        }
+        dlg.show()
+    }
+
+    // ---------- menus ----------
+
+    private fun sleepDialog() {
+        val labels = arrayOf(
+            tr("Désactivé", "Off", "إيقاف", "Desactivado"),
+            "15 min", "30 min", "60 min", "90 min", "120 min"
+        )
+        val mins = intArrayOf(0, 15, 30, 60, 90, 120)
+        dialog().setTitle(tr("Minuteur de veille", "Sleep timer", "مؤقت النوم", "Temporizador")).setItems(labels) { _, i ->
+            ui.removeCallbacks(sleepRunnable)
+            if (mins[i] > 0) {
+                ui.postDelayed(sleepRunnable, mins[i] * 60000L)
+                sleepEnd = System.currentTimeMillis() + mins[i] * 60000L
+                toast(mins[i].toString() + " min")
+            } else {
+                sleepEnd = 0L
+                toast(tr("Minuteur désactivé", "Timer off", "تم إيقاف المؤقت", "Temporizador desactivado"))
+            }
+        }.show()
+    }
+
+    private fun menuDialog() {
+        openSettings()
+    }
+
+    private fun groupsDialog() {
+        val groups = all.map { it.group }.filter { it.isNotBlank() }.distinct().sorted()
+        if (groups.isEmpty()) {
+            toast(tr("Aucun groupe", "No groups", "لا توجد مجموعات", "Sin grupos"))
+            return
+        }
+        val checked = BooleanArray(groups.size) { !hiddenSet.contains(groups[it]) }
+        dialog().setTitle(tr("Groupes visibles", "Visible groups", "المجموعات الظاهرة", "Grupos visibles"))
+            .setMultiChoiceItems(groups.toTypedArray(), checked) { _, i, isChecked -> checked[i] = isChecked }
+            .setPositiveButton("OK") { _, _ ->
+                val hs = HashSet<String>()
+                for (i in groups.indices) {
+                    if (!checked[i]) hs.add(groups[i])
+                }
+                hiddenSet = hs
+                prefs.edit().putString("hidden", hs.joinToString("\n")).apply()
+                if (hs.contains(filter)) filter = ""
+                refresh(true)
+            }
+            .setNegativeButton(tr("Annuler", "Cancel", "إلغاء", "Cancelar"), null)
+            .show()
+    }
+
+    private fun uaDialog() {
+        val u = field("User-Agent", prefs.getString("ua", "") ?: "")
+        dialog().setTitle("User-Agent").setView(form(u))
+            .setPositiveButton(tr("Enregistrer", "Save", "حفظ", "Guardar")) { _, _ ->
+                prefs.edit().putString("ua", u.text.toString().trim()).apply()
+                rebuildPlayer()
+            }
+            .setNegativeButton(tr("Annuler", "Cancel", "إلغاء", "Cancelar"), null).show()
+    }
+
+    private fun remoteDialog() {
+        val inv = prefs.getBoolean("inv_updown", false)
+        val ok = prefs.getInt("ok_action", 1).coerceIn(0, 3)
+        val okNames = arrayOf(
+            tr("Liste des chaînes", "Channel list", "قائمة القنوات", "Lista de canales"),
+            tr("Infos", "Info", "معلومات", "Info"),
+            tr("Pause / Lecture", "Pause / Play", "إيقاف / تشغيل", "Pausa / Reproducir"),
+            tr("Options", "Options", "خيارات", "Opciones")
+        )
+        val items = arrayOf(
+            tr("Haut/Bas : ", "Up/Down: ", "أعلى/أسفل: ", "Arriba/Abajo: ") +
+                (if (inv) tr("inversé", "reversed", "معكوس", "invertido") else tr("normal", "normal", "عادي", "normal")),
+            tr("Touche OK : ", "OK button: ", "زر OK: ", "Botón OK: ") + okNames[ok],
+            tr("Aide des touches", "Key guide", "دليل الأزرار", "Guía de teclas")
+        )
+        dialog().setTitle(tr("Télécommande", "Remote control", "جهاز التحكم", "Mando a distancia"))
+            .setItems(items) { _, i ->
+                when (i) {
+                    0 -> {
+                        prefs.edit().putBoolean("inv_updown", !inv).apply()
+                        remoteDialog()
+                    }
+                    1 -> {
+                        prefs.edit().putInt("ok_action", (ok + 1) % 4).apply()
+                        remoteDialog()
+                    }
+                    2 -> remoteHelp()
+                }
+            }.show()
+    }
+
+    private fun remoteHelp() {
+        val msg = tr(
+            "TV en direct :\nHaut / Bas : chaîne suivante / précédente\nGauche : liste des chaînes, films et séries\nDroite : options (audio, sous-titres, qualité…)\nOK : action au choix (voir réglages)\nOK long : favori\nOK (si « Retour au direct » s'affiche) : revenir au direct\n0-9 : numéro de chaîne\nCH+ / CH− : changer de chaîne\n◀◀ / ▶▶ : groupe précédent / suivant\n\nFilms et séries :\nGauche / Droite : −10 s / +10 s\nHaut : infos, Bas : options\nOK : pause / lecture\n◀◀ / ▶▶ : ±30 s\nRetour : arrêter et revenir à la TV\n\nAutres touches :\nMENU / BLEU : réglages\nROUGE : favori, VERT : format, JAUNE : minuteur\nINFO : infos, GUIDE : liste, LAST : dernière chaîne\nCC : sous-titres, AUDIO : pistes audio",
+            "Live TV:\nUp / Down: next / previous channel\nLeft: channel, movie and series browser\nRight: options (audio, subtitles, quality…)\nOK: configurable action (see settings)\nLong OK: favorite\nOK (when Go to Live shows): back to live\n0-9: channel number\nCH+ / CH−: change channel\n◀◀ / ▶▶: previous / next group\n\nMovies and series:\nLeft / Right: −10 s / +10 s\nUp: info, Down: options\nOK: pause / play\n◀◀ / ▶▶: ±30 s\nBack: stop and return to TV\n\nOther keys:\nMENU / BLUE: settings\nRED: favorite, GREEN: aspect, YELLOW: timer\nINFO: info, GUIDE: browser, LAST: last channel\nCC: subtitles, AUDIO: audio tracks",
+            "البث المباشر:\nأعلى / أسفل: القناة التالية / السابقة\nيسار: قائمة القنوات والأفلام والمسلسلات\nيمين: خيارات (الصوت والترجمة والجودة…)\nOK: إجراء قابل للتعديل\nضغطة طويلة على OK: مفضلة\nOK (عند ظهور زر العودة للبث): العودة للبث المباشر\n0-9: رقم القناة\nCH+ / CH−: تغيير القناة\n◀◀ / ▶▶: المجموعة السابقة / التالية\n\nالأفلام والمسلسلات:\nيسار / يمين: −10 ث / +10 ث\nأعلى: معلومات، أسفل: خيارات\nOK: إيقاف مؤقت / تشغيل\n◀◀ / ▶▶: ±30 ث\nرجوع: إيقاف والعودة للتلفاز\n\nأزرار أخرى:\nMENU / أزرق: الإعدادات\nأحمر: مفضلة، أخضر: النسبة، أصفر: المؤقت\nINFO: معلومات، GUIDE: القائمة، LAST: القناة الأخيرة\nCC: الترجمة، AUDIO: مسارات الصوت",
+            "TV en vivo:\nArriba / Abajo: canal siguiente / anterior\nIzquierda: lista de canales, películas y series\nDerecha: opciones (audio, subtítulos, calidad…)\nOK: acción configurable\nOK largo: favorito\nOK (si aparece Ir al directo): volver al directo\n0-9: número de canal\nCH+ / CH−: cambiar de canal\n◀◀ / ▶▶: grupo anterior / siguiente\n\nPelículas y series:\nIzquierda / Derecha: −10 s / +10 s\nArriba: info, Abajo: opciones\nOK: pausa / reproducir\n◀◀ / ▶▶: ±30 s\nAtrás: parar y volver a la TV\n\nOtras teclas:\nMENU / AZUL: ajustes\nROJO: favorito, VERDE: formato, AMARILLO: temporizador\nINFO: info, GUIDE: lista, LAST: último canal\nCC: subtítulos, AUDIO: pistas de audio"
+        )
+        dialog().setTitle(tr("Aide des touches", "Key guide", "دليل الأزرار", "Guía de teclas"))
+            .setMessage(msg)
+            .setPositiveButton("OK", null)
+            .show()
+    }
+
+    private fun languageDialog() {
+        val labels = arrayOf(
+            tr("Automatique (système)", "Automatic (system)", "تلقائي (النظام)", "Automático (sistema)"),
+            "Français", "English", "العربية", "Español"
+        )
+        val codes = arrayOf("auto", "fr", "en", "ar", "es")
+        dialog().setTitle(tr("Langue", "Language", "اللغة", "Idioma")).setItems(labels) { _, i ->
+            prefs.edit().putString("lang", codes[i]).apply()
+            recreate()
+        }.show()
+    }
+
+    private fun accentDialog() {
+        val labels = arrayOf(
+            tr("Bleu", "Blue", "أزرق", "Azul"),
+            tr("Vert", "Green", "أخضر", "Verde"),
+            tr("Orange", "Orange", "برتقالي", "Naranja"),
+            tr("Violet", "Purple", "بنفسجي", "Morado"),
+            tr("Rouge", "Red", "أحمر", "Rojo"),
+            tr("Cyan", "Cyan", "سماوي", "Cian")
+        )
+        dialog().setTitle(tr("Couleur du thème", "Theme color", "لون السمة", "Color del tema")).setItems(labels) { _, i ->
+            prefs.edit().putInt("accent", i).apply()
+            recreate()
+        }.show()
+    }
+
+    private fun channelMenu(ch: Channel) {
+        val items = arrayOf(
+            if (ch.fav) tr("Retirer des favoris", "Remove from favorites", "إزالة من المفضلة", "Quitar de favoritos")
+            else tr("Ajouter aux favoris", "Add to favorites", "إضافة للمفضلة", "Añadir a favoritos"),
+            tr("Programmes de la chaîne", "Channel schedule", "برامج القناة", "Programación del canal"),
+            tr("Renommer", "Rename", "إعادة تسمية", "Renombrar"),
+            tr("Copier le lien", "Copy link", "نسخ الرابط", "Copiar enlace"),
+            tr("Changer le logo", "Change logo", "تغيير الشعار", "Cambiar logo"),
+            tr("Supprimer", "Delete", "حذف", "Eliminar")
+        )
+        dialog().setTitle(ch.name).setItems(items) { _, i ->
+            when (i) {
+                0 -> {
+                    ch.fav = !ch.fav
+                    save()
+                    refresh(true)
+                }
+                1 -> guideDialog(ch)
+                2 -> {
+                    val n = field(tr("Nom", "Name", "الاسم", "Nombre"), ch.name)
+                    dialog().setTitle(tr("Renommer", "Rename", "إعادة تسمية", "Renombrar")).setView(form(n))
+                        .setPositiveButton("OK") { _, _ ->
+                            val t = n.text.toString().trim()
+                            if (t.isNotEmpty()) {
+                                ch.name = t
+                                save()
+                                refresh(false)
+                            }
+                        }
+                        .setNegativeButton(tr("Annuler", "Cancel", "إلغاء", "Cancelar"), null).show()
+                }
+                3 -> {
+                    val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    cm.setPrimaryClip(ClipData.newPlainText("link", ch.url))
+                    toast(tr("Lien copié", "Link copied", "تم نسخ الرابط", "Enlace copiado"))
+                }
+                4 -> logoDialog(ch)
+                5 -> confirm(tr("Supprimer cette chaîne ?", "Delete this channel?", "حذف هذه القناة؟", "¿Eliminar este canal?")) {
+                    all.remove(ch)
+                    save()
+                    refresh(true)
+                }
+            }
+        }.show()
+    }
+
+    private fun addChannelDialog() {
+        val n = field(tr("Nom de la chaîne", "Channel name", "اسم القناة", "Nombre del canal"))
+        val u = field(tr("Lien du flux (.m3u8)", "Stream link (.m3u8)", "رابط البث (.m3u8)", "Enlace del flujo (.m3u8)"))
+        val g = field(tr("Groupe (facultatif)", "Group (optional)", "المجموعة (اختياري)", "Grupo (opcional)"))
+        dialog().setTitle(tr("Ajouter une chaîne", "Add a channel", "إضافة قناة", "Añadir un canal")).setView(form(n, u, g))
+            .setPositiveButton(tr("Ajouter", "Add", "إضافة", "Añadir")) { _, _ ->
+                val url = u.text.toString().trim()
+                val name = n.text.toString().trim()
+                if (url.isNotEmpty()) {
+                    if (all.any { it.url == url }) {
+                        toast(tr("Cette chaîne existe déjà", "Channel already exists", "القناة موجودة بالفعل", "El canal ya existe"))
+                    } else {
+                        all.add(Channel(if (name.isEmpty()) url else name, url, g.text.toString().trim()))
+                        save()
+                        refresh(true)
+                    }
+                }
+            }
+            .setNegativeButton(tr("Annuler", "Cancel", "إلغاء", "Cancelar"), null).show()
+    }
+
+    private fun epgDialog() {
+        val u = field(
+            tr("Lien du guide XMLTV (.xml / .xml.gz)", "XMLTV guide link (.xml / .xml.gz)", "رابط دليل XMLTV (.xml / .xml.gz)", "Enlace de la guía XMLTV (.xml / .xml.gz)"),
+            prefs.getString("epg", "") ?: ""
+        )
+        dialog().setTitle(tr("Guide TV (EPG)", "TV guide (EPG)", "دليل البرامج (EPG)", "Guía TV (EPG)")).setView(form(u))
+            .setPositiveButton(tr("Enregistrer", "Save", "حفظ", "Guardar")) { _, _ ->
+                prefs.edit().putString("epg", u.text.toString().trim()).apply()
+                fetchEpg(true)
+            }
+            .setNegativeButton(tr("Annuler", "Cancel", "إلغاء", "Cancelar"), null).show()
+    }
+
+    // ---------- xtream ----------
+
+    private fun normServer(s: String): String {
+        var t = s.trim()
+        if (!t.startsWith("http://") && !t.startsWith("https://")) t = "http://" + t
+        t = t.trimEnd('/')
+        if (t.endsWith("/c")) t = t.removeSuffix("/c")
+        return t
+    }
+
+    private fun xtreamMenu() {
+        val accs = accounts()
+        val items = ArrayList<String>()
+        items.add(tr("+ Ajouter un compte Xtream", "+ Add an Xtream account", "+ إضافة حساب Xtream", "+ Añadir cuenta Xtream"))
+        for (a in accs) items.add(a.label())
+        dialog().setTitle("Xtream").setItems(items.toTypedArray()) { _, i ->
+            if (i == 0) xtreamAddDialog() else xtreamAccountMenu(accs[i - 1])
+        }.show()
+    }
+
+    private fun xtreamAddDialog() {
+        val n = field(tr("Nom (facultatif)", "Name (optional)", "الاسم (اختياري)", "Nombre (opcional)"))
+        val s = field(tr("Serveur (http://hote:port)", "Server (http://host:port)", "الخادم (http://host:port)", "Servidor (http://host:port)"))
+        s.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
+        val u = field(tr("Identifiant", "Username", "اسم المستخدم", "Usuario"))
+        val p = field(tr("Mot de passe", "Password", "كلمة المرور", "Contraseña"))
+        p.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+        dialog().setTitle(tr("Compte Xtream", "Xtream account", "حساب Xtream", "Cuenta Xtream")).setView(form(n, s, u, p))
+            .setPositiveButton(tr("Connexion", "Connect", "اتصال", "Conectar")) { _, _ ->
+                val server = s.text.toString().trim()
+                val user = u.text.toString().trim()
+                val pass = p.text.toString().trim()
+                if (server.isNotEmpty() && user.isNotEmpty() && pass.isNotEmpty()) {
+                    val acc = Account(n.text.toString().trim(), normServer(server), user, pass)
+                    val l = accounts()
+                    l.removeAll { it.key() == acc.key() }
+                    l.add(acc)
+                    saveAccounts(l)
+                    fetchXtream(acc, true)
+                    fetchVod(acc, true)
+                } else {
+                    toast(tr("Champs incomplets", "Missing fields", "حقول ناقصة", "Campos incompletos"))
+                }
+            }
+            .setNegativeButton(tr("Annuler", "Cancel", "إلغاء", "Cancelar"), null).show()
+    }
+
+    private fun xtreamAccountMenu(acc: Account) {
+        val items = arrayOf(
+            tr("Actualiser les chaînes", "Refresh channels", "تحديث القنوات", "Actualizar canales"),
+            tr("Actualiser films et séries", "Refresh movies and series", "تحديث الأفلام والمسلسلات", "Actualizar películas y series"),
+            tr("Infos du compte", "Account info", "معلومات الحساب", "Info de la cuenta"),
+            tr("Supprimer", "Delete", "حذف", "Eliminar")
+        )
+        dialog().setTitle(acc.label()).setItems(items) { _, i ->
+            when (i) {
+                0 -> fetchXtream(acc, true)
+                1 -> fetchVod(acc, true)
+                2 -> xtreamInfo(acc)
+                3 -> confirm(tr("Supprimer ce compte, ses chaînes et ses films ?", "Delete this account, its channels and movies?", "حذف هذا الحساب وقنواته وأفلامه؟", "¿Eliminar esta cuenta, sus canales y películas?")) {
+                    val key = acc.key()
+                    val l = accounts()
+                    l.removeAll { it.key() == key }
+                    saveAccounts(l)
+                    all.removeAll { it.src == key }
+                    save()
+                    refresh(true)
+                    pool.execute {
+                        vodLoadOnce()
+                        val keep = vods.filter { it.src != key }.toMutableList()
+                        saveVodFile(keep)
+                        runOnUiThread {
+                            vods = keep
+                            refresh(true)
+                        }
+                    }
+                }
+            }
+        }.show()
+    }
+
+    private fun xtreamAuth(acc: Account): String =
+        "username=" + Uri.encode(acc.user) + "&password=" + Uri.encode(acc.pass)
+
+    private fun xtreamInfo(acc: Account) {
+        pool.execute {
+            try {
+                val o = JSONObject(httpGet(acc.server + "/player_api.php?" + xtreamAuth(acc)))
+                val uinfo = o.getJSONObject("user_info")
+                val status = js(uinfo, "status")
+                val exp = js(uinfo, "exp_date").toLongOrNull()
+                    ?.let { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(it * 1000)) } ?: "∞"
+                val msg = tr("Statut", "Status", "الحالة", "Estado") + " : " + status + "\n" +
+                    tr("Expire le", "Expires", "ينتهي في", "Caduca") + " : " + exp + "\n" +
+                    tr("Connexions", "Connections", "الاتصالات", "Conexiones") + " : " +
+                    js(uinfo, "active_cons") + " / " + js(uinfo, "max_connections")
+                runOnUiThread {
+                    dialog().setTitle(acc.label()).setMessage(msg).setPositiveButton("OK", null).show()
+                }
+            } catch (e: Exception) {
+                runOnUiThread { toast(tr("Erreur : ", "Error: ", "خطأ: ", "Error: ") + e.message) }
+            }
+        }
+    }
+
+    private fun readArray(link: String, wanted: Set<String>, onItem: (HashMap<String, String>) -> Unit) {
+        val c = URL(link).openConnection() as HttpURLConnection
+        c.connectTimeout = 15000
+        c.readTimeout = 120000
+        c.instanceFollowRedirects = true
+        c.setRequestProperty("User-Agent", userAgent())
+        val reader = JsonReader(BufferedReader(InputStreamReader(c.inputStream, "UTF-8"), 65536))
+        try {
+            reader.beginArray()
+            while (reader.hasNext()) {
+                reader.beginObject()
+                val m = HashMap<String, String>()
+                while (reader.hasNext()) {
+                    val k = reader.nextName()
+                    val t = reader.peek()
+                    if (wanted.contains(k) && (t == JsonToken.STRING || t == JsonToken.NUMBER)) {
+                        m[k] = reader.nextString()
+                    } else {
+                        reader.skipValue()
+                    }
+                }
+                reader.endObject()
+                onItem(m)
+            }
+            reader.endArray()
+        } finally {
+            reader.close()
+        }
+    }
+
+    private fun fetchXtream(acc: Account, manual: Boolean) {
+        if (manual) toast(tr("Connexion…", "Connecting…", "جارٍ الاتصال…", "Conectando…"))
+        pool.execute {
+            try {
+                val api = acc.server + "/player_api.php?" + xtreamAuth(acc)
+                val head = JSONObject(httpGet(api))
+                val uinfo = head.optJSONObject("user_info")
+                if (uinfo == null || uinfo.optInt("auth", 1) == 0) {
+                    runOnUiThread {
+                        toast(tr("Identifiants refusés", "Login refused", "بيانات الدخول مرفوضة", "Credenciales rechazadas"))
+                    }
+                } else {
+                    val cats = HashMap<String, String>()
+                    readArray(api + "&action=get_live_categories", setOf("category_id", "category_name")) { m ->
+                        cats[m["category_id"] ?: ""] = m["category_name"] ?: ""
+                    }
+                    val ext = prefs.getString("xt_ext", "m3u8") ?: "m3u8"
+                    val key = acc.key()
+                    val list = ArrayList<Channel>()
+                    val wanted = setOf("stream_id", "name", "stream_icon", "category_id", "epg_channel_id")
+                    readArray(api + "&action=get_live_streams", wanted) { m ->
+                        val id = m["stream_id"]
+                        if (!id.isNullOrEmpty()) {
+                            val url = acc.server + "/live/" + Uri.encode(acc.user) + "/" +
+                                Uri.encode(acc.pass) + "/" + id + "." + ext
+                            val name = m["name"]
+                            list.add(
+                                Channel(
+                                    if (name.isNullOrEmpty()) id else name,
+                                    url,
+                                    cats[m["category_id"] ?: ""] ?: "",
+                                    m["stream_icon"] ?: "",
+                                    false,
+                                    m["epg_channel_id"] ?: "",
+                                    key
+                                )
+                            )
+                        }
+                    }
+                    runOnUiThread { mergeXtream(key, list, manual) }
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    if (manual) toast(tr("Erreur : ", "Error: ", "خطأ: ", "Error: ") + e.message)
+                }
+            }
+        }
+    }
+
+    private fun mergeXtream(key: String, list: List<Channel>, manual: Boolean) {
+        val favKeys = HashSet<String>()
+        for (c in all) {
+            if (c.fav && c.src == key) favKeys.add(c.url.substringBeforeLast('.'))
+        }
+        all.removeAll { it.src == key }
+        val known = HashSet<String>()
+        for (c in all) known.add(c.url)
+        val fresh = ArrayList<Channel>()
+        for (c in list) {
+            if (known.add(c.url)) {
+                if (favKeys.contains(c.url.substringBeforeLast('.'))) c.fav = true
+                fresh.add(c)
+            }
+        }
+        all.addAll(fresh)
+        save()
+        refresh(true)
+        if (manual) {
+            toast(fresh.size.toString() + tr(" chaînes", " channels", " قناة", " canales"))
+        }
+        fetchEpg(false)
+    }
+
+    private fun fetchVod(acc: Account, manual: Boolean) {
+        if (manual) {
+            toast(tr("Chargement des films et séries…", "Loading movies and series…", "جارٍ تحميل الأفلام والمسلسلات…", "Cargando películas y series…"))
+        }
+        pool.execute {
+            try {
+                val api = acc.server + "/player_api.php?" + xtreamAuth(acc)
+                val key = acc.key()
+                val mcats = HashMap<String, String>()
+                val scats = HashMap<String, String>()
+                try {
+                    readArray(api + "&action=get_vod_categories", setOf("category_id", "category_name")) { m ->
+                        mcats[m["category_id"] ?: ""] = m["category_name"] ?: ""
+                    }
+                } catch (e: Exception) {
+                }
+                try {
+                    readArray(api + "&action=get_series_categories", setOf("category_id", "category_name")) { m ->
+                        scats[m["category_id"] ?: ""] = m["category_name"] ?: ""
+                    }
+                } catch (e: Exception) {
+                }
+                val list = ArrayList<Vod>()
+                var err = ""
+                try {
+                    val wantedM = setOf("stream_id", "name", "stream_icon", "category_id", "container_extension", "rating")
+                    readArray(api + "&action=get_vod_streams", wantedM) { m ->
+                        val id = m["stream_id"]
+                        if (!id.isNullOrEmpty()) {
+                            val name = m["name"]
+                            list.add(
+                                Vod(
+                                    id,
+                                    if (name.isNullOrEmpty()) id else name,
+                                    m["stream_icon"] ?: "",
+                                    mcats[m["category_id"] ?: ""] ?: "",
+                                    1,
+                                    m["container_extension"] ?: "mp4",
+                                    key,
+                                    m["rating"] ?: ""
+                                )
+                            )
+                        }
+                    }
+                } catch (e: Exception) {
+                    err = e.message ?: ""
+                }
+                try {
+                    val wantedS = setOf("series_id", "name", "cover", "category_id", "rating")
+                    readArray(api + "&action=get_series", wantedS) { m ->
+                        val id = m["series_id"]
+                        if (!id.isNullOrEmpty()) {
+                            val name = m["name"]
+                            list.add(
+                                Vod(
+                                    id,
+                                    if (name.isNullOrEmpty()) id else name,
+                                    m["cover"] ?: "",
+                                    scats[m["category_id"] ?: ""] ?: "",
+                                    2,
+                                    "",
+                                    key,
+                                    m["rating"] ?: ""
+                                )
+                            )
+                        }
+                    }
+                } catch (e: Exception) {
+                    err = e.message ?: ""
+                }
+                if (list.isEmpty()) {
+                    runOnUiThread {
+                        if (manual) {
+                            toast(tr("Aucun film ni série trouvé ", "No movies or series found ", "لم يتم العثور على أفلام أو مسلسلات ", "No se encontraron películas ni series ") + err)
+                        }
+                    }
+                } else {
+                    vodLoadOnce()
+                    val merged = ArrayList<Vod>()
+                    for (v in vods) {
+                        if (v.src != key) merged.add(v)
+                    }
+                    merged.addAll(list)
+                    val dedup = merged.distinctBy { it.src + "|" + it.kind + "|" + it.id }.toMutableList()
+                    saveVodFile(dedup)
+                    prefs.edit().putLong("last_vod", System.currentTimeMillis()).apply()
+                    val movies = list.count { it.kind == 1 }
+                    val series = list.count { it.kind == 2 }
+                    runOnUiThread {
+                        vods = dedup
+                        vodLoaded = true
+                        if (section != 0) refresh(true)
+                        if (manual) {
+                            toast(
+                                movies.toString() + tr(" films, ", " movies, ", " فيلم، ", " películas, ") +
+                                    series + tr(" séries", " series", " مسلسل", " series")
+                            )
+                        }
+                    }
+                }
+            } catch (e: Throwable) {
+                runOnUiThread {
+                    if (manual) toast(tr("Erreur : ", "Error: ", "خطأ: ", "Error: ") + e.message)
+                }
+            }
+        }
+    }
+
+    private fun autoConnect() {
+        if (!prefs.getBoolean("autoconnect", true)) return
+        val now = System.currentTimeMillis()
+        val accs = accounts()
+        if (accs.isNotEmpty() && now - prefs.getLong("last_vod", 0L) > 12 * 3600000L) {
+            prefs.edit().putLong("last_vod", now).apply()
+            for (a in accs) fetchVod(a, false)
+        }
+        val last = prefs.getLong("last_refresh", 0L)
+        if (now - last < 30 * 60000L) return
+        val pls = playlists()
+        if (accs.isEmpty() && pls.isEmpty()) return
+        prefs.edit().putLong("last_refresh", now).apply()
+        for (a in accs) fetchXtream(a, false)
+        for (u in pls) fetchPlaylist(u, false)
+    }
+
+    private fun updateAll() {
+        var n = 0
+        for (a in accounts()) {
+            fetchXtream(a, true)
+            fetchVod(a, true)
+            n++
+        }
+        for (u in playlists()) {
+            fetchPlaylist(u, true)
+            n++
+        }
+        if (n == 0) {
+            toast(tr("Aucune source enregistrée", "No saved source", "لا يوجد مصدر محفوظ", "Ninguna fuente guardada"))
+        }
+        fetchEpg(true)
+    }
+
+    // ---------- playlists et guide ----------
+
+    private fun m3uLinkDialog() {
+        val u = field(tr("Lien de la playlist (.m3u)", "Playlist link (.m3u)", "رابط قائمة التشغيل (.m3u)", "Enlace de la lista (.m3u)"))
+        dialog().setTitle(tr("Importer une playlist", "Import a playlist", "استيراد قائمة تشغيل", "Importar lista")).setView(form(u))
+            .setPositiveButton(tr("Importer", "Import", "استيراد", "Importar")) { _, _ ->
+                val url = u.text.toString().trim()
+                if (url.isNotEmpty()) {
+                    val l = playlists()
+                    if (!l.contains(url)) {
+                        l.add(url)
+                        savePlaylists(l)
+                    }
+                    fetchPlaylist(url, true)
+                }
+            }
+            .setNegativeButton(tr("Annuler", "Cancel", "إلغاء", "Cancelar"), null).show()
+    }
+
+    private fun fetchPlaylist(link: String, manual: Boolean) {
+        if (manual) toast(tr("Chargement…", "Loading…", "جارٍ التحميل…", "Cargando…"))
+        pool.execute {
+            try {
+                val text = httpGet(link)
+                val pl = parseM3u(text)
+                runOnUiThread { mergeChannels(pl, manual) }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    if (manual) toast(tr("Erreur : ", "Error: ", "خطأ: ", "Error: ") + e.message)
+                }
+            }
+        }
+    }
+
+    private fun mergeChannels(pl: Playlist, manual: Boolean) {
+        val byUrl = HashMap<String, Channel>()
+        for (c in all) byUrl[c.url] = c
+        var added = 0
+        for (n in pl.channels) {
+            val old = byUrl[n.url]
+            if (old == null) {
+                all.add(n)
+                byUrl[n.url] = n
+                added++
+            } else {
+                old.group = n.group
+                old.logo = n.logo
+                old.tvgId = n.tvgId
+            }
+        }
+        if (pl.epgUrl.isNotBlank() && (prefs.getString("epg", "") ?: "").isBlank()) {
+            prefs.edit().putString("epg", pl.epgUrl).apply()
+        }
+        save()
+        refresh(true)
+        if (manual) {
+            toast(added.toString() + tr(" nouvelles chaînes", " new channels", " قنوات جديدة", " canales nuevos"))
+        }
+        fetchEpg(false)
+    }
+
+    private fun epgSources(): List<String> {
+        val out = LinkedHashSet<String>()
+        val m = prefs.getString("epg", "") ?: ""
+        if (m.isNotBlank()) out.add(m)
+        for (u in (prefs.getString("epg_list", "") ?: "").lines()) {
+            if (u.isNotBlank()) out.add(u.trim())
+        }
+        for (a in accounts()) out.add(a.server + "/xmltv.php?" + xtreamAuth(a))
+        return out.toList()
+    }
+
+    private fun fetchEpg(manual: Boolean) {
+        val sources = epgSources()
+        if (sources.isEmpty()) {
+            if (manual) toast(tr("Aucune source de guide TV", "No TV guide source", "لا يوجد مصدر لدليل البرامج", "Sin fuente de guía TV"))
+            return
+        }
+        val wanted = HashSet<String>()
+        val names = HashSet<String>()
+        val matchByName = prefs.getBoolean("epg_match", true)
+        for (c in all) {
+            if (c.tvgId.isNotBlank()) {
+                wanted.add(c.tvgId.lowercase())
+            } else if (matchByName) {
+                val k = Epg.norm(c.name)
+                if (k.length >= 2) names.add(k)
+            }
+        }
+        if (wanted.isEmpty() && names.isEmpty()) {
+            if (manual) toast(tr("Aucune chaîne à associer au guide", "No channel to match with the guide", "لا توجد قنوات لمطابقتها مع الدليل", "Ningún canal para asociar con la guía"))
+            return
+        }
+        if (manual) toast(tr("Chargement du guide TV…", "Loading TV guide…", "جارٍ تحميل دليل البرامج…", "Cargando guía TV…"))
+        pool.execute {
+            val merged = HashMap<String, MutableList<Programme>>()
+            val nameMap = HashMap<String, String>()
+            var okCount = 0
+            var err = ""
+            for (url in sources) {
+                try {
+                    val c = URL(url).openConnection() as HttpURLConnection
+                    c.connectTimeout = 15000
+                    c.readTimeout = 120000
+                    c.instanceFollowRedirects = true
+                    c.setRequestProperty("User-Agent", userAgent())
+                    val r = c.inputStream.use { Epg.parse(it, wanted, names) }
+                    for ((k, v) in r.data) merged.getOrPut(k) { mutableListOf() }.addAll(v)
+                    for ((k, v) in r.nameToId) {
+                        if (!nameMap.containsKey(k)) nameMap[k] = v
+                    }
+                    okCount++
+                } catch (e: Throwable) {
+                    err = e.message ?: ""
+                }
+            }
+            for (l in merged.values) l.sortBy { it.start }
+            if (okCount > 0) Epg.data = merged
+            runOnUiThread {
+                var assigned = 0
+                if (nameMap.isNotEmpty()) {
+                    for (c in all) {
+                        if (c.tvgId.isBlank()) {
+                            val id = nameMap[Epg.norm(c.name)]
+                            if (id != null) {
+                                c.tvgId = id
+                                assigned++
+                            }
+                        }
+                    }
+                    if (assigned > 0) save()
+                }
+                if (section == 0) adapter.notifyDataSetChanged()
+                if (banner.visibility == View.VISIBLE && !isVod) showBanner(null, controlsVisible)
+                if (manual) {
+                    if (okCount > 0) {
+                        toast(
+                            tr("Guide TV : ", "TV guide: ", "دليل البرامج: ", "Guía TV: ") + merged.size +
+                                tr(" chaînes (", " channels (", " قناة (", " canales (") + assigned +
+                                tr(" associées par nom)", " matched by name)", " مطابقة بالاسم)", " asociadas por nombre)")
+                        )
+                    } else {
+                        toast(tr("Erreur guide : ", "Guide error: ", "خطأ في الدليل: ", "Error de guía: ") + err)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun pickFile() {
+        val i = Intent(Intent.ACTION_OPEN_DOCUMENT)
+        i.addCategory(Intent.CATEGORY_OPENABLE)
+        i.type = "*/*"
+        try {
+            startActivityForResult(i, 11)
+        } catch (e: Exception) {
+            toast(tr("Sélecteur de fichiers indisponible", "File picker unavailable", "منتقي الملفات غير متاح", "Selector de archivos no disponible"))
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 11 && resultCode == RESULT_OK) {
+            val uri = data?.data ?: return
+            pool.execute {
+                try {
+                    val stream = contentResolver.openInputStream(uri)
+                    val text = stream!!.bufferedReader().use { it.readText() }
+                    val pl = parseM3u(text)
+                    runOnUiThread { mergeChannels(pl, true) }
+                } catch (e: Exception) {
+                    runOnUiThread { toast(tr("Erreur : ", "Error: ", "خطأ: ", "Error: ") + e.message) }
+                }
+            }
+        }
+    }
+
+    // ---------- cycle de vie ----------
+
+    override fun onStart() {
+        super.onStart()
+        if (resumeOnStart) player?.play()
+    }
+
+    override fun onStop() {
+        resumeOnStart = player?.playWhenReady == true
+        if (!inPip) player?.pause()
+        super.onStop()
+    }
+
+    override fun onDestroy() {
+        ui.removeCallbacksAndMessages(null)
+        stopPortal()
+        if (isFinishing) recorder.stop()
+        player?.release()
+        player = null
+        pool.shutdownNow()
+        super.onDestroy()
+    }
+
+    // ---------- v7 : reglages modernes, PVR, portail web ----------
+
+    private val recorder = RecorderHolder.recorder
+    private lateinit var goLive: LinearLayout
+    private var behindLive = false
+
+    private val goLiveTicker = object : Runnable {
+        override fun run() {
+            updateGoLive()
+            ui.postDelayed(this, 500)
+        }
+    }
+    private lateinit var recBadge: TextView
+    private lateinit var settingsPane: FrameLayout
+    private lateinit var settingsScroll: ScrollView
+    private lateinit var settingsList: LinearLayout
+    private var settingsOpen = false
+    private var portal: PortalServer? = null
+
+    private val recTicker = object : Runnable {
+        override fun run() {
+            updateRecBadge()
+            if (recorder.active) ui.postDelayed(this, 1000)
+        }
+    }
+
+    private val schedTicker = object : Runnable {
+        override fun run() {
+            checkSchedule()
+            ui.postDelayed(this, 20000)
+        }
+    }
+
+    private fun buildExtras() {
+        buildOsd()
+        recBadge = TextView(this)
+        recBadge.textSize = ts(13f)
+        recBadge.setTextColor(Color.WHITE)
+        recBadge.setPadding(dp(10), dp(4), dp(10), dp(4))
+        recBadge.background = rounded(Color.parseColor("#CCD32F2F"), 12)
+        recBadge.visibility = View.GONE
+        val rlp = FrameLayout.LayoutParams(-2, -2)
+        rlp.gravity = Gravity.TOP or Gravity.END
+        rlp.setMargins(dp(16), dp(84), dp(24), 0)
+        playerFrame.addView(recBadge, rlp)
+
+        goLive = LinearLayout(this)
+        goLive.orientation = LinearLayout.HORIZONTAL
+        goLive.gravity = Gravity.CENTER_VERTICAL
+        goLive.setPadding(dp(14), dp(8), dp(16), dp(8))
+        val gbg = GradientDrawable()
+        gbg.setColor(Color.parseColor("#E61A1D24"))
+        gbg.cornerRadius = dp(24).toFloat()
+        gbg.setStroke(dp(2), Color.parseColor("#FF3B30"))
+        goLive.background = gbg
+        goLive.isClickable = true
+        goLive.isFocusable = true
+        goLive.visibility = View.GONE
+        val dot = TextView(this)
+        dot.text = "●"
+        dot.textSize = ts(14f)
+        dot.setTextColor(Color.parseColor("#FF3B30"))
+        dot.setPadding(0, 0, dp(8), 0)
+        val glText = TextView(this)
+        glText.text = tr("Retour au direct", "Go to Live", "العودة للبث المباشر", "Ir al directo")
+        glText.textSize = ts(15f)
+        glText.typeface = Typeface.DEFAULT_BOLD
+        glText.setTextColor(Color.WHITE)
+        goLive.addView(dot)
+        goLive.addView(glText)
+        if (tv) {
+            val hint = TextView(this)
+            hint.text = "   OK"
+            hint.textSize = ts(12f)
+            hint.setTextColor(SUB)
+            goLive.addView(hint)
+        }
+        goLive.setOnClickListener { goToLive() }
+        val glp = FrameLayout.LayoutParams(-2, -2)
+        glp.gravity = Gravity.BOTTOM or Gravity.END
+        glp.setMargins(dp(16), 0, dp(16), dp(28))
+        playerFrame.addView(goLive, glp)
+
+        settingsPane = FrameLayout(this)
+        settingsPane.setBackgroundColor(BG)
+        settingsPane.isClickable = true
+        settingsPane.visibility = View.GONE
+
+        val col = LinearLayout(this)
+        col.orientation = LinearLayout.VERTICAL
+
+        val head = LinearLayout(this)
+        head.orientation = LinearLayout.HORIZONTAL
+        head.gravity = Gravity.CENTER_VERTICAL
+        head.setPadding(dp(14), dp(14), dp(14), dp(8))
+        val back = pill("✕", false)
+        back.setOnClickListener { closeSettings() }
+        back.contentDescription = tr("Fermer", "Close", "إغلاق", "Cerrar")
+        head.addView(back, LinearLayout.LayoutParams(dp(ph(44)), dp(ph(44))))
+        val title = TextView(this)
+        title.text = tr("Réglages", "Settings", "الإعدادات", "Ajustes")
+        title.textSize = ts(22f)
+        title.typeface = Typeface.DEFAULT_BOLD
+        title.setTextColor(TXT)
+        title.setPadding(dp(14), 0, 0, 0)
+        head.addView(title)
+        col.addView(head, LinearLayout.LayoutParams(-1, -2))
+
+        settingsScroll = ScrollView(this)
+        settingsScroll.isVerticalScrollBarEnabled = false
+        settingsList = LinearLayout(this)
+        settingsList.orientation = LinearLayout.VERTICAL
+        settingsList.setPadding(0, 0, 0, dp(24))
+        settingsScroll.addView(settingsList)
+        col.addView(settingsScroll, LinearLayout.LayoutParams(-1, 0, 1f))
+
+        settingsPane.addView(col, FrameLayout.LayoutParams(-1, -1))
+        root.addView(settingsPane, FrameLayout.LayoutParams(-1, -1))
+    }
+
+    private fun startExtras() {
+        if (prefs.getBoolean("portal_on", false)) startPortal()
+        ui.postDelayed(schedTicker, 5000)
+        ui.postDelayed({ maybeOnboard() }, 900)
+        ui.postDelayed(goLiveTicker, 1000)
+        if (recorder.active) ui.postDelayed(recTicker, 500)
+    }
+
+    // ----- retour au direct -----
+
+    private fun canSeekLive(): Boolean = player?.isCurrentMediaItemSeekable == true
+
+    private fun updateGoLive() {
+        val p = player
+        if (p == null || isVod || inPip || settingsOpen || p.mediaItemCount == 0 || p.playbackState == Player.STATE_IDLE) {
+            if (goLive.visibility != View.GONE) goLive.visibility = View.GONE
+            return
+        }
+        val off = p.currentLiveOffset
+        val behind = if (off != C.TIME_UNSET && p.isCurrentMediaItemLive) off > 4000L else behindLive
+        val show = !p.playWhenReady || behind
+        val canSeek = p.isCurrentMediaItemSeekable
+        seekBack.visibility = if (canSeek) View.VISIBLE else View.GONE
+        seekFwd.visibility = if (canSeek) View.VISIBLE else View.GONE
+        goLive.visibility = if (show) View.VISIBLE else View.GONE
+        val want = if (banner.visibility == View.VISIBLE || optionsBar.visibility == View.VISIBLE) dp(if (controlsVisible || quickOpen) 156 else 100) else dp(28)
+        val lp = goLive.layoutParams as FrameLayout.LayoutParams
+        if (lp.bottomMargin != want) {
+            lp.bottomMargin = want
+            goLive.layoutParams = lp
+        }
+        if (banner.visibility == View.VISIBLE && !isVod) bannerInfo.text = infoLine()
+    }
+
+    private fun goToLive() {
+        val p = player ?: return
+        if (isVod) return
+        behindLive = false
+        if (p.isCurrentMediaItemLive && p.isCurrentMediaItemSeekable) {
+            p.seekToDefaultPosition()
+            p.play()
+        } else {
+            val c = all.firstOrNull { it.url == currentUrl }
+            if (c != null) {
+                p.setMediaItem(MediaItem.fromUri(c.url))
+                p.prepare()
+                p.play()
+            }
+        }
+        goLive.visibility = View.GONE
+        showOverlay("LIVE")
+        updatePlayButton()
+    }
+
+    // ----- ecran des reglages -----
+
+    private fun openSettings() {
+        if (settingsOpen) return
+        if (quickOpen) closeQuick()
+        if (panelOpen) closePanel()
+        settingsOpen = true
+        val w = minOf(dp(720), resources.displayMetrics.widthPixels)
+        settingsList.layoutParams = FrameLayout.LayoutParams(w, -2, Gravity.CENTER_HORIZONTAL)
+        buildSettings()
+        settingsPane.visibility = View.VISIBLE
+        settingsScroll.scrollTo(0, 0)
+        settingsPane.post { focusFirstSetting() }
+    }
+
+    private fun focusFirstSetting() {
+        for (i in 0 until settingsList.childCount) {
+            val c = settingsList.getChildAt(i)
+            if (c.isFocusable) {
+                c.requestFocus()
+                break
+            }
+        }
+    }
+
+    private fun closeSettings() {
+        if (!settingsOpen) return
+        settingsOpen = false
+        settingsPane.visibility = View.GONE
+        root.requestFocus()
+    }
+
+    private fun rebuildSettings(focusIdx: Int) {
+        val sy = settingsScroll.scrollY
+        buildSettings()
+        settingsScroll.post {
+            settingsScroll.scrollTo(0, sy)
+            if (focusIdx >= 0) settingsList.getChildAt(focusIdx)?.requestFocus()
+        }
+    }
+
+    private fun shead(text: String): TextView {
+        val t = TextView(this)
+        t.text = text.uppercase()
+        t.textSize = ts(12f)
+        t.typeface = Typeface.DEFAULT_BOLD
+        t.setTextColor(ACCENT)
+        t.setPadding(dp(28), dp(18), dp(16), dp(4))
+        return t
+    }
+
+    private fun srow(title: String, sub: String, value: String, isChip: Boolean, chipOn: Boolean, action: () -> Unit): LinearLayout {
+        val row = LinearLayout(this)
+        row.orientation = LinearLayout.HORIZONTAL
+        row.gravity = Gravity.CENTER_VERTICAL
+        row.setPadding(dp(16), dp(12), dp(16), dp(12))
+        row.isFocusable = true
+        row.isClickable = true
+        row.background = rowBg(false, false)
+        row.setOnFocusChangeListener { _, has -> row.background = rowBg(false, has) }
+
+        val tx = LinearLayout(this)
+        tx.orientation = LinearLayout.VERTICAL
+        val tt = TextView(this)
+        tt.text = title
+        tt.textSize = ts(16f)
+        tt.setTextColor(TXT)
+        tx.addView(tt)
+        if (sub.isNotBlank()) {
+            val ts2 = TextView(this)
+            ts2.text = sub
+            ts2.textSize = ts(12f)
+            ts2.setTextColor(SUB)
+            tx.addView(ts2)
+        }
+        row.addView(tx, LinearLayout.LayoutParams(0, -2, 1f))
+
+        val v = TextView(this)
+        v.text = value
+        v.textSize = ts(14f)
+        if (isChip) {
+            v.typeface = Typeface.DEFAULT_BOLD
+            v.setTextColor(Color.WHITE)
+            v.setPadding(dp(14), dp(5), dp(14), dp(5))
+            v.background = rounded(if (chipOn) ACCENT else Color.parseColor("#3A4050"), 14)
+        } else {
+            v.setTextColor(ACCENT)
+        }
+        row.addView(v)
+
+        row.setOnClickListener {
+            val idx = settingsList.indexOfChild(row)
+            action()
+            if (settingsOpen) rebuildSettings(idx)
+        }
+        return row
+    }
+
+    private fun buildSettings() {
+        settingsList.removeAllViews()
+        fun add(v: View) {
+            val lp = LinearLayout.LayoutParams(-1, -2)
+            lp.setMargins(dp(12), dp(3), dp(12), dp(3))
+            settingsList.addView(v, lp)
+        }
+        fun sec(t: String) {
+            settingsList.addView(shead(t))
+        }
+        fun row(title: String, sub: String, value: String, action: () -> Unit) {
+            add(srow(title, sub, value, false, false, action))
+        }
+        fun tog(title: String, sub: String, on: Boolean, action: () -> Unit) {
+            add(srow(title, sub, if (on) "ON" else "OFF", true, on, action))
+        }
+
+        val arrow = if (isRtl()) "‹" else "›"
+        val accs = accounts()
+        val ext = prefs.getString("xt_ext", "m3u8") ?: "m3u8"
+        val buf = prefs.getInt("buffer", 1).coerceIn(0, 2)
+        val bufNames = arrayOf(
+            tr("rapide", "fast", "سريع", "rápido"),
+            tr("normale", "normal", "عادي", "normal"),
+            tr("stable", "stable", "مستقر", "estable")
+        )
+        val logoMode = prefs.getInt("logo_mode", 0).coerceIn(0, 2)
+        val logoNames = arrayOf(
+            tr("au zapping", "on zap", "عند التبديل", "al cambiar"),
+            tr("toujours", "always", "دائماً", "siempre"),
+            tr("non", "off", "إيقاف", "no")
+        )
+        val ok = prefs.getInt("ok_action", 1).coerceIn(0, 3)
+        val okNames = arrayOf(
+            tr("Liste", "List", "القائمة", "Lista"),
+            tr("Infos", "Info", "معلومات", "Info"),
+            tr("Pause", "Pause", "إيقاف", "Pausa"),
+            tr("Options", "Options", "خيارات", "Opciones")
+        )
+        val recMax = prefs.getInt("rec_max", 240)
+        val ptl = portal
+        val ips = if (ptl != null) portalLocalIps() else emptyList()
+        val portalSub = if (ptl != null && ips.isNotEmpty()) {
+            "http://" + ips[0] + ":" + ptl.port() + "   " + tr("Code ", "Code ", "الرمز ", "Código ") + portalPin()
+        } else {
+            tr("Gérez le lecteur depuis votre téléphone", "Manage the player from your phone", "تحكم بالمشغّل من هاتفك", "Gestiona el reproductor desde tu móvil")
+        }
+        val enabledEpg = enabledPresets().size
+        val nSched = loadSched().size
+        val nRec = (recDir().listFiles() ?: emptyArray<File>()).count { it.isFile && it.name.endsWith(".ts") }
+
+        sec(tr("Sources", "Sources", "المصادر", "Fuentes"))
+        tog(tr("Portail web (smartphone)", "Web portal (smartphone)", "بوابة الويب (الهاتف)", "Portal web (móvil)"), portalSub, ptl != null) { togglePortal() }
+        row("Xtream / " + tr("Portail", "Portal", "البوابة", "Portal"), accs.size.toString() + " " + tr("compte(s)", "account(s)", "حساب", "cuenta(s)"), arrow) { xtreamMenu() }
+        row(tr("Importer une playlist (lien)", "Import a playlist (link)", "استيراد قائمة تشغيل (رابط)", "Importar lista (enlace)"), "", arrow) { m3uLinkDialog() }
+        row(tr("Importer un fichier M3U", "Import an M3U file", "استيراد ملف M3U", "Importar archivo M3U"), "", arrow) { pickFile() }
+        row(tr("Ajouter une chaîne", "Add a channel", "إضافة قناة", "Añadir un canal"), "", arrow) { addChannelDialog() }
+        row(tr("Tout actualiser", "Refresh all", "تحديث الكل", "Actualizar todo"), tr("Sources, films et guide", "Sources, movies and guide", "المصادر والأفلام والدليل", "Fuentes, películas y guía"), arrow) { updateAll() }
+        tog(tr("Connexion automatique", "Auto-connect", "الاتصال التلقائي", "Conexión automática"), "", prefs.getBoolean("autoconnect", true)) {
+            prefs.edit().putBoolean("autoconnect", !prefs.getBoolean("autoconnect", true)).apply()
+        }
+        row(tr("Flux Xtream", "Xtream stream", "بث Xtream", "Flujo Xtream"), "m3u8 / ts", ext) {
+            prefs.edit().putString("xt_ext", if (ext == "m3u8") "ts" else "m3u8").apply()
+            for (a in accounts()) fetchXtream(a, true)
+        }
+
+        sec(tr("Guide TV (EPG)", "TV guide (EPG)", "دليل البرامج (EPG)", "Guía TV (EPG)"))
+        row(
+            tr("Sources EPG gratuites", "Free EPG sources", "مصادر EPG مجانية", "Fuentes EPG gratuitas"),
+            tr("France, UK, USA, Maghreb/Arabe et plus", "France, UK, USA, Arabic and more", "فرنسا وبريطانيا وأمريكا والعربية وغيرها", "Francia, UK, EE. UU., árabe y más"),
+            enabledEpg.toString()
+        ) { epgPresetsDialog() }
+        row(tr("Source personnalisée (lien)", "Custom source (link)", "مصدر مخصص (رابط)", "Fuente personalizada (enlace)"), "", arrow) { epgDialog() }
+        tog(
+            tr("Association automatique par nom", "Automatic match by name", "المطابقة التلقائية بالاسم", "Asociación automática por nombre"),
+            tr("Pour les chaînes sans tvg-id", "For channels without tvg-id", "للقنوات بدون tvg-id", "Para canales sin tvg-id"),
+            prefs.getBoolean("epg_match", true)
+        ) { prefs.edit().putBoolean("epg_match", !prefs.getBoolean("epg_match", true)).apply() }
+        row(tr("Actualiser le guide maintenant", "Refresh the guide now", "تحديث الدليل الآن", "Actualizar la guía ahora"), "", arrow) { fetchEpg(true) }
+
+        sec(tr("Enregistrement (PVR)", "Recording (PVR)", "التسجيل (PVR)", "Grabación (PVR)"))
+        row(
+            if (recorder.active) tr("Arrêter l'enregistrement", "Stop recording", "إيقاف التسجيل", "Detener grabación")
+            else tr("Enregistrer la chaîne actuelle", "Record current channel", "تسجيل القناة الحالية", "Grabar el canal actual"),
+            if (recorder.active) recorder.title else "",
+            if (recorder.active) "● REC" else "●"
+        ) { toggleRecord() }
+        row(tr("Mes enregistrements", "My recordings", "تسجيلاتي", "Mis grabaciones"), tr("Lire, supprimer", "Play, delete", "تشغيل، حذف", "Reproducir, borrar"), (nRec + nSched).toString()) { recordingsDialog() }
+        row(tr("Planifier un enregistrement", "Schedule a recording", "جدولة تسجيل", "Programar grabación"), tr("L'application doit rester ouverte", "The app must stay open", "يجب أن يبقى التطبيق مفتوحاً", "La app debe seguir abierta"), arrow) { scheduleDialog() }
+        row(tr("Durée maximale", "Maximum length", "أقصى مدة", "Duración máxima"), "", recMax.toString() + " min") {
+            val opts = intArrayOf(30, 60, 120, 240, 480)
+            val i = opts.indexOf(recMax)
+            prefs.edit().putInt("rec_max", opts[(i + 1) % opts.size]).apply()
+        }
+
+        sec(tr("Lecture", "Playback", "التشغيل", "Reproducción"))
+        row(tr("Qualité vidéo", "Video quality", "جودة الفيديو", "Calidad de vídeo"), tr("Mode Auto : adaptation dynamique", "Auto mode: dynamic adaptation", "الوضع التلقائي: تكيّف ديناميكي", "Modo Auto: adaptación dinámica"), if (videoAuto) "Auto" else tr("Fixe", "Fixed", "ثابت", "Fija")) { videoDialog() }
+        row(tr("Format de l'image", "Picture format", "حجم الصورة", "Formato de imagen"), "", resizeName(resizeIndex)) { cycleResize() }
+        row(tr("Mémoire tampon", "Buffer", "المخزن المؤقت", "Búfer"), "", bufNames[buf]) {
+            prefs.edit().putInt("buffer", (buf + 1) % 3).apply()
+            rebuildPlayer()
+        }
+        val tsLevel = prefs.getInt("timeshift", 1).coerceIn(0, 2)
+        val tsNames = arrayOf(tr("désactivé", "off", "إيقاف", "desactivado"), "2 min", "5 min")
+        row(
+            tr("Pause en direct (timeshift)", "Pause live TV (timeshift)", "إيقاف البث مؤقتاً (تايم شيفت)", "Pausa en directo (timeshift)"),
+            tr("Mémoire utilisée pour revenir en arrière", "Memory used to rewind", "الذاكرة المستخدمة للرجوع للخلف", "Memoria usada para retroceder"),
+            tsNames[tsLevel]
+        ) {
+            prefs.edit().putInt("timeshift", (tsLevel + 1) % 3).apply()
+            rebuildPlayer()
+        }
+        tog(tr("Lecture au démarrage", "Play on start", "التشغيل عند البدء", "Reproducir al iniciar"), "", prefs.getBoolean("autoplay", true)) {
+            prefs.edit().putBoolean("autoplay", !prefs.getBoolean("autoplay", true)).apply()
+        }
+        row(tr("Minuteur de veille", "Sleep timer", "مؤقت النوم", "Temporizador"), "", arrow) { sleepDialog() }
+        row("User-Agent", "", arrow) { uaDialog() }
+
+        sec(tr("Télécommande", "Remote control", "جهاز التحكم", "Mando a distancia"))
+        row(tr("Touche OK", "OK button", "زر OK", "Botón OK"), "", okNames[ok]) {
+            prefs.edit().putInt("ok_action", (ok + 1) % 4).apply()
+        }
+        tog(tr("Inverser Haut / Bas", "Reverse Up / Down", "عكس أعلى / أسفل", "Invertir Arriba / Abajo"), "", prefs.getBoolean("inv_updown", false)) {
+            prefs.edit().putBoolean("inv_updown", !prefs.getBoolean("inv_updown", false)).apply()
+        }
+        row(tr("Aide des touches", "Key guide", "دليل الأزرار", "Guía de teclas"), "", arrow) { remoteHelp() }
+
+        sec(tr("Logos", "Logos", "الشعارات", "Logos"))
+        val logoSize = prefs.getInt("logo_size", 1).coerceIn(0, 2)
+        val sizeNames = arrayOf(tr("petit", "small", "صغير", "pequeño"), tr("moyen", "medium", "متوسط", "medio"), tr("grand", "large", "كبير", "grande"))
+        val logoPos = prefs.getInt("logo_pos", 0).coerceIn(0, 3)
+        val posNames = arrayOf(
+            tr("haut gauche", "top left", "أعلى اليسار", "arriba izquierda"),
+            tr("haut droite", "top right", "أعلى اليمين", "arriba derecha"),
+            tr("bas gauche", "bottom left", "أسفل اليسار", "abajo izquierda"),
+            tr("bas droite", "bottom right", "أسفل اليمين", "abajo derecha")
+        )
+        tog(tr("Logos dans la liste", "Logos in the list", "الشعارات في القائمة", "Logos en la lista"), "", prefs.getBoolean("logo_list", true)) {
+            prefs.edit().putBoolean("logo_list", !prefs.getBoolean("logo_list", true)).apply()
+            modeKey = -1
+            applyListMode()
+        }
+        row(tr("Taille des logos", "Logo size", "حجم الشعارات", "Tamaño de los logos"), "", sizeNames[logoSize]) {
+            prefs.edit().putInt("logo_size", (logoSize + 1) % 3).apply()
+            modeKey = -1
+            applyListMode()
+            applyLayout()
+        }
+        row(tr("Logo à l'écran", "On-screen logo", "الشعار على الشاشة", "Logo en pantalla"), tr("Affichage sur la vidéo", "Shown over the video", "العرض فوق الفيديو", "Mostrado sobre el vídeo"), logoNames[logoMode]) {
+            prefs.edit().putInt("logo_mode", (logoMode + 1) % 3).apply()
+            updateLogoBadge(all.firstOrNull { it.url == currentUrl })
+        }
+        row(tr("Position du logo", "Logo position", "موضع الشعار", "Posición del logo"), "", posNames[logoPos]) {
+            prefs.edit().putInt("logo_pos", (logoPos + 1) % 4).apply()
+            updateLogoBadge(all.firstOrNull { it.url == currentUrl })
+        }
+        tog(
+            tr("Logos gratuits automatiques", "Automatic free logos", "شعارات مجانية تلقائية", "Logos gratuitos automáticos"),
+            tr("Essai pour les chaînes sans logo (selon disponibilité)", "Best effort for channels without a logo", "محاولة للقنوات بدون شعار", "Intento para canales sin logo"),
+            prefs.getBoolean("logo_auto", false)
+        ) {
+            prefs.edit().putBoolean("logo_auto", !prefs.getBoolean("logo_auto", false)).apply()
+            modeKey = -1
+            applyListMode()
+        }
+        row(tr("Vider le cache des logos", "Clear the logo cache", "مسح ذاكرة الشعارات", "Vaciar la caché de logos"), "", arrow) {
+            logos.evictAll()
+            failed.clear()
+            modeKey = -1
+            applyListMode()
+            toast(tr("Cache vidé", "Cache cleared", "تم المسح", "Caché vaciada"))
+        }
+
+        sec(tr("Affichage", "Display", "العرض", "Pantalla"))
+        val themeMode = prefs.getInt("theme", 1).coerceIn(0, 2)
+        val themeNames = arrayOf(tr("auto", "auto", "تلقائي", "auto"), tr("sombre", "dark", "داكن", "oscuro"), tr("clair", "light", "فاتح", "claro"))
+        row(
+            tr("Thème", "Theme", "السمة", "Tema"),
+            tr("Sombre par défaut ; le clair est en bêta", "Dark by default; light is beta", "داكن افتراضياً؛ الفاتح تجريبي", "Oscuro por defecto; claro en beta"),
+            themeNames[themeMode]
+        ) {
+            prefs.edit().putInt("theme", (themeMode + 1) % 3).apply()
+            recreate()
+        }
+        row(tr("Langue", "Language", "اللغة", "Idioma"), "", arrow) { languageDialog() }
+        row(tr("Couleur du thème", "Theme color", "لون السمة", "Color del tema"), "", arrow) { accentDialog() }
+        row(tr("Gérer les groupes (masquer)", "Manage groups (hide)", "إدارة المجموعات (إخفاء)", "Gestionar grupos (ocultar)"), "", hiddenSet.size.toString()) { groupsDialog() }
+
+        sec(tr("Données", "Data", "البيانات", "Datos"))
+        row(tr("Trier A → Z", "Sort A → Z", "ترتيب أبجدي", "Ordenar A → Z"), "", arrow) {
+            all.sortBy { it.name.lowercase() }
+            save()
+            refresh(true)
+        }
+        row(tr("Vider la liste des chaînes", "Clear the channel list", "مسح قائمة القنوات", "Vaciar la lista de canales"), "", arrow) {
+            confirm(tr("Supprimer toutes les chaînes ?", "Delete all channels?", "حذف كل القنوات؟", "¿Borrar todos los canales?")) {
+                all.clear()
+                save()
+                refresh(true)
+            }
+        }
+        row(tr("Réinitialiser", "Reset", "إعادة الضبط", "Restablecer"), "", arrow) {
+            confirm(tr("Tout réinitialiser (comptes, playlists, films) ?", "Reset everything (accounts, playlists, movies)?", "إعادة ضبط الكل؟", "¿Restablecer todo?")) {
+                resetAll()
+            }
+        }
+        row(
+            tr("À propos de Player Lamine S Bouzareah", "About Player Lamine S Bouzareah", "حول Player Lamine S Bouzareah", "Acerca de Player Lamine S Bouzareah"),
+            tr("Version 7.4.0", "Version 7.4.0", "الإصدار 7.4.0", "Versión 7.4.0"),
+            arrow
+        ) { aboutDialog() }
+    }
+
+    private fun aboutDialog() {
+        dialog().setTitle(
+            tr("À propos de Player Lamine S Bouzareah", "About Player Lamine S Bouzareah", "حول Player Lamine S Bouzareah", "Acerca de Player Lamine S Bouzareah")
+        )
+            .setMessage(
+                tr(
+                    "Player Lamine S Bouzareah\nVersion 7.4.0\n\nTV en direct, films et séries (HLS, DASH, TS) avec Xtream, M3U, guide TV, enregistrement (PVR), portail web et retour au direct.\n\nMobile, Android TV et Fire TV.",
+                    "Player Lamine S Bouzareah\nVersion 7.4.0\n\nLive TV, movies and series (HLS, DASH, TS) with Xtream, M3U, TV guide, recording (PVR), web portal and Go to Live.\n\nMobile, Android TV and Fire TV.",
+                    "Player Lamine S Bouzareah\nالإصدار 7.4.0\n\nتلفزيون مباشر وأفلام ومسلسلات (HLS وDASH وTS) مع Xtream وM3U ودليل البرامج والتسجيل وبوابة الويب والعودة للبث المباشر.\n\nللهاتف وAndroid TV وFire TV.",
+                    "Player Lamine S Bouzareah\nVersión 7.4.0\n\nTV en vivo, películas y series (HLS, DASH, TS) con Xtream, M3U, guía TV, grabación (PVR), portal web e Ir al directo.\n\nMóvil, Android TV y Fire TV."
+                )
+            )
+            .setPositiveButton("OK", null)
+            .show()
+    }
+
+    private fun resetAll() {
+        all = defaultChannels.map { it.copy() }.toMutableList()
+        savePlaylists(emptyList())
+        saveAccounts(emptyList())
+        vods = mutableListOf()
+        vodLoaded = true
+        saveVodFile(vods)
+        hiddenSet = HashSet()
+        prefs.edit().putString("hidden", "").putString("epg", "").putString("epg_list", "").apply()
+        filter = ""
+        vfilter = ""
+        save()
+        refresh(true)
+    }
+
+    // ----- sources EPG gratuites -----
+
+    private fun enabledPresets(): HashSet<String> {
+        val s = prefs.getString("epg_list", "") ?: ""
+        return HashSet(s.lines().filter { it.isNotBlank() })
+    }
+
+    private fun epgPresetsDialog() {
+        val on = enabledPresets()
+        val names = epgPresets.map { it.first }.toTypedArray()
+        val checked = BooleanArray(epgPresets.size) { on.contains(epgPresets[it].second) }
+        dialog().setTitle(tr("Sources EPG gratuites", "Free EPG sources", "مصادر EPG مجانية", "Fuentes EPG gratuitas"))
+            .setMultiChoiceItems(names, checked) { _, i, isChecked -> checked[i] = isChecked }
+            .setPositiveButton(tr("Enregistrer et charger", "Save and load", "حفظ وتحميل", "Guardar y cargar")) { _, _ ->
+                val sel = ArrayList<String>()
+                for (i in epgPresets.indices) {
+                    if (checked[i]) sel.add(epgPresets[i].second)
+                }
+                prefs.edit().putString("epg_list", sel.joinToString("\n")).apply()
+                fetchEpg(true)
+            }
+            .setNegativeButton(tr("Annuler", "Cancel", "إلغاء", "Cancelar"), null)
+            .show()
+    }
+
+    // ----- PVR -----
+
+    private fun recDir(): File {
+        val base = getExternalFilesDir("recordings") ?: File(filesDir, "recordings")
+        if (!base.exists()) base.mkdirs()
+        return base
+    }
+
+    private fun updateRecBadge() {
+        if (recorder.active) {
+            val mb = String.format(Locale.US, "%.0f MB", recorder.bytes / 1048576.0)
+            recBadge.text = "● REC " + fmtDur(System.currentTimeMillis() - recorder.startMs) + "   " + mb
+            recBadge.visibility = View.VISIBLE
+        } else {
+            recBadge.visibility = View.GONE
+        }
+    }
+
+    private fun toggleRecord() {
+        if (recorder.active) {
+            recorder.stop()
+            toast(tr("Enregistrement arrêté", "Recording stopped", "تم إيقاف التسجيل", "Grabación detenida"))
+        } else {
+            val c = all.firstOrNull { it.url == currentUrl }
+            if (c == null || isVod) {
+                toast(tr("Lancez d'abord une chaîne en direct", "Start a live channel first", "شغّل قناة مباشرة أولاً", "Inicia primero un canal en vivo"))
+            } else {
+                startRecording(c.name, c.url, Long.MAX_VALUE)
+            }
+        }
+    }
+
+    private fun startRecording(name: String, url: String, durMs: Long) {
+        if (recorder.active) {
+            toast(tr("Un enregistrement est déjà en cours", "A recording is already running", "هناك تسجيل قيد التشغيل", "Ya hay una grabación en curso"))
+            return
+        }
+        val dir = recDir()
+        if (dir.usableSpace < 300L * 1024L * 1024L) {
+            toast(tr("Espace de stockage insuffisant", "Not enough storage space", "مساحة التخزين غير كافية", "Espacio insuficiente"))
+            return
+        }
+        val maxMs = minOf(durMs, prefs.getInt("rec_max", 240) * 60000L)
+        val started = recorder.start(name, url, dir, maxMs, userAgent()) { f, err ->
+            runOnUiThread { onRecordingDone(f, err) }
+        }
+        if (started) {
+            toast("● REC " + name)
+            ui.removeCallbacks(recTicker)
+            ui.postDelayed(recTicker, 500)
+            updateRecBadge()
+        }
+    }
+
+    private fun onRecordingDone(f: File?, err: String) {
+        updateRecBadge()
+        if (f != null) {
+            toast(tr("Enregistrement terminé : ", "Recording finished: ", "انتهى التسجيل: ", "Grabación terminada: ") + f.name)
+        } else {
+            toast(tr("Enregistrement échoué ", "Recording failed ", "فشل التسجيل ", "Grabación fallida ") + err)
+        }
+    }
+
+    private fun loadSched(): MutableList<Sched> {
+        val out = ArrayList<Sched>()
+        val s = prefs.getString("sched", "") ?: ""
+        for (line in s.lines()) {
+            val p = line.split("|", limit = 4)
+            if (p.size == 4) {
+                val st = p[0].toLongOrNull()
+                val mn = p[1].toIntOrNull()
+                if (st != null && mn != null) out.add(Sched(st, mn, p[2], p[3]))
+            }
+        }
+        return out
+    }
+
+    private fun saveSched(l: List<Sched>) {
+        val s = l.joinToString("\n") {
+            it.start.toString() + "|" + it.min + "|" + it.url + "|" + it.name.replace("|", " ").replace("\n", " ")
+        }
+        prefs.edit().putString("sched", s).apply()
+    }
+
+    private fun checkSchedule() {
+        val l = loadSched()
+        if (l.isEmpty()) return
+        val now = System.currentTimeMillis()
+        var changed = false
+        val iter = l.iterator()
+        while (iter.hasNext()) {
+            val s = iter.next()
+            val end = s.start + s.min * 60000L
+            if (now >= end) {
+                iter.remove()
+                changed = true
+            } else if (now >= s.start && !recorder.active) {
+                iter.remove()
+                changed = true
+                startRecording(s.name, s.url, end - now)
+            }
+        }
+        if (changed) saveSched(l)
+    }
+
+    private fun addSchedule(query: String, hhmm: String, minutes: Int): String {
+        val q = query.trim()
+        val num = q.toIntOrNull()
+        val ch = if (num != null) all.getOrNull(num - 1) else all.firstOrNull { it.name.lowercase().contains(q.lowercase()) }
+        if (ch == null) return tr("Chaîne introuvable", "Channel not found", "القناة غير موجودة", "Canal no encontrado")
+        val m = Regex("(\\d{1,2}):(\\d{2})").matchEntire(hhmm.trim())
+            ?: return tr("Heure invalide (HH:mm)", "Invalid time (HH:mm)", "وقت غير صالح (HH:mm)", "Hora inválida (HH:mm)")
+        val h = m.groupValues[1].toInt()
+        val mi = m.groupValues[2].toInt()
+        if (h > 23 || mi > 59 || minutes < 1) {
+            return tr("Heure ou durée invalide", "Invalid time or length", "وقت أو مدة غير صالحة", "Hora o duración inválida")
+        }
+        val cal = java.util.Calendar.getInstance()
+        cal.set(java.util.Calendar.HOUR_OF_DAY, h)
+        cal.set(java.util.Calendar.MINUTE, mi)
+        cal.set(java.util.Calendar.SECOND, 0)
+        cal.set(java.util.Calendar.MILLISECOND, 0)
+        if (cal.timeInMillis < System.currentTimeMillis() - 60000L) cal.add(java.util.Calendar.DAY_OF_YEAR, 1)
+        val l = loadSched()
+        l.add(Sched(cal.timeInMillis, minutes, ch.url, ch.name))
+        saveSched(l)
+        return tr("Enregistrement planifié : ", "Recording scheduled: ", "تم جدولة التسجيل: ", "Grabación programada: ") +
+            ch.name + " " + fmtTime(cal.timeInMillis)
+    }
+
+    private fun scheduleDialog() {
+        val cur = all.firstOrNull { it.url == currentUrl }
+        val n = field(tr("Chaîne (nom ou numéro)", "Channel (name or number)", "القناة (اسم أو رقم)", "Canal (nombre o número)"), cur?.name ?: "")
+        val t = field("HH:mm", fmtTime(System.currentTimeMillis() + 5 * 60000L))
+        val d = field(tr("Durée (minutes)", "Length (minutes)", "المدة (دقائق)", "Duración (minutos)"), "60")
+        d.inputType = InputType.TYPE_CLASS_NUMBER
+        dialog().setTitle(tr("Planifier un enregistrement", "Schedule a recording", "جدولة تسجيل", "Programar grabación"))
+            .setView(form(n, t, d))
+            .setPositiveButton(tr("Planifier", "Schedule", "جدولة", "Programar")) { _, _ ->
+                val msg = addSchedule(n.text.toString(), t.text.toString(), d.text.toString().trim().toIntOrNull() ?: 0)
+                toast(msg)
+            }
+            .setNegativeButton(tr("Annuler", "Cancel", "إلغاء", "Cancelar"), null)
+            .show()
+    }
+
+    private fun recordingsDialog() {
+        val files = (recDir().listFiles() ?: emptyArray<File>())
+            .filter { it.isFile && it.name.endsWith(".ts") }
+            .sortedByDescending { it.lastModified() }
+        val sched = loadSched()
+        val labels = ArrayList<String>()
+        val acts = ArrayList<() -> Unit>()
+        if (recorder.active) {
+            labels.add("● " + tr("Arrêter : ", "Stop: ", "إيقاف: ", "Detener: ") + recorder.title)
+            acts.add { toggleRecord() }
+        }
+        for (s in sched) {
+            labels.add("⏰ " + dayFmt.format(Date(s.start)) + "  " + s.name + "  (" + s.min + " min)")
+            acts.add {
+                confirm(tr("Annuler cet enregistrement planifié ?", "Cancel this scheduled recording?", "إلغاء هذا التسجيل المجدول؟", "¿Cancelar esta grabación programada?")) {
+                    val l = loadSched()
+                    l.removeAll { it.start == s.start && it.url == s.url }
+                    saveSched(l)
+                }
+            }
+        }
+        for (f in files) {
+            val mb = String.format(Locale.US, "%.0f MB", f.length() / 1048576.0)
+            labels.add(f.nameWithoutExtension + "   " + mb)
+            acts.add { recordingMenu(f) }
+        }
+        if (labels.isEmpty()) {
+            toast(tr("Aucun enregistrement", "No recordings", "لا توجد تسجيلات", "Sin grabaciones"))
+            return
+        }
+        dialog().setTitle(tr("Mes enregistrements", "My recordings", "تسجيلاتي", "Mis grabaciones"))
+            .setItems(labels.toTypedArray()) { _, i -> acts[i]() }
+            .show()
+    }
+
+    private fun recordingMenu(f: File) {
+        val items = arrayOf(
+            tr("Lire", "Play", "تشغيل", "Reproducir"),
+            tr("Supprimer", "Delete", "حذف", "Eliminar")
+        )
+        dialog().setTitle(f.nameWithoutExtension).setItems(items) { _, i ->
+            when (i) {
+                0 -> {
+                    closeSettings()
+                    playVod(f.nameWithoutExtension, Uri.fromFile(f).toString())
+                }
+                1 -> confirm(tr("Supprimer cet enregistrement ?", "Delete this recording?", "حذف هذا التسجيل؟", "¿Eliminar esta grabación?")) {
+                    f.delete()
+                }
+            }
+        }.show()
+    }
+
+    // ----- portail web -----
+
+    private fun portalPin(): String {
+        var p = prefs.getString("portal_pin", "") ?: ""
+        if (p.isBlank()) {
+            p = (java.util.Random().nextInt(9000) + 1000).toString()
+            prefs.edit().putString("portal_pin", p).apply()
+        }
+        return p
+    }
+
+    private fun startPortal(): Boolean {
+        if (portal != null) return true
+        val html = try {
+            assets.open("portal.html").bufferedReader().use { it.readText() }
+        } catch (e: Exception) {
+            "portal.html missing"
+        }
+        val srv = PortalServer(portalPin(), html, { portalStatus() }, epgPresets) { n, p -> portalAction(n, p) }
+        if (!srv.start()) return false
+        portal = srv
+        return true
+    }
+
+    private fun stopPortal() {
+        portal?.stop()
+        portal = null
+    }
+
+    private fun togglePortal() {
+        if (portal != null) {
+            stopPortal()
+            prefs.edit().putBoolean("portal_on", false).apply()
+            toast(tr("Portail web désactivé", "Web portal off", "تم إيقاف بوابة الويب", "Portal web desactivado"))
+        } else if (startPortal()) {
+            prefs.edit().putBoolean("portal_on", true).apply()
+            portalDialog()
+        } else {
+            toast(tr("Impossible de démarrer le portail", "Cannot start the portal", "تعذر تشغيل البوابة", "No se pudo iniciar el portal"))
+        }
+    }
+
+    private fun portalDialog() {
+        val p = portal
+        if (p == null) {
+            toast(tr("Portail désactivé", "Portal is off", "البوابة متوقفة", "Portal desactivado"))
+            return
+        }
+        val ips = portalLocalIps()
+        val sb = StringBuilder()
+        sb.append(tr("Sur votre smartphone (même Wi-Fi), ouvrez :", "On your smartphone (same Wi-Fi), open:", "على هاتفك (نفس الواي فاي) افتح:", "En tu móvil (misma Wi-Fi), abre:"))
+        sb.append("\n\n")
+        if (ips.isEmpty()) sb.append(tr("Adresse IP introuvable", "IP address not found", "تعذر العثور على عنوان IP", "Dirección IP no encontrada")).append("\n")
+        for (ip in ips) {
+            sb.append("http://").append(ip).append(":").append(p.port()).append("/?pin=").append(portalPin()).append("\n")
+        }
+        sb.append("\n").append(tr("Code : ", "Code: ", "الرمز: ", "Código: ")).append(portalPin())
+        dialog().setTitle(tr("Portail web", "Web portal", "بوابة الويب", "Portal web"))
+            .setMessage(sb.toString())
+            .setPositiveButton("OK", null)
+            .setNeutralButton(tr("Nouveau code", "New code", "رمز جديد", "Nuevo código")) { _, _ ->
+                prefs.edit().putString("portal_pin", "").apply()
+                stopPortal()
+                startPortal()
+                portalDialog()
+            }
+            .show()
+    }
+
+    private fun portalStatus(): List<String> {
+        val l = ArrayList<String>()
+        try {
+            l.add(tr("Chaînes : ", "Channels: ", "القنوات: ", "Canales: ") + all.size)
+            l.add(tr("Films et séries : ", "Movies and series: ", "الأفلام والمسلسلات: ", "Películas y series: ") + vods.size)
+            val c = all.firstOrNull { it.url == currentUrl }
+            if (c != null) l.add(tr("En lecture : ", "Now playing: ", "قيد التشغيل: ", "En reproducción: ") + c.name)
+            if (recorder.active) l.add("● REC " + recorder.title)
+            l.add(tr("Enregistrements planifiés : ", "Scheduled recordings: ", "التسجيلات المجدولة: ", "Grabaciones programadas: ") + loadSched().size)
+        } catch (e: Exception) {
+        }
+        return l
+    }
+
+    private fun portalAction(name: String, p: Map<String, String>): String {
+        val result = StringBuilder()
+        val latch = java.util.concurrent.CountDownLatch(1)
+        runOnUiThread {
+            try {
+                result.append(doPortalAction(name, p))
+            } catch (e: Throwable) {
+                result.append("Error: " + e.message)
+            } finally {
+                latch.countDown()
+            }
+        }
+        latch.await(20, java.util.concurrent.TimeUnit.SECONDS)
+        return result.toString()
+    }
+
+    private fun doPortalAction(name: String, p: Map<String, String>): String {
+        val done = tr("Fait", "Done", "تم", "Hecho")
+        when (name) {
+            "refresh" -> {
+                updateAll()
+                return done
+            }
+            "play" -> {
+                val q = (p["q"] ?: "").trim()
+                val num = q.toIntOrNull()
+                val ch = if (num != null) all.getOrNull(num - 1) else all.firstOrNull { it.name.lowercase().contains(q.lowercase()) }
+                if (ch == null) return tr("Chaîne introuvable", "Channel not found", "القناة غير موجودة", "Canal no encontrado")
+                play(ch)
+                return tr("Lecture : ", "Playing: ", "تشغيل: ", "Reproduciendo: ") + ch.name
+            }
+            "add_channel" -> {
+                val url = (p["url"] ?: "").trim()
+                if (url.isEmpty()) return tr("Lien manquant", "Missing link", "الرابط مفقود", "Falta el enlace")
+                if (all.any { it.url == url }) return tr("Cette chaîne existe déjà", "Channel already exists", "القناة موجودة بالفعل", "El canal ya existe")
+                val nm = (p["name"] ?: "").trim()
+                all.add(Channel(if (nm.isEmpty()) url else nm, url, (p["group"] ?: "").trim()))
+                save()
+                refresh(true)
+                return tr("Chaîne ajoutée", "Channel added", "تمت إضافة القناة", "Canal añadido")
+            }
+            "add_m3u" -> {
+                val url = (p["url"] ?: "").trim()
+                if (url.isEmpty()) return tr("Lien manquant", "Missing link", "الرابط مفقود", "Falta el enlace")
+                val l = playlists()
+                if (!l.contains(url)) {
+                    l.add(url)
+                    savePlaylists(l)
+                }
+                fetchPlaylist(url, true)
+                return tr("Import en cours…", "Importing…", "جارٍ الاستيراد…", "Importando…")
+            }
+            "add_m3u_text" -> {
+                val pl = parseM3u(p["text"] ?: "")
+                if (pl.channels.isEmpty()) return tr("Aucune chaîne trouvée", "No channels found", "لم يتم العثور على قنوات", "No se encontraron canales")
+                mergeChannels(pl, true)
+                return pl.channels.size.toString() + tr(" chaînes lues", " channels read", " قناة تمت قراءتها", " canales leídos")
+            }
+            "add_xtream" -> {
+                val server = (p["server"] ?: "").trim()
+                val user = (p["user"] ?: "").trim()
+                val pass = (p["pass"] ?: "").trim()
+                if (server.isEmpty() || user.isEmpty() || pass.isEmpty()) {
+                    return tr("Champs incomplets", "Missing fields", "حقول ناقصة", "Campos incompletos")
+                }
+                val acc = Account((p["name"] ?: "").trim(), normServer(server), user, pass)
+                val l = accounts()
+                l.removeAll { it.key() == acc.key() }
+                l.add(acc)
+                saveAccounts(l)
+                fetchXtream(acc, true)
+                fetchVod(acc, true)
+                return tr("Connexion en cours…", "Connecting…", "جارٍ الاتصال…", "Conectando…")
+            }
+            "set_epg" -> {
+                var url = (p["url"] ?: "").trim()
+                if (url.isEmpty()) url = (p["preset"] ?: "").trim()
+                if (url.isEmpty()) return tr("Lien manquant", "Missing link", "الرابط مفقود", "Falta el enlace")
+                val cur = enabledPresets()
+                if (epgPresets.any { it.second == url }) {
+                    cur.add(url)
+                    prefs.edit().putString("epg_list", cur.joinToString("\n")).apply()
+                } else {
+                    prefs.edit().putString("epg", url).apply()
+                }
+                fetchEpg(true)
+                return tr("Guide en cours de chargement…", "Loading guide…", "جارٍ تحميل الدليل…", "Cargando guía…")
+            }
+            "rec_start" -> {
+                toggleRecordStartOnly()
+                return done
+            }
+            "rec_stop" -> {
+                if (recorder.active) recorder.stop()
+                return done
+            }
+            "rec_schedule" -> {
+                return addSchedule(p["q"] ?: "", p["time"] ?: "", (p["min"] ?: "60").trim().toIntOrNull() ?: 0)
+            }
+        }
+        return "?"
+    }
+
+    private fun toggleRecordStartOnly() {
+        if (!recorder.active) toggleRecord()
+    }
+
+    // ---------- v7.1 : OSD facon TiviMate, logos ----------
+
+    private val osdFmt = SimpleDateFormat("EEE d MMM  HH:mm", Locale.getDefault())
+    private var sleepEnd = 0L
+
+    private fun buildOsd() {
+        osdGroup = TextView(this)
+        osdGroup.textSize = ts(18f)
+        osdGroup.setTextColor(Color.parseColor("#E6FFFFFF"))
+        osdGroup.setShadowLayer(6f, 0f, 2f, Color.BLACK)
+        osdGroup.visibility = View.GONE
+        val g1 = FrameLayout.LayoutParams(-2, -2)
+        g1.gravity = Gravity.TOP or Gravity.START
+        g1.setMargins(dp(24), dp(16), 0, 0)
+        playerFrame.addView(osdGroup, g1)
+
+        osdClock = TextView(this)
+        osdClock.textSize = ts(18f)
+        osdClock.setTextColor(Color.parseColor("#E6FFFFFF"))
+        osdClock.setShadowLayer(6f, 0f, 2f, Color.BLACK)
+        osdClock.visibility = View.GONE
+        val g2 = FrameLayout.LayoutParams(-2, -2)
+        g2.gravity = Gravity.TOP or Gravity.END
+        g2.setMargins(0, dp(16), dp(24), 0)
+        playerFrame.addView(osdClock, g2)
+
+        optionsBar = HorizontalScrollView(this)
+        optionsBar.isHorizontalScrollBarEnabled = false
+        optionsBar.background = GradientDrawable(
+            GradientDrawable.Orientation.BOTTOM_TOP,
+            intArrayOf(Color.parseColor("#F2000000"), Color.TRANSPARENT)
+        )
+        optionsBar.setPadding(dp(16), dp(40), dp(16), dp(16))
+        optRow = LinearLayout(this)
+        optRow.orientation = LinearLayout.HORIZONTAL
+        optionsBar.addView(optRow)
+        optionsBar.visibility = View.GONE
+        val ob = FrameLayout.LayoutParams(-1, -2)
+        ob.gravity = Gravity.BOTTOM
+        playerFrame.addView(optionsBar, ob)
+    }
+
+    private fun hideOsd() {
+        banner.visibility = View.GONE
+        tilesScroll.visibility = View.GONE
+        controls.visibility = View.GONE
+        optionsBar.visibility = View.GONE
+        osdGroup.visibility = View.GONE
+        osdClock.visibility = View.GONE
+        controlsVisible = false
+        quickOpen = false
+        if (!panelOpen && !settingsOpen) root.requestFocus()
+    }
+
+    private fun updateOsdTop() {
+        val c = all.firstOrNull { it.url == currentUrl }
+        osdGroup.text = if (isVod) vodTitle else (c?.group ?: "")
+        osdClock.text = osdFmt.format(Date())
+        osdGroup.visibility = if (osdGroup.text.isEmpty()) View.GONE else View.VISIBLE
+        osdClock.visibility = View.VISIBLE
+    }
+
+    private fun updateBadges() {
+        badgeBox.removeAllViews()
+        val exo = player ?: return
+        val labels = ArrayList<String>()
+        val vf = exo.videoFormat
+        if (vf != null && vf.height > 0) {
+            val h = vf.height
+            labels.add(if (h >= 2160) "4K" else if (h >= 1080) "FHD" else if (h >= 720) "HD" else "SD")
+        }
+        if (vf != null && vf.frameRate > 0f) labels.add(Math.round(vf.frameRate).toString() + " FPS")
+        val af = exo.audioFormat
+        if (af != null && af.channelCount > 0) labels.add(audioName(af.channelCount))
+        for (l in labels) {
+            val t = TextView(this)
+            t.text = l
+            t.textSize = ts(11f)
+            t.typeface = Typeface.DEFAULT_BOLD
+            t.setTextColor(Color.WHITE)
+            t.setPadding(dp(7), dp(2), dp(7), dp(2))
+            t.background = rounded(Color.parseColor("#55FFFFFF"), 6)
+            val lp = LinearLayout.LayoutParams(-2, -2)
+            lp.leftMargin = dp(8)
+            badgeBox.addView(t, lp)
+        }
+    }
+
+    private fun audioName(channels: Int): String = when (channels) {
+        1 -> "MONO"
+        2 -> tr("STÉRÉO", "STEREO", "ستيريو", "ESTÉREO")
+        6 -> "5.1"
+        8 -> "7.1"
+        else -> "AUDIO"
+    }
+
+    private fun resLabel(): String {
+        val vf = player?.videoFormat
+        return if (vf != null && vf.width > 0 && vf.height > 0) {
+            vf.width.toString() + " × " + vf.height.toString()
+        } else {
+            tr("Qualité", "Quality", "الجودة", "Calidad")
+        }
+    }
+
+    private fun audioLabel(): String {
+        val af = player?.audioFormat
+        return if (af != null && af.channelCount > 0) audioName(af.channelCount) else "Audio"
+    }
+
+    private fun ccLabel(): String {
+        val exo = player ?: return "Off"
+        for (g in exo.currentTracks.groups) {
+            if (g.type != C.TRACK_TYPE_TEXT) continue
+            for (i in 0 until g.length) {
+                if (g.isTrackSelected(i)) {
+                    val lang = g.getTrackFormat(i).language
+                    return if (!lang.isNullOrBlank() && lang != "und") lang.uppercase() else "CC"
+                }
+            }
+        }
+        return "Off"
+    }
+
+    private fun sleepLabel(): String {
+        val left = sleepEnd - System.currentTimeMillis()
+        return if (left > 0L) ((left / 60000L) + 1L).toString() + " min" else "Off"
+    }
+
+    // ----- tuiles -----
+
+    private fun osdTileBg(focused: Boolean, bare: Boolean): GradientDrawable {
+        val g = GradientDrawable()
+        g.cornerRadius = dp(14).toFloat()
+        if (focused) {
+            g.setColor(ACCENT)
+        } else if (bare) {
+            g.setColor(Color.TRANSPARENT)
+        } else {
+            g.setColor(Color.parseColor("#44FFFFFF"))
+        }
+        return g
+    }
+
+    private fun osdTile(icon: Int, label: String, bare: Boolean, action: () -> Unit): LinearLayout {
+        val t = LinearLayout(this)
+        t.orientation = LinearLayout.VERTICAL
+        t.gravity = Gravity.CENTER
+        t.setPadding(dp(6), dp(8), dp(6), dp(8))
+        t.isFocusable = true
+        t.isClickable = true
+        t.contentDescription = label
+        t.background = osdTileBg(false, bare)
+        t.setOnFocusChangeListener { v, has -> v.background = osdTileBg(has, bare) }
+        if (icon != 0) {
+            val iv = ImageView(this)
+            iv.setImageResource(icon)
+            t.addView(iv, LinearLayout.LayoutParams(dp(if (tv) 36 else 28), dp(if (tv) 36 else 28)))
+        }
+        val tx = TextView(this)
+        tx.text = label
+        tx.textSize = ts(12f)
+        tx.setTextColor(Color.WHITE)
+        tx.gravity = Gravity.CENTER
+        tx.maxLines = 2
+        tx.ellipsize = TextUtils.TruncateAt.END
+        val tlp = LinearLayout.LayoutParams(-2, -2)
+        tlp.topMargin = dp(4)
+        t.addView(tx, tlp)
+        t.setOnClickListener {
+            ui.removeCallbacks(hideBanner)
+            ui.postDelayed(hideBanner, 9000L)
+            action()
+        }
+        return t
+    }
+
+    private fun chTile(ch: Channel): LinearLayout {
+        val t = osdTile(0, "", false) {
+            play(ch)
+            hideOsd()
+        }
+        t.removeAllViews()
+        val iv = ImageView(this)
+        iv.scaleType = ImageView.ScaleType.FIT_CENTER
+        t.addView(iv, LinearLayout.LayoutParams(dp(if (tv) 90 else 70), dp(if (tv) 50 else 38)))
+        val tx = TextView(this)
+        val now = Epg.now(ch.tvgId)
+        val logo = logoFor(ch)
+        tx.text = if (logo.isBlank()) ch.name else if (now != null) now.title else tr("Pas d'information", "No information", "لا توجد معلومات", "Sin información")
+        tx.textSize = ts(11f)
+        tx.setTextColor(Color.WHITE)
+        tx.gravity = Gravity.CENTER
+        tx.maxLines = 2
+        tx.ellipsize = TextUtils.TruncateAt.END
+        t.addView(tx, LinearLayout.LayoutParams(-2, -2))
+        loadLogo(logo, iv, null, 160)
+        return t
+    }
+
+    private fun populateTiles() {
+        tilesRow.removeAllViews()
+        fun addT(v: View) {
+            val lp = LinearLayout.LayoutParams(dp(if (tv) 150 else 112), dp(if (tv) 112 else 88))
+            lp.setMargins(dp(4), dp(4), dp(4), dp(4))
+            tilesRow.addView(v, lp)
+        }
+        addT(osdTile(R.drawable.osd_guide, tr("Guide TV", "TV Guide", "دليل التلفاز", "Guía TV"), false) {
+            val c = all.firstOrNull { it.url == currentUrl }
+            if (c != null && !isVod) guideDialog(c)
+            else toast(tr("Pas de guide", "No guide", "لا يوجد دليل", "Sin guía"))
+        })
+        addT(osdTile(R.drawable.osd_history, tr("Historique", "History", "السجل", "Historial"), false) {
+            if (section != 0) setSection(0)
+            filter = F_RECENT
+            refresh(true)
+            openPanel()
+        })
+        var n = 0
+        for (u in recent) {
+            if (n >= 12) break
+            val ch = all.firstOrNull { it.url == u }
+            if (ch == null || ch.url == currentUrl) continue
+            addT(chTile(ch))
+            n++
+        }
+    }
+
+    private fun populateOptions() {
+        optRow.removeAllViews()
+        fun add(icon: Int, label: String, refreshAfter: Boolean, action: () -> Unit) {
+            val lp = LinearLayout.LayoutParams(dp(if (tv) 132 else 98), -2)
+            lp.setMargins(dp(3), 0, dp(3), 0)
+            var tile: LinearLayout? = null
+            tile = osdTile(icon, label, true) {
+                val idx = optRow.indexOfChild(tile)
+                action()
+                if (refreshAfter) {
+                    populateOptions()
+                    optRow.getChildAt(idx)?.requestFocus()
+                }
+            }
+            optRow.addView(tile, lp)
+        }
+        val c = all.firstOrNull { it.url == currentUrl }
+        if (isVod) {
+            add(0, "−10 s", false) { seekBy(-10000L) }
+            val paused = player?.playWhenReady == false
+            add(if (paused) R.drawable.ic_play else R.drawable.ic_pause, tr("Lecture / Pause", "Play / Pause", "تشغيل / إيقاف", "Reproducir / Pausa"), true) { playPause() }
+            add(0, "+10 s", false) { seekBy(10000L) }
+        }
+        add(R.drawable.osd_search, tr("Rechercher", "Search", "بحث", "Buscar"), false) { globalSearchDialog() }
+        add(R.drawable.osd_list, tr("Liste des Chaînes", "Channel list", "قائمة القنوات", "Lista de canales"), false) { openPanel() }
+        add(R.drawable.osd_dvr, tr("Enregistrements", "Recordings", "التسجيلات", "Grabaciones"), false) { recordingsDialog() }
+        if (!isVod) {
+            add(
+                R.drawable.osd_rec,
+                if (recorder.active) tr("Arrêter REC", "Stop REC", "إيقاف التسجيل", "Detener REC") else tr("Enregistrer", "Record", "تسجيل", "Grabar"),
+                true
+            ) { toggleRecord() }
+        }
+        if (!tv) add(R.drawable.osd_pip, tr("Image dans l'image", "Picture in picture", "صورة داخل صورة", "Imagen en imagen"), false) { enterPip() }
+        add(R.drawable.osd_video, resLabel(), false) { videoDialog() }
+        add(R.drawable.osd_audio, audioLabel(), false) { trackDialog(C.TRACK_TYPE_AUDIO) }
+        add(R.drawable.osd_cc, ccLabel(), false) { trackDialog(C.TRACK_TYPE_TEXT) }
+        add(R.drawable.osd_aspect, resizeName(resizeIndex), true) { cycleResize() }
+        add(R.drawable.osd_timer, sleepLabel(), false) { sleepDialog() }
+        if (!isVod) {
+            add(
+                R.drawable.osd_star,
+                if (c != null && c.fav) tr("Retirer des Favoris", "Remove from Favorites", "إزالة من المفضلة", "Quitar de Favoritos")
+                else tr("Ajouter aux Favoris", "Add to Favorites", "إضافة للمفضلة", "Añadir a Favoritos"),
+                true
+            ) { toggleFavCurrent() }
+            if (c != null) {
+                add(R.drawable.osd_options, tr("Options de Chaîne", "Channel options", "خيارات القناة", "Opciones del canal"), false) { channelMenu(c) }
+            }
+        }
+        add(R.drawable.osd_settings, tr("Paramètres", "Settings", "الإعدادات", "Ajustes"), false) { menuDialog() }
+    }
+
+    // ----- logos -----
+
+    private fun logoScale(): Float = when (prefs.getInt("logo_size", 1)) {
+        0 -> 0.75f
+        2 -> 1.4f
+        else -> 1f
+    }
+
+    private fun logoListSize(): Int = when (prefs.getInt("logo_size", 1)) {
+        0 -> 40
+        2 -> 64
+        else -> 50
+    }
+
+    private fun autoLogoUrl(c: Channel): String {
+        var n = java.text.Normalizer.normalize(c.name, java.text.Normalizer.Form.NFD)
+        n = n.replace(Regex("\\p{M}+"), "").lowercase()
+        n = n.replace(Regex("\\[[^\\]]*\\]|\\([^)]*\\)"), " ")
+        n = n.replace(Regex("\\b(fhd|uhd|hd|sd|4k|hevc|raw|vip)\\b"), " ")
+        n = n.replace(Regex("^[^a-z0-9]*[a-z]{2}\\s*[:|\\-]+\\s*"), " ")
+        n = n.trim().replace(Regex("[^a-z0-9]+"), "-").trim('-')
+        if (n.length < 2) return ""
+        val hay = (c.name + " " + c.group).lowercase()
+        var folder = "france"
+        var cc = "fr"
+        if (hay.contains("uk") || hay.contains("united kingdom")) {
+            folder = "united-kingdom"
+            cc = "uk"
+        } else if (hay.contains("germany") || hay.contains("de|")) {
+            folder = "germany"
+            cc = "de"
+        } else if (hay.contains("spain") || hay.contains("es|")) {
+            folder = "spain"
+            cc = "es"
+        } else if (hay.contains("italy") || hay.contains("it|")) {
+            folder = "italy"
+            cc = "it"
+        } else if (hay.contains("belgi") || hay.contains("be|")) {
+            folder = "belgium"
+            cc = "be"
+        }
+        return "https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/" + folder + "/" + n + "-" + cc + ".png"
+    }
+
+    private fun logoFor(c: Channel): String {
+        if (c.logo.isNotBlank()) return c.logo
+        if (!prefs.getBoolean("logo_auto", false)) return ""
+        return autoLogoUrl(c)
+    }
+
+    private fun logoDialog(ch: Channel) {
+        val u = field(tr("Lien du logo (png / jpg)", "Logo link (png / jpg)", "رابط الشعار (png / jpg)", "Enlace del logo (png / jpg)"), ch.logo)
+        dialog().setTitle(tr("Changer le logo", "Change the logo", "تغيير الشعار", "Cambiar el logo")).setView(form(u))
+            .setPositiveButton("OK") { _, _ ->
+                ch.logo = u.text.toString().trim()
+                failed.remove(ch.logo)
+                save()
+                modeKey = -1
+                applyListMode()
+            }
+            .setNegativeButton(tr("Annuler", "Cancel", "إلغاء", "Cancelar"), null)
+            .show()
+    }
+
+    // ----- liste facon TiviMate -----
+
+    private fun groupBg(selected: Boolean, focused: Boolean): GradientDrawable {
+        val g = GradientDrawable()
+        g.cornerRadius = dp(8).toFloat()
+        g.setColor(
+            if (focused) Color.parseColor("#80FFFFFF")
+            else if (selected) Color.parseColor("#33FFFFFF")
+            else Color.TRANSPARENT
+        )
+        return g
+    }
+
+    private fun listRowBg(active: Boolean, focused: Boolean): GradientDrawable {
+        val g = GradientDrawable()
+        g.cornerRadius = dp(10).toFloat()
+        g.setColor(
+            if (focused) (if (onScrim()) Color.parseColor("#4DFFFFFF") else CARD_FOCUS)
+            else if (active) (if (onScrim()) Color.parseColor("#1AFFFFFF") else CARD_ACTIVE)
+            else Color.TRANSPARENT
+        )
+        return g
+    }
+
+    private fun lineBar(): ProgressBar {
+        val b = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal)
+        b.max = 100
+        b.progressTintList = ColorStateList.valueOf(if (onScrim()) Color.WHITE else ACCENT)
+        b.progressBackgroundTintList = ColorStateList.valueOf(Color.parseColor(if (onScrim()) "#55FFFFFF" else "#33000000"))
+        return b
+    }
+
+    // ----- theme et accessibilite -----
+
+    private fun onScrim(): Boolean = isLandscape() || tv
+
+    private fun listTxt(): Int = if (onScrim()) Color.WHITE else TXT
+
+    private fun listSub(): Int = if (onScrim()) Color.parseColor("#D0D5DD") else SUB
+
+    // ----- premiere utilisation -----
+
+    private fun maybeOnboard() {
+        if (prefs.getBoolean("onboarded", false)) return
+        if (accounts().isNotEmpty() || playlists().isNotEmpty() || all.size > defaultChannels.size) {
+            prefs.edit().putBoolean("onboarded", true).apply()
+            return
+        }
+        onboardingDialog()
+    }
+
+    private fun onboardingDialog() {
+        val items = arrayOf(
+            tr("Portail web : configurer depuis mon smartphone", "Web portal: set up from my phone", "بوابة الويب: الإعداد من هاتفي", "Portal web: configurar desde mi móvil"),
+            tr("Compte Xtream", "Xtream account", "حساب Xtream", "Cuenta Xtream"),
+            tr("Playlist M3U (lien)", "M3U playlist (link)", "قائمة M3U (رابط)", "Lista M3U (enlace)"),
+            tr("Plus tard", "Later", "لاحقاً", "Más tarde")
+        )
+        dialog().setTitle(tr("Bienvenue ! Ajoutez vos chaînes", "Welcome! Add your channels", "مرحباً! أضف قنواتك", "¡Bienvenido! Añade tus canales"))
+            .setItems(items) { _, i ->
+                when (i) {
+                    0 -> if (portal == null) togglePortal() else portalDialog()
+                    1 -> xtreamAddDialog()
+                    2 -> m3uLinkDialog()
+                }
+            }
+            .setOnDismissListener { prefs.edit().putBoolean("onboarded", true).apply() }
+            .show()
+    }
+
+    // ----- recherche globale (chaines, films, series) -----
+
+    private fun globalSearchDialog() {
+        val u = field(tr("Chaîne, film ou série", "Channel, movie or series", "قناة أو فيلم أو مسلسل", "Canal, película o serie"))
+        dialog().setTitle(tr("Recherche", "Search", "بحث", "Buscar")).setView(form(u))
+            .setPositiveButton(tr("Rechercher", "Search", "بحث", "Buscar")) { _, _ ->
+                runGlobalSearch(u.text.toString().trim())
+            }
+            .setNegativeButton(tr("Annuler", "Cancel", "إلغاء", "Cancelar"), null)
+            .show()
+    }
+
+    private fun runGlobalSearch(q: String) {
+        if (q.length < 2) {
+            toast(tr("Entrez au moins 2 lettres", "Type at least 2 letters", "اكتب حرفين على الأقل", "Escribe al menos 2 letras"))
+            return
+        }
+        val lq = q.lowercase()
+        val chs = all.filter { it.name.lowercase().contains(lq) }.take(40)
+        pool.execute {
+            vodLoadOnce()
+            val vs = vods.filter { it.name.lowercase().contains(lq) }.take(40)
+            runOnUiThread { showSearchResults(q, chs, vs) }
+        }
+    }
+
+    private fun showSearchResults(q: String, chs: List<Channel>, vs: List<Vod>) {
+        val labels = ArrayList<String>()
+        for (c in chs) labels.add("TV   " + c.name)
+        for (v in vs) {
+            labels.add((if (v.kind == 1) tr("Film", "Movie", "فيلم", "Película") else tr("Série", "Series", "مسلسل", "Serie")) + "   " + v.name)
+        }
+        if (labels.isEmpty()) {
+            toast(tr("Aucun résultat", "No results", "لا توجد نتائج", "Sin resultados"))
+            return
+        }
+        dialog().setTitle(q).setItems(labels.toTypedArray()) { _, i ->
+            if (i < chs.size) {
+                play(chs[i])
+            } else {
+                openVod(vs[i - chs.size])
+            }
+        }.show()
+    }
+}
